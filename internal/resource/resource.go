@@ -18,7 +18,7 @@ package resource
 
 import "github.com/observiq/bindplane-op/model"
 
-// AnyResourceFromConfiguration takes an BindPlane configuration and returns an BindPlane AnyResource
+// AnyResourceFromConfiguration takes a BindPlane configuration and returns a BindPlane AnyResource
 func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 	return model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
@@ -34,7 +34,7 @@ func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 	}
 }
 
-// AnyResourceFromDestination takes an BindPlane Destination and returns an BindPlane AnyResource
+// AnyResourceFromDestination takes a BindPlane Destination and returns a BindPlane AnyResource
 func AnyResourceFromDestination(d *model.Destination) model.AnyResource {
 	r := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{

@@ -50,7 +50,7 @@ func New(options ...Option) (*BindPlane, error) {
 	return &BindPlane{i}, err
 }
 
-// Option is a function that configures an bindplane client configuration
+// Option is a function that configures a BindPlane client configuration
 type Option func(*config.Config)
 
 // WithEndpoint sets a client's endpoint

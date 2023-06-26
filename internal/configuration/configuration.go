@@ -66,7 +66,7 @@ func WithMatchLabels(match map[string]string) Option {
 	}
 }
 
-// NewV1Alpha takes configuration options and returns an BindPlane configuration
+// NewV1Alpha takes configuration options and returns a BindPlane configuration
 func NewV1Alpha(options ...Option) (*model.Configuration, error) {
 	const (
 		version     = "bindplane.observiq.com/v1alpha"
