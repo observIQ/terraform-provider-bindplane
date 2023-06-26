@@ -1,0 +1,18 @@
+# minimum confidence percentage used during license classification
+threshold: .90
+
+# all permitted licenses - if no list is specified, all licenses are assumed to be allowed
+allow:
+  - "MIT"
+  - "Apache-2.0"
+  - "BSD-3-Clause"
+  - "BSD-2-Clause"
+  - "Zlib"
+  - "ISC"
+  - "MPL-2.0"
+
+exceptions:
+  unresolvableLicense:
+    # Mapstructure is MIT licensed https://github.com/mitchellh/mapstructure
+    # and we distribute our own modified version
+    - path: "./internal/mapstructure"

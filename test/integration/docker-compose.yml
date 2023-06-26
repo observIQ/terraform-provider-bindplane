@@ -1,0 +1,42 @@
+
+version: "3.9"
+services:
+  bindplane:
+    hostname: bindplane.bindplane-dev.svc.cluster.local
+    image: ghcr.io/observiq/bindplane:1.17.1
+    restart: always
+    ports:
+      - "3100:3001"
+    environment:
+      - BINDPLANE_USERNAME=tfu
+      - BINDPLANE_PASSWORD=tfp
+      - BINDPLANE_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
+      - BINDPLANE_SESSION_SECRET=524abde2-d9f8-485c-b426-bac229686d13
+      - BINDPLANE_LOGGING_OUTPUT=stdout
+      - BINDPLANE_TLS_CERT=/bindplane.crt
+      - BINDPLANE_TLS_KEY=/bindplane.key
+      - BINDPLANE_TLS_CA=/bindplane-ca.crt
+      - BINDPLANE_REMOTE_URL=https://bindplane.bindplane-dev.svc.cluster.local:3001
+    volumes:
+      - "../../internal/client/tls/bindplane.crt:/bindplane-ca.crt:ro"
+      - "../../internal/client/tls/bindplane.crt:/bindplane.crt:ro"
+      - "../../internal/client/tls/bindplane.key:/bindplane.key:ro"
+
+  agent:
+    build:
+      context: docker/collector
+    # TODO(cant mix env and config file). Docker build process bakes in
+    # the manager.yaml which has TLS options. TLS options do not exist as
+    # envirionment variables yet.
+    # environment:
+    #   - OPAMP_AGENT_NAME=agent
+    #   - OPAMP_ENDPOINT=wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp
+    #   - OPAMP_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
+    #   - OPAMP_LABELS=purpose=tf
+    restart: always
+    depends_on:
+      - bindplane
+    volumes:
+      - "../../internal/client/tls/bindplane-ca.crt:/etc/otel/bindplane-ca.crt:ro"
+      - "../../internal/client/tls/bindplane-client.crt:/etc/otel/bindplane-client.crt:ro"
+      - "../../internal/client/tls/bindplane-client.key:/etc/otel/bindplane-client.key:ro"

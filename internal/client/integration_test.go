@@ -1,0 +1,293 @@
+// Copyright  observIQ, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//go:build integration
+// +build integration
+
+package client
+
+import (
+	"context"
+	"fmt"
+	"net/url"
+	"os"
+	"path"
+	"testing"
+	"time"
+
+	"github.com/observiq/bindplane-op/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
+	"github.com/observiq/terraform-provider-bindplane/internal/resource"
+
+	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+)
+
+const (
+	bindplaneImage   = "ghcr.io/observiq/bindplane:1.17.1"
+	bindplaneExtPort = 3100
+
+	username = "int-test-user"
+	password = "int-test-password"
+)
+
+func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Container {
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mount := testcontainers.ContainerMount{
+		Source: testcontainers.GenericBindMountSource{
+			HostPath: path.Join(dir, "tls"),
+		},
+		Target:   "/tmp",
+		ReadOnly: false,
+	}
+
+	mounts := []testcontainers.ContainerMount{
+		mount,
+	}
+
+	ctx := context.Background()
+	req := testcontainers.ContainerRequest{
+		Image:  bindplaneImage,
+		Env:    env,
+		Mounts: mounts,
+		// TODO(jsirianni): dynamic port?
+		ExposedPorts: []string{fmt.Sprintf("%d:%d", bindplaneExtPort, 3001)},
+		WaitingFor:   wait.ForListeningPort("3001"),
+	}
+
+	require.NoError(t, req.Validate())
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	require.NoError(t, err)
+	time.Sleep(time.Second * 3)
+
+	return container
+}
+
+func TestIntegration_http(t *testing.T) {
+	env := map[string]string{
+		"BINDPLANE_USERNAME":       username,
+		"BINDPLANE_PASSWORD":       password,
+		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+	}
+
+	container := bindplaneContainer(t, env)
+	defer func() {
+		require.NoError(t, container.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+
+	time.Sleep(time.Second * 20)
+
+	hostname, err := container.Host(context.Background())
+	require.NoError(t, err)
+
+	endpoint := url.URL{
+		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Scheme: "http",
+	}
+
+	i, err := New(
+		WithEndpoint(endpoint.String()),
+		WithUsername(username),
+		WithPassword(password),
+	)
+	require.NoError(t, err)
+
+	_, err = i.client.Version(context.Background())
+	require.NoError(t, err)
+
+	_, err = i.client.Agents(context.Background(), client.QueryOptions{})
+	require.NoError(t, err)
+
+	config, err := configuration.NewV1Alpha(
+		configuration.WithName("test"),
+	)
+	require.NoError(t, err)
+	r := resource.AnyResourceFromConfiguration(config)
+	id, err := i.Apply(&r)
+	require.NoError(t, err)
+	require.NotEmpty(t, id)
+
+	outputConfig, err := i.Configuration("test")
+	require.NoError(t, err)
+	require.NotNil(t, outputConfig)
+	require.Equal(t, "test", outputConfig.Metadata.Name)
+
+	err = i.DeleteConfiguration("test")
+	require.NoError(t, err)
+
+	outputConfig, err = i.Configuration("test")
+	require.Nil(t, err, "reading a configuration that does not exist should return a nil error")
+	require.Nil(t, outputConfig, "reading a configuration that does not exist should return a nil configuration")
+}
+
+func TestIntegration_invalidProtocol(t *testing.T) {
+	env := map[string]string{
+		"BINDPLANE_USERNAME":       username,
+		"BINDPLANE_PASSWORD":       password,
+		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+	}
+
+	container := bindplaneContainer(t, env)
+	defer func() {
+		require.NoError(t, container.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	hostname, err := container.Host(context.Background())
+	require.NoError(t, err)
+
+	endpoint := url.URL{
+		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Scheme: "https",
+	}
+
+	i, err := New(
+		WithEndpoint(endpoint.String()),
+		WithUsername(username),
+		WithPassword(password),
+		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+	)
+	require.NoError(t, err)
+
+	_, err = i.client.Version(context.Background())
+	require.Error(t, err, "http: server gave HTTP response to HTTPS client")
+}
+
+func TestIntegration_https(t *testing.T) {
+	env := map[string]string{
+		"BINDPLANE_USERNAME":       username,
+		"BINDPLANE_PASSWORD":       password,
+		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
+		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
+		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+	}
+
+	container := bindplaneContainer(t, env)
+	defer func() {
+		require.NoError(t, container.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	hostname, err := container.Host(context.Background())
+	require.NoError(t, err)
+
+	endpoint := url.URL{
+		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Scheme: "https",
+	}
+
+	i, err := New(
+		WithEndpoint(endpoint.String()),
+		WithUsername(username),
+		WithPassword(password),
+		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+	)
+	require.NoError(t, err)
+
+	_, err = i.client.Version(context.Background())
+	require.NoError(t, err)
+
+	_, err = i.client.Agents(context.Background(), client.QueryOptions{})
+	require.NoError(t, err)
+}
+
+// func TestIntegration_mtls_fail(t *testing.T) {
+// 	env := map[string]string{
+// 		"BINDPLANE_USERNAME":       username,
+// 		"BINDPLANE_PASSWORD":       password,
+// 		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
+// 		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
+// 		"BINDPLANE_TLS_CA":         "/tmp/bindplane-ca.crt",
+// 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+// 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+// 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+// 	}
+
+// 	container := bindplaneContainer(t, env)
+// 	defer func() {
+// 		require.NoError(t, container.Terminate(context.Background()))
+// 		time.Sleep(time.Second * 1)
+// 	}()
+// 	hostname, err := container.Host(context.Background())
+// 	require.NoError(t, err)
+
+// 	endpoint := url.URL{
+// 		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+// 		Scheme: "https",
+// 	}
+
+// 	i, err := New(
+// 		WithEndpoint(endpoint.String()),
+// 		WithUsername(username),
+// 		WithPassword(password),
+// 		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+// 	)
+// 	require.NoError(t, err)
+
+// 	_, err = i.client.Version(context.Background())
+// 	require.Error(t, err, "expect an error when client not in mtls mode")
+// 	require.Contains(t, err.Error(), "remote error: tls: bad certificate")
+// }
+
+func TestIntegration_mtls(t *testing.T) {
+	env := map[string]string{
+		"BINDPLANE_USERNAME":       username,
+		"BINDPLANE_PASSWORD":       password,
+		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
+		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
+		"BINDPLANE_TLS_CA":         "/tmp/bindplane-ca.crt",
+		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+	}
+
+	container := bindplaneContainer(t, env)
+	defer func() {
+		require.NoError(t, container.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	hostname, err := container.Host(context.Background())
+	require.NoError(t, err)
+
+	endpoint := url.URL{
+		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Scheme: "https",
+	}
+
+	i, err := New(
+		WithEndpoint(endpoint.String()),
+		WithUsername(username),
+		WithPassword(password),
+		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+		WithTLS("tls/bindplane-client.crt", "tls/bindplane-client.key"),
+	)
+	require.NoError(t, err)
+
+	_, err = i.client.Version(context.Background())
+	require.NoError(t, err)
+}

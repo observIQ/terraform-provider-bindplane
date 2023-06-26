@@ -1,0 +1,7 @@
+secret_key: 524abde2-d9f8-485c-b426-bac229686d13
+labels: "purpose=tf"
+endpoint: wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp
+tls_config:
+  cert_file: /etc/otel/bindplane-client.crt
+  key_file: /etc/otel/bindplane-client.key
+  ca_file: /etc/otel/bindplane-ca.crt
