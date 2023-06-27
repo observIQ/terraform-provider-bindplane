@@ -33,29 +33,3 @@ func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 		},
 	}
 }
-
-// AnyResourceFromDestination takes a BindPlane Destination and returns a BindPlane AnyResource
-func AnyResourceFromDestination(d *model.Destination) model.AnyResource {
-	r := model.AnyResource{
-		ResourceMeta: model.ResourceMeta{
-			APIVersion: d.APIVersion,
-			Kind:       d.Kind,
-			Metadata:   d.Metadata,
-		},
-		Spec: map[string]any{
-			"type":       "googlecloud",
-			"parameters": []map[string]any{},
-		},
-	}
-
-	params := []map[string]any{}
-	for _, p := range d.Spec.Parameters {
-		param := map[string]any{}
-		param[p.Name] = p.Value
-		params = append(params, param)
-	}
-
-	r.Spec["parameters"] = params
-
-	return r
-}
