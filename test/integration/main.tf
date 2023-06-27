@@ -65,9 +65,9 @@ resource "bindplane_configuration" "config" {
   source {
     type = "host"
     parameters = {
-      metric_filtering = [
-        "system.disk.operation_time"
-      ]
+      # metric_filtering = [
+      #   "system.disk.operation_time"
+      # ]
       enable_process = false
       collection_interval = 20
     }
