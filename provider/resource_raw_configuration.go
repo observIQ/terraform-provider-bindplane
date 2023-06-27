@@ -91,9 +91,8 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	bindplane := meta.(*client.BindPlane)
 
-	id := ""
 	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
-		id, err = bindplane.Apply(&resource)
+		err := bindplane.Apply(&resource, false)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
 			if retryableError(err) {
@@ -106,7 +105,6 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		return fmt.Errorf("create retries exhausted: %v", err)
 	}
-	d.SetId(id)
 
 	return resourceConfigurationRead(d, meta)
 }

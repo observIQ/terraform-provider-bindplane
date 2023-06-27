@@ -26,6 +26,7 @@ import (
 	"github.com/observiq/bindplane-op/client"
 	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -107,35 +108,43 @@ type BindPlane struct {
 }
 
 // Apply creates or updates a single BindPlane resource and returns it's id.
-func (i *BindPlane) Apply(r *model.AnyResource) (string, error) {
+// If rollout is true, any configuration which is updated by the Apply
+// opteration will have a rollout started.
+func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 	status, err := i.client.Apply(context.TODO(), []*model.AnyResource{r})
 	if err != nil {
-		return "", fmt.Errorf("failed to apply BindPlane resources: %w", err)
+		return fmt.Errorf("failed to apply BindPlane resources: %w", err)
 	}
 
-	// BindPlane should return a single status when applying a single resource,
-	// which means we will index into status[0] when returning the id.
-	if x := len(status); x != 1 {
-		return "", fmt.Errorf("expected BindPlane to return one resource status, got %d", x)
+	var errs error
+
+	for _, status := range status {
+		resource := status.Resource
+
+		// Apply expects the resource to be unchanged, configured, or
+		// created. All other statuses are unexpected and should result
+		// in an error from this method.
+		switch status.Status {
+		case model.StatusUnchanged, model.StatusConfigured, model.StatusCreated:
+		default:
+			err := fmt.Errorf(
+				"unexpected status when applying resource: %s, status: %s",
+				resource.Name(),
+				status.Status)
+			// TODO(jsirianni): can this be handled in a nicer way?
+			errs = errors.Wrap(errs, err.Error())
+		}
+
+		if resource.Kind == model.KindConfiguration && status.Status == model.StatusConfigured {
+			if rollout {
+				if err := i.Rollout(resource.Name()); err != nil {
+					errs = errors.Wrap(errs, err.Error())
+				}
+			}
+		}
 	}
 
-	resource := status[0]
-
-	// Apply expects the resource to be unchanged, configured, or
-	// created. All other statuses are unexpected and should result
-	// in an error from this method.
-	switch resource.Status {
-	case model.StatusUnchanged, model.StatusConfigured, model.StatusCreated:
-		break
-	default:
-		return "", fmt.Errorf(
-			"unexpected status when applying resource: %s, status: %s",
-			r.Name(),
-			resource.Status)
-	}
-
-	id := status[0].Resource.ID()
-	return id, nil
+	return errs
 }
 
 // Rollout starts a rollout against a named config

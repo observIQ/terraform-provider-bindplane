@@ -54,6 +54,11 @@ func resourceSource() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"rollout": {
+				Type:     schema.TypeBool,
+				Required: true,
+				ForceNew: false,
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -66,6 +71,7 @@ func resourceSource() *schema.Resource {
 func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	sourceType := d.Get("type").(string)
 	name := d.Get("name").(string)
+	rollout := d.Get("rollout").(bool)
 
 	resource := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
@@ -92,10 +98,8 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 
 	bindplane := meta.(*client.BindPlane)
 
-	id := ""
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
-		var err error
-		id, err = bindplane.Apply(&resource)
+		err := bindplane.Apply(&resource, rollout)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
 			if retryableError(err) {
@@ -108,7 +112,6 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		return fmt.Errorf("create retries exhausted: %v", err)
 	}
-	d.SetId(id)
 
 	return resourceSourceRead(d, meta)
 }

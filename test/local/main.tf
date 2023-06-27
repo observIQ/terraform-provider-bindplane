@@ -64,6 +64,7 @@ resource "bindplane_configuration" "config" {
 }
 
 resource "bindplane_destination" "google_dest" {
+  rollout = true
   name = "google-test"
   type = "googlecloud"
   parameters_json = jsonencode({
@@ -72,20 +73,23 @@ resource "bindplane_destination" "google_dest" {
 }
 
 resource "bindplane_source" "otlp" {
+  rollout = true
   name = "otlp-default"
   type = "otlp"
 }
 
 resource "bindplane_source" "otlp-custom" {
+  rollout = true
   name = "otlp-custom"
   type = "otlp"
   parameters_json = jsonencode({
-    "http_port": 44318,
+    "http_port": 44313,
     "grpc_port": 0
   })
 }
 
 resource "bindplane_source" "host" {
+  rollout = true
   name = "my-host"
   type = "host"
   parameters_json = jsonencode({
