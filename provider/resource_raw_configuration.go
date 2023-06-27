@@ -17,7 +17,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/observiq/bindplane-op/model"
@@ -188,14 +187,4 @@ func resourceRawConfigurationDelete(d *schema.ResourceData, meta any) error {
 	}
 
 	return resourceRawConfigurationRead(d, meta)
-}
-
-func retryableError(err error) bool {
-	switch e := err.Error(); {
-	case strings.Contains(e, errClientConnectionRefused):
-		return true
-	case strings.Contains(e, errClientTimeoutRetry):
-		return true
-	}
-	return false
 }
