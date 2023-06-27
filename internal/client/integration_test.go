@@ -121,7 +121,7 @@ func TestIntegration_http(t *testing.T) {
 	_, err = i.client.Agents(context.Background(), client.QueryOptions{})
 	require.NoError(t, err)
 
-	config, err := configuration.NewV1Alpha(
+	config, err := configuration.NewV1(
 		configuration.WithName("test"),
 	)
 	require.NoError(t, err)

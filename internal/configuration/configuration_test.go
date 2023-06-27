@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewV1Alpha(t *testing.T) {
+func TestNewV1(t *testing.T) {
 	cases := []struct {
 		name   string
 		input  Option
@@ -32,7 +32,7 @@ func TestNewV1Alpha(t *testing.T) {
 			nil,
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1alpha",
+					APIVersion: "bindplane.observiq.com/v1",
 					Kind:       "Configuration",
 				},
 				Spec: model.ConfigurationSpec{
@@ -45,7 +45,7 @@ func TestNewV1Alpha(t *testing.T) {
 			WithName("observiq"),
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1alpha",
+					APIVersion: "bindplane.observiq.com/v1",
 					Kind:       "Configuration",
 					Metadata: model.Metadata{
 						Name: "observiq",
@@ -61,7 +61,7 @@ func TestNewV1Alpha(t *testing.T) {
 			WithRawOTELConfig("some raw config"),
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1alpha",
+					APIVersion: "bindplane.observiq.com/v1",
 					Kind:       "Configuration",
 				},
 				Spec: model.ConfigurationSpec{
@@ -81,7 +81,7 @@ func TestNewV1Alpha(t *testing.T) {
 			}(),
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1alpha",
+					APIVersion: "bindplane.observiq.com/v1",
 					Kind:       "Configuration",
 					Metadata: model.Metadata{
 						Labels: func() model.Labels {
@@ -110,7 +110,7 @@ func TestNewV1Alpha(t *testing.T) {
 			}(),
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1alpha",
+					APIVersion: "bindplane.observiq.com/v1",
 					Kind:       "Configuration",
 				},
 				Spec: model.ConfigurationSpec{
@@ -128,7 +128,7 @@ func TestNewV1Alpha(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			output, err := NewV1Alpha(tc.input)
+			output, err := NewV1(tc.input)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, output)
 		})

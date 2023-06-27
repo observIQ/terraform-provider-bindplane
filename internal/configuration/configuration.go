@@ -66,11 +66,18 @@ func WithSources(sources []model.ResourceConfiguration) Option {
 	}
 }
 
-// WithDestinations is a Option that configures a configuration's
+// WithDestinationsByName is a Option that configures a configuration's
 // destinations.
-func WithDestinations(destinations []model.ResourceConfiguration) Option {
+func WithDestinationsByName(d []string) Option {
 	return func(c *model.Configuration) error {
-		c.Spec.Destinations = destinations
+		for _, d := range d {
+			r := model.ResourceConfiguration{
+				Name:              d,
+				DisplayName:       "",
+				ParameterizedSpec: model.ParameterizedSpec{},
+			}
+			c.Spec.Destinations = append(c.Spec.Destinations, r)
+		}
 		return nil
 	}
 }
@@ -84,10 +91,10 @@ func WithMatchLabels(match map[string]string) Option {
 	}
 }
 
-// NewV1Alpha takes configuration options and returns a BindPlane configuration
-func NewV1Alpha(options ...Option) (*model.Configuration, error) {
+// NewV1 takes configuration options and returns a BindPlane configuration
+func NewV1(options ...Option) (*model.Configuration, error) {
 	const (
-		version     = "bindplane.observiq.com/v1alpha"
+		version     = "bindplane.observiq.com/v1"
 		kind        = "Configuration"
 		contentType = "text/yaml"
 	)

@@ -123,7 +123,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 		// raw list of sources
 		if v := d.Get("source").([]any); v != nil {
-			sources = make([]model.ResourceConfiguration, len(v))
+			sources = []model.ResourceConfiguration{}
 
 			// for each raw source
 			for _, raw := range v {
@@ -161,22 +161,20 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 		opts = append(opts, configuration.WithSources(sources))
 
-		var destinations []model.ResourceConfiguration
+		// Convert the destinations terraform set to a string list
+		var destinations []string
 		if v := d.Get("destinations").(*schema.Set); v != nil {
-			destinations = make([]model.ResourceConfiguration, v.Len())
 			for _, v := range v.List() {
-				d := model.ResourceConfiguration{
-					Name: v.(string),
-				}
-				destinations = append(destinations, d)
+				name := v.(string)
+				destinations = append(destinations, name)
 			}
 		}
-		opts = append(opts, configuration.WithDestinations(destinations))
+		opts = append(opts, configuration.WithDestinationsByName(destinations))
 	}
 
-	config, err := configuration.NewV1Alpha(opts...)
+	config, err := configuration.NewV1(opts...)
 	if err != nil {
-		return fmt.Errorf("failed to create new v1alpha configuration: %v", err)
+		return fmt.Errorf("failed to create new configuration: %v", err)
 	}
 
 	resource := resource.AnyResourceFromConfiguration(config)

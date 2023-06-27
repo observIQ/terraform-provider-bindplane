@@ -12,35 +12,35 @@ provider "bindplane" {
   password = "admin"
 }
 
-resource "bindplane_configuration" "raw" {
-  name = "testtf-raw"
-  labels = {
-    purpose = "tf-raw"
-  }
-  match_labels = {
-    purpose = "tf-raw"
-  }
-  raw_configuration = <<EOT
-receivers:
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: 'collector'
-          scrape_interval: 10s
-          static_configs:
-            - targets:
-                - 'localhost:8888'
-exporters:
-  logging:
-service:
-  pipelines:
-    metrics:
-      receivers:
-        - prometheus
-      exporters:
-        - logging
-EOT
-}
+# resource "bindplane_configuration" "raw" {
+#   name = "testtf-raw"
+#   labels = {
+#     purpose = "tf-raw"
+#   }
+#   match_labels = {
+#     purpose = "tf-raw"
+#   }
+#   raw_configuration = <<EOT
+# receivers:
+#   prometheus:
+#     config:
+#       scrape_configs:
+#         - job_name: 'collector'
+#           scrape_interval: 10s
+#           static_configs:
+#             - targets:
+#                 - 'localhost:8888'
+# exporters:
+#   logging:
+# service:
+#   pipelines:
+#     metrics:
+#       receivers:
+#         - prometheus
+#       exporters:
+#         - logging
+# EOT
+# }
 
 resource "bindplane_configuration" "config" {
   name = "testtf"

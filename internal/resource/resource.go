@@ -20,7 +20,7 @@ import "github.com/observiq/bindplane-op/model"
 
 // AnyResourceFromConfiguration takes a BindPlane configuration and returns a BindPlane AnyResource
 func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
-	return model.AnyResource{
+	a := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
 			APIVersion: c.APIVersion,
 			Kind:       c.Kind,
@@ -28,8 +28,16 @@ func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 		},
 		Spec: map[string]any{
 			"contentType": c.Spec.ContentType,
-			"raw":         c.Spec.Raw,
 			"selector":    c.Spec.Selector,
 		},
 	}
+
+	if c.Spec.Raw != "" {
+		a.Spec["raw"] = c.Spec.Raw
+	} else {
+		a.Spec["sources"] = c.Spec.Sources
+		a.Spec["destinations"] = c.Spec.Destinations
+	}
+
+	return a
 }

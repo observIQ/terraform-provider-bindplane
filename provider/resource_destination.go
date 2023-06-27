@@ -39,6 +39,11 @@ func resourceDestination() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+				ForceNew: false,
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -69,7 +74,7 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 
 	resource := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
-			APIVersion: "bindplane.observiq.com/v1alpha",
+			APIVersion: "bindplane.observiq.com/v1",
 			Kind:       "Destination",
 			Metadata: model.Metadata{
 				Name: name,
@@ -130,16 +135,18 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 		return nil
 	}
 
-	if err := d.Set("name", destination.Name()); err != nil {
+	name := destination.Name()
+	version := destination.Version()
+
+	if err := d.Set("name", name); err != nil {
 		return fmt.Errorf("failed to set resource name: %v", err)
 	}
 
-	// Split the destination type and version
-	// googlecloud:1 --> googlecloud, 1.
-	// TODO(jsirianni): Is this safe? Should versioned resources be handled differently?
-	// TODO(jsirianni): Can we just omit updating the destinationt type field? Probably not. I suppose
-	// someone could delete the destinaion and re-create it by name but then its id would change, causing
-	// it to be re-created by tf?
+	if err := d.Set("version", version); err != nil {
+		return fmt.Errorf("failed to set resource version: %v", err)
+	}
+
+	// TODO(jsirianni): Should Terraform be version aware?
 	destinationType := strings.Split(destination.Spec.Type, ":")[0]
 	if err := d.Set("type", destinationType); err != nil {
 		return fmt.Errorf("failed to set resource type: %v", err)
