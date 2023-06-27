@@ -23,7 +23,7 @@ provider "bindplane" {
   // tls_private_key = "../../internal/client/tls/test-client.key"
 }
 
-resource "bindplane_raw_configuration" "config" {
+resource "bindplane_configuration" "config" {
   name = "testtf"
   labels = {
     purpose = "tf"

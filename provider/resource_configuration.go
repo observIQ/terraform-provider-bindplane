@@ -35,12 +35,12 @@ const (
 	errClientTimeoutRetry      = "Client.Timeout exceeded while awaiting headers"
 )
 
-func resourceRawConfiguration() *schema.Resource {
+func resourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRawConfigurationCreate,
-		Update: resourceRawConfigurationCreate, // Run create as update
-		Read:   resourceRawConfigurationRead,
-		Delete: resourceRawConfigurationDelete,
+		Create: resourceConfigurationCreate,
+		Update: resourceConfigurationCreate, // Run create as update
+		Read:   resourceConfigurationRead,
+		Delete: resourceConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -59,7 +59,7 @@ func resourceRawConfiguration() *schema.Resource {
 			},
 			"raw_configuration": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: false,
 			},
 		},
@@ -71,7 +71,7 @@ func resourceRawConfiguration() *schema.Resource {
 	}
 }
 
-func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
+func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
 		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
@@ -113,10 +113,10 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	}
 	d.SetId(id) // TODO: is this necessary or will read handle this?
 
-	return resourceRawConfigurationRead(d, meta)
+	return resourceConfigurationRead(d, meta)
 }
 
-func resourceRawConfigurationRead(d *schema.ResourceData, meta any) error {
+func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	config := &model.Configuration{}
@@ -166,7 +166,7 @@ func resourceRawConfigurationRead(d *schema.ResourceData, meta any) error {
 	return nil
 }
 
-func resourceRawConfigurationDelete(d *schema.ResourceData, meta any) error {
+func resourceConfigurationDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *tfresource.RetryError {
@@ -186,5 +186,5 @@ func resourceRawConfigurationDelete(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("delete retries exhausted: %v", err)
 	}
 
-	return resourceRawConfigurationRead(d, meta)
+	return resourceConfigurationRead(d, meta)
 }
