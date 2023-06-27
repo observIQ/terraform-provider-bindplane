@@ -57,6 +57,24 @@ func WithRawOTELConfig(raw string) Option {
 	}
 }
 
+// WithSources is a Option that configures a configuration's
+// sources.
+func WithSources(sources []model.ResourceConfiguration) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Sources = sources
+		return nil
+	}
+}
+
+// WithDestinations is a Option that configures a configuration's
+// destinations.
+func WithDestinations(destinations []model.ResourceConfiguration) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Destinations = destinations
+		return nil
+	}
+}
+
 // WithMatchLabels is a Option that configures a configuration's
 // agent match labels.
 func WithMatchLabels(match map[string]string) Option {

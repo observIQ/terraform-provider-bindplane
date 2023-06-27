@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -57,6 +58,32 @@ func resourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
+			"source": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: false,
+						},
+						"parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: false,
+						},
+					},
+				},
+			},
+			"destinations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			// TODO(jsirianni): Remove or make sure it is safe to keep.
 			"raw_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -82,12 +109,67 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to read match labels from resource configuration: %v", err)
 	}
 
-	config, err := configuration.NewV1Alpha(
+	opts := []configuration.Option{
 		configuration.WithName(d.Get("name").(string)),
-		configuration.WithRawOTELConfig(d.Get("raw_configuration").(string)),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
-	)
+	}
+
+	if raw, ok := d.Get("raw_configuration").(string); ok && raw != "" {
+		opts = append(opts, configuration.WithRawOTELConfig(raw))
+	} else {
+		var sources []model.ResourceConfiguration
+
+		// raw list of sources
+		if v := d.Get("source").([]any); v != nil {
+			sources = make([]model.ResourceConfiguration, len(v))
+
+			// for each raw source
+			for _, raw := range v {
+				data := raw.(map[string]interface{})
+
+				sourceType, ok := data["type"].(string)
+				if !ok || sourceType == "" {
+					return errors.New("source configuration's 'type' parameter must be set")
+				}
+
+				params := []model.Parameter{}
+				rawParams, ok := data["parameters"].([]map[string]string)
+				if ok {
+					for _, p := range rawParams {
+						param := model.Parameter{
+							Name:  p["name"],
+							Value: p["value"],
+						}
+						params = append(params, param)
+					}
+				}
+
+				source := model.ResourceConfiguration{
+					ParameterizedSpec: model.ParameterizedSpec{
+						Type:       sourceType,
+						Parameters: params,
+					},
+				}
+				sources = append(sources, source)
+			}
+		}
+		opts = append(opts, configuration.WithSources(sources))
+
+		var destinations []model.ResourceConfiguration
+		if v := d.Get("destinations").(*schema.Set); v != nil {
+			destinations = make([]model.ResourceConfiguration, v.Len())
+			for _, v := range v.List() {
+				d := model.ResourceConfiguration{
+					Name: v.(string),
+				}
+				destinations = append(destinations, d)
+			}
+		}
+		opts = append(opts, configuration.WithDestinations(destinations))
+	}
+
+	config, err := configuration.NewV1Alpha(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new v1alpha configuration: %v", err)
 	}

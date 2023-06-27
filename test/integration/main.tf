@@ -23,8 +23,8 @@ provider "bindplane" {
   // tls_private_key = "../../internal/client/tls/test-client.key"
 }
 
-resource "bindplane_configuration" "config" {
-  name = "testtf"
+resource "bindplane_configuration" "raw" {
+  name = "testtf-raw"
   labels = {
     purpose = "tf"
   }
@@ -51,6 +51,43 @@ service:
       exporters:
         - logging
 EOT
+}
+
+resource "bindplane_configuration" "config" {
+  name = "testtf"
+  labels = {
+    purpose = "tf"
+  }
+  match_labels = {
+    purpose = "tf"
+  }
+  
+  source {
+    type = "host"
+    parameters = {
+      metric_filtering = [
+        "system.disk.operation_time"
+      ]
+      enable_process = false
+      collection_interval = 20
+    }
+  }
+
+  source {
+    type = "otlp"
+  }
+
+  source {
+    type = "otlp"
+    parameters = {
+      http_port = 44318
+      grpc_port = 0
+    }
+  }
+
+  destinations = [
+    bindplane_destination.google_dest.name
+  ]
 }
 
 resource "bindplane_destination" "google_dest" {
