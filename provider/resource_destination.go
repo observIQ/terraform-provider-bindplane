@@ -25,47 +25,30 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 )
 
-func resourceDestinationGoogleCloud() *schema.Resource {
+func resourceDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDestinationGoogleCloudCreate,
-		Update: resourceDestinationGoogleCloudCreate,
-		Read:   resourceDestinationGoogleCloudRead,
-		Delete: resourceDestinationGoogleCloudDelete,
+		Create: resourceDestinationCreate,
+		Update: resourceDestinationCreate,
+		Read:   resourceDestinationRead,
+		Delete: resourceDestinationDelete,
 		Schema: map[string]*schema.Schema{
-			// Metadata
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"labels": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: false,
-			},
-			// parameters
-			"project": {
+			// Destination type, such as `googlecloud` or `logging`.
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
 			},
-			"auth_type": {
-				Type:     schema.TypeString,
+			// Key value pairs used to configure the destination. Keys must
+			// match the destinaton type's parameters.
+			"parameters": {
+				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
-				Default:  "auto",
-			},
-			"credentials": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "",
-			},
-			"credentials_file": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "",
+				ForceNew: false,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -76,14 +59,15 @@ func resourceDestinationGoogleCloud() *schema.Resource {
 	}
 }
 
-func resourceDestinationGoogleCloudCreate(d *schema.ResourceData, meta any) error {
-	l, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
-	if err != nil {
-		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
-	}
-	labels, err := model.LabelsFromMap(l)
-	if err != nil {
-		return fmt.Errorf("failed to set destination labels: %v", err)
+func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
+	paramList := []model.Parameter{}
+	params := d.Get("parameters").(map[string]any)
+	for k, v := range params {
+		p := model.Parameter{
+			Name:  k,
+			Value: v,
+		}
+		paramList = append(paramList, p)
 	}
 
 	resource := model.AnyResource{
@@ -91,38 +75,20 @@ func resourceDestinationGoogleCloudCreate(d *schema.ResourceData, meta any) erro
 			APIVersion: "bindplane.observiq.com/v1alpha",
 			Kind:       "Destination",
 			Metadata: model.Metadata{
-				ID:     d.Get("id").(string),
-				Name:   d.Get("name").(string),
-				Labels: labels,
+				Name: d.Get("name").(string),
 			},
 		},
 		Spec: map[string]any{
-			"type": "googlecloud",
-			"parameters": []map[string]any{
-				{
-					"name":  "project",
-					"value": d.Get("project").(string),
-				},
-				{
-					"name":  "auth_type",
-					"value": d.Get("auth_type").(string),
-				},
-				{
-					"name":  "credentials",
-					"value": d.Get("credentials").(string),
-				},
-				{
-					"name":  "credentials_file",
-					"value": d.Get("credentials_file").(string),
-				},
-			},
+			"type":       d.Get("type").(string),
+			"parameters": paramList,
 		},
 	}
 
 	bindplane := meta.(*client.BindPlane)
 
 	id := ""
-	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+		var err error
 		id, err = bindplane.Apply(&resource)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
@@ -138,18 +104,18 @@ func resourceDestinationGoogleCloudCreate(d *schema.ResourceData, meta any) erro
 	}
 	d.SetId(id) // TODO: is this necessary or will read handle this?
 
-	return resourceDestinationGoogleCloudRead(d, meta)
+	return resourceDestinationRead(d, meta)
 }
 
-func resourceDestinationGoogleCloudRead(d *schema.ResourceData, meta any) error {
+func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	config := &model.Destination{}
+	destination := &model.Destination{}
 
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *tfresource.RetryError {
 		var err error
 		name := d.Get("name").(string)
-		config, err = bindplane.Destination(name)
+		destination, err = bindplane.Destination(name)
 		if err != nil {
 			if retryableError(err) {
 				return tfresource.RetryableError(err)
@@ -162,61 +128,30 @@ func resourceDestinationGoogleCloudRead(d *schema.ResourceData, meta any) error 
 		return fmt.Errorf("read retries exhausted: %v", err)
 	}
 
-	if config == nil {
+	if destination == nil {
 		d.SetId("")
 		return nil
 	}
 
-	if err := d.Set("name", config.Name()); err != nil {
+	if err := d.Set("name", destination.Name()); err != nil {
 		return fmt.Errorf("failed to set resource name: %v", err)
 	}
 
-	if err := d.Set("labels", config.Metadata.Labels.AsMap()); err != nil {
-		return fmt.Errorf("failed to set resource labels: %v", err)
+	if err := d.Set("type", destination.Spec.Type); err != nil {
+		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	// TODO(jsirianni): Not safe to assume spec param values
-	// are always a string. They could change if the underlying source type changes,
-	// but it is unlikely. We should handle this gracefully.
-
-	for _, p := range config.Spec.Parameters {
-		if p.Name == "project" {
-			if err := d.Set("project", p.Value.(string)); err != nil {
-				return fmt.Errorf("failed to set resource project: %v", err)
-			}
-		}
+	params := map[string]any{}
+	for _, param := range destination.Spec.Parameters {
+		params[param.Name] = param.Value
 	}
 
-	for _, p := range config.Spec.Parameters {
-		if p.Name == "auth_type" {
-			if err := d.Set("auth_type", p.Value.(string)); err != nil {
-				return fmt.Errorf("failed to set resource auth_type: %v", err)
-			}
-		}
-	}
-
-	for _, p := range config.Spec.Parameters {
-		if p.Name == "credentials" {
-			if err := d.Set("credentials", p.Value.(string)); err != nil {
-				return fmt.Errorf("failed to set resource credentials: %v", err)
-			}
-		}
-	}
-
-	for _, p := range config.Spec.Parameters {
-		if p.Name == "credentials_file" {
-			if err := d.Set("credentials_file", p.Value.(string)); err != nil {
-				return fmt.Errorf("failed to set resource credentials_file: %v", err)
-			}
-		}
-	}
-
-	d.SetId(config.ID())
+	d.SetId(destination.ID())
 
 	return nil
 }
 
-func resourceDestinationGoogleCloudDelete(d *schema.ResourceData, meta any) error {
+func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *tfresource.RetryError {
@@ -236,5 +171,5 @@ func resourceDestinationGoogleCloudDelete(d *schema.ResourceData, meta any) erro
 		return fmt.Errorf("delete retries exhausted: %v", err)
 	}
 
-	return resourceDestinationGoogleCloudRead(d, meta)
+	return resourceDestinationRead(d, meta)
 }

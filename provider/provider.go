@@ -86,7 +86,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"bindplane_raw_configuration": resourceRawConfiguration(),
-			"bindplane_destination":       resourceDestinationGoogleCloud(),
+			"bindplane_destination":       resourceDestination(),
 		},
 	}
 

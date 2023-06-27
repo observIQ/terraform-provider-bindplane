@@ -52,3 +52,11 @@ service:
         - logging
 EOT
 }
+
+resource "bindplane_destination" "google_dest" {
+  name = "google-test"
+  type = "googlecloud"
+  parameters = {
+    "project": "abcd"
+  }
+}
