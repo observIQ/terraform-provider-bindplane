@@ -109,6 +109,17 @@ test-end-to-end: test-integration provider
 	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
 	bash test/integration/test.sh
 
+# Test local configures test/local directory
+# with the provider.
+# Usage: After running this target, cd to test/local
+# and run `export TF_CLI_CONFIG_FILE=./dev.tfrc` followed
+# by your `terraform commands`.
+.PHONY: test-local
+test-local: provider
+	rm -rf test/local/providers
+	mkdir -p test/local/providers
+	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/local/providers/terraform-provider-bindplane_v0.0.0
+
 .PHONY: check-license
 check-license:
 	@ADDLICENSEOUT=`$(ADDLICENSE) -check $(ALL_SRC) 2>&1`; \

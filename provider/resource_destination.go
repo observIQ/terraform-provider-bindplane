@@ -17,12 +17,14 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
 func resourceDestination() *schema.Resource {
@@ -37,16 +39,13 @@ func resourceDestination() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			// Destination type, such as `googlecloud` or `logging`.
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
 			},
-			// Key value pairs used to configure the destination. Keys must
-			// match the destinaton type's parameters.
-			"parameters": {
-				Type:     schema.TypeMap,
+			"parameters_json": {
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
 			},
@@ -60,14 +59,12 @@ func resourceDestination() *schema.Resource {
 }
 
 func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
-	paramList := []model.Parameter{}
-	params := d.Get("parameters").(map[string]any)
-	for k, v := range params {
-		p := model.Parameter{
-			Name:  k,
-			Value: v,
-		}
-		paramList = append(paramList, p)
+	destType := d.Get("type").(string)
+	name := d.Get("name").(string)
+
+	parameters, err := parameter.StringToParameter(d.Get("parameters_json").(string))
+	if err != nil {
+		return fmt.Errorf("failed to parse 'parameters_json' for destination type '%s' with name '%s': %v", destType, name, err)
 	}
 
 	resource := model.AnyResource{
@@ -75,19 +72,19 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 			APIVersion: "bindplane.observiq.com/v1alpha",
 			Kind:       "Destination",
 			Metadata: model.Metadata{
-				Name: d.Get("name").(string),
+				Name: name,
 			},
 		},
 		Spec: map[string]any{
-			"type":       d.Get("type").(string),
-			"parameters": paramList,
+			"type":       destType,
+			"parameters": parameters,
 		},
 	}
 
 	bindplane := meta.(*client.BindPlane)
 
 	id := ""
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
 		var err error
 		id, err = bindplane.Apply(&resource)
 		if err != nil {
@@ -137,14 +134,24 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource name: %v", err)
 	}
 
-	if err := d.Set("type", destination.Spec.Type); err != nil {
+	// Split the destination type and version
+	// googlecloud:1 --> googlecloud, 1.
+	// TODO(jsirianni): Is this safe? Should versioned resources be handled differently?
+	// TODO(jsirianni): Can we just omit updating the destinationt type field? Probably not. I suppose
+	// someone could delete the destinaion and re-create it by name but then its id would change, causing
+	// it to be re-created by tf?
+	destinationType := strings.Split(destination.Spec.Type, ":")[0]
+	if err := d.Set("type", destinationType); err != nil {
 		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	params := map[string]any{}
-	for _, param := range destination.Spec.Parameters {
-		params[param.Name] = param.Value
+	paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to convert destination parameters into 'parameters_json' for destination type '%s' with name '%s': %v",
+			destinationType, destination.Name(), err)
 	}
+	d.Set("parameters_json", paramStr)
 
 	d.SetId(destination.ID())
 

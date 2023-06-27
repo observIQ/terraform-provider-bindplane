@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -69,8 +70,8 @@ func resourceConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: false,
 						},
-						"parameters": {
-							Type:     schema.TypeMap,
+						"parameters_json": {
+							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: false,
 						},
@@ -134,12 +135,16 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				}
 
 				params := []model.Parameter{}
-				rawParams, ok := data["parameters"].([]map[string]string)
-				if ok {
-					for _, p := range rawParams {
+				rawParams, ok := data["parameters_json"].(string)
+				if ok && rawParams != "" {
+					rawParamsJson := make(map[string]any)
+					if err := json.Unmarshal([]byte(rawParams), &rawParamsJson); err != nil {
+						return fmt.Errorf("failed to unmarshal 'parameters_json' for source type '%s': %v", sourceType, err)
+					}
+					for k, v := range rawParamsJson {
 						param := model.Parameter{
-							Name:  p["name"],
-							Value: p["value"],
+							Name:  k,
+							Value: v,
 						}
 						params = append(params, param)
 					}
@@ -243,6 +248,8 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	if err := d.Set("match_labels", matchLabels); err != nil {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
+
+	// TODO(jsirianni): Set params
 
 	d.SetId(config.ID())
 	return nil

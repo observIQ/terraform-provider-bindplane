@@ -7,20 +7,9 @@ terraform {
 }
 
 provider "bindplane" {
-  remote_url = "https://localhost:3100"
-  username = "tfu"
-  password = "tfp"
-
-  // server's certificate is signed by this CA
-  tls_certificate_authority = "../../internal/client/tls/bindplane-ca.crt"
-
-  // mtls client auth
-  tls_certificate = "../../internal/client/tls/bindplane-client.crt"
-  tls_private_key = "../../internal/client/tls/bindplane-client.key"
-
-  // invalid mtls, client ca is not trusted by the server
-  // tls_certificate = "../../internal/client/tls/test-client.crt"
-  // tls_private_key = "../../internal/client/tls/test-client.key"
+  remote_url = "http://localhost:3001"
+  username = "admin"
+  password = "admin"
 }
 
 resource "bindplane_configuration" "raw" {
