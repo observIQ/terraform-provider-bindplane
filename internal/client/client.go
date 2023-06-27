@@ -138,6 +138,13 @@ func (i *BindPlane) Apply(r *model.AnyResource) (string, error) {
 	return id, nil
 }
 
+// Rollout starts a rollout against a named config
+// TODO(jsirianni): Should Rollout block until it has finished or failed?
+func (i *BindPlane) Rollout(name string) error {
+	_, err := i.client.StartRollout(context.TODO(), name, nil)
+	return err
+}
+
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
 	c, err := i.client.Configuration(context.TODO(), name)
@@ -182,6 +189,30 @@ func (i *BindPlane) DeleteDestination(name string) error {
 	err := i.client.DeleteDestination(context.TODO(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting destination with name %s: %w", name, err)
+	}
+	return nil
+}
+
+// Source takes a name and returns the matching source
+func (i *BindPlane) Source(name string) (*model.Source, error) {
+	r, err := i.client.Source(context.TODO(), name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get source with name %s: %v", name, err)
+	}
+	return r, nil
+}
+
+// DeleteSource will delete a BindPlane source
+func (i *BindPlane) DeleteSource(name string) error {
+	err := i.client.DeleteSource(context.TODO(), name)
+	if err != nil {
+		return fmt.Errorf("error while deleting source with name %s: %w", name, err)
 	}
 	return nil
 }

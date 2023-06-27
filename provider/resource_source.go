@@ -27,12 +27,12 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
-func resourceDestination() *schema.Resource {
+func resourceSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDestinationCreate,
-		Update: resourceDestinationCreate,
-		Read:   resourceDestinationRead,
-		Delete: resourceDestinationDelete,
+		Create: resourceSourceCreate,
+		Update: resourceSourceCreate,
+		Read:   resourceSourceRead,
+		Delete: resourceSourceDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -63,33 +63,37 @@ func resourceDestination() *schema.Resource {
 	}
 }
 
-func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
-	destType := d.Get("type").(string)
+func resourceSourceCreate(d *schema.ResourceData, meta any) error {
+	sourceType := d.Get("type").(string)
 	name := d.Get("name").(string)
-
-	parameters, err := parameter.StringToParameter(d.Get("parameters_json").(string))
-	if err != nil {
-		return fmt.Errorf("failed to parse 'parameters_json' for destination type '%s' with name '%s': %v", destType, name, err)
-	}
 
 	resource := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
 			APIVersion: "bindplane.observiq.com/v1",
-			Kind:       "Destination",
+			Kind:       "Source",
 			Metadata: model.Metadata{
 				Name: name,
 			},
 		},
 		Spec: map[string]any{
-			"type":       destType,
-			"parameters": parameters,
+			"type": sourceType,
 		},
+	}
+
+	rawParams := d.Get("parameters_json").(string)
+	if rawParams != "" {
+		var err error
+		parameters, err := parameter.StringToParameter(rawParams)
+		if err != nil {
+			return fmt.Errorf("failed to parse 'parameters_json' for source type '%s' with name '%s': %v", sourceType, name, err)
+		}
+		resource.Spec["parameters"] = parameters
 	}
 
 	bindplane := meta.(*client.BindPlane)
 
 	id := ""
-	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
 		var err error
 		id, err = bindplane.Apply(&resource)
 		if err != nil {
@@ -106,18 +110,18 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 	}
 	d.SetId(id)
 
-	return resourceDestinationRead(d, meta)
+	return resourceSourceRead(d, meta)
 }
 
-func resourceDestinationRead(d *schema.ResourceData, meta any) error {
+func resourceSourceRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	destination := &model.Destination{}
+	source := &model.Source{}
 
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *tfresource.RetryError {
 		var err error
 		name := d.Get("name").(string)
-		destination, err = bindplane.Destination(name)
+		source, err = bindplane.Source(name)
 		if err != nil {
 			if retryableError(err) {
 				return tfresource.RetryableError(err)
@@ -130,13 +134,13 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("read retries exhausted: %v", err)
 	}
 
-	if destination == nil {
+	if source == nil {
 		d.SetId("")
 		return nil
 	}
 
-	name := destination.Name()
-	version := destination.Version()
+	name := source.Name()
+	version := source.Version()
 
 	if err := d.Set("name", name); err != nil {
 		return fmt.Errorf("failed to set resource name: %v", err)
@@ -147,32 +151,37 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 	}
 
 	// TODO(jsirianni): Should Terraform be version aware?
-	destinationType := strings.Split(destination.Spec.Type, ":")[0]
-	if err := d.Set("type", destinationType); err != nil {
+	sourceType := strings.Split(source.Spec.Type, ":")[0]
+	if err := d.Set("type", sourceType); err != nil {
 		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to convert destination parameters into 'parameters_json' for destination type '%s' with name '%s': %v",
-			destinationType, destination.Name(), err)
-	}
-	d.Set("parameters_json", paramStr)
+	if len(source.Spec.Parameters) > 0 {
+		paramStr, err := parameter.ParametersToString(source.Spec.Parameters)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to convert source parameters into 'parameters_json' for source type '%s' with name '%s': %v",
+				sourceType, source.Name(), err)
+		}
 
-	d.SetId(destination.ID())
+		if err := d.Set("parameters_json", paramStr); err != nil {
+			return fmt.Errorf("failed to set resource parameters_json: %v", err)
+		}
+	}
+
+	d.SetId(source.ID())
 
 	return nil
 }
 
-func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
+func resourceSourceDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *tfresource.RetryError {
 		name := d.Get("name").(string)
-		err := bindplane.DeleteDestination(name)
+		err := bindplane.DeleteSource(name)
 		if err != nil {
-			err := fmt.Errorf("failed to delete destination '%s' by name: %v", name, err)
+			err := fmt.Errorf("failed to delete source '%s' by name: %v", name, err)
 			if retryableError(err) {
 				return tfresource.RetryableError(err)
 			}
@@ -185,5 +194,5 @@ func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("delete retries exhausted: %v", err)
 	}
 
-	return resourceDestinationRead(d, meta)
+	return resourceSourceRead(d, meta)
 }

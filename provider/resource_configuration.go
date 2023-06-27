@@ -16,8 +16,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -52,30 +50,22 @@ func resourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
-			"source": {
-				Type:     schema.TypeList,
+			"sources": {
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: false,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: false,
-						},
-						"parameters_json": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: false,
-						},
-					},
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"destinations": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"rollout": {
+				Type:     schema.TypeBool,
+				Required: true,
+				ForceNew: false,
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -87,6 +77,10 @@ func resourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
+	name := d.Get("name").(string)
+
+	rollout := d.Get("rollout").(bool)
+
 	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
 		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
@@ -97,63 +91,30 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to read match labels from resource configuration: %v", err)
 	}
 
-	opts := []configuration.Option{
-		configuration.WithName(d.Get("name").(string)),
-		configuration.WithLabels(labels),
-		configuration.WithMatchLabels(matchLabels),
+	// Build list of source names
+	var sources []string
+	if v := d.Get("sources").(*schema.Set); v != nil {
+		for _, v := range v.List() {
+			name := v.(string)
+			sources = append(sources, name)
+		}
 	}
 
-	var sources []model.ResourceConfiguration
-
-	// raw list of sources
-	if v := d.Get("source").([]any); v != nil {
-		sources = []model.ResourceConfiguration{}
-
-		// for each raw source
-		for _, raw := range v {
-			data := raw.(map[string]interface{})
-
-			sourceType, ok := data["type"].(string)
-			if !ok || sourceType == "" {
-				return errors.New("source configuration's 'type' parameter must be set")
-			}
-
-			params := []model.Parameter{}
-			rawParams, ok := data["parameters_json"].(string)
-			if ok && rawParams != "" {
-				rawParamsJson := make(map[string]any)
-				if err := json.Unmarshal([]byte(rawParams), &rawParamsJson); err != nil {
-					return fmt.Errorf("failed to unmarshal 'parameters_json' for source type '%s': %v", sourceType, err)
-				}
-				for k, v := range rawParamsJson {
-					param := model.Parameter{
-						Name:  k,
-						Value: v,
-					}
-					params = append(params, param)
-				}
-			}
-
-			source := model.ResourceConfiguration{
-				ParameterizedSpec: model.ParameterizedSpec{
-					Type:       sourceType,
-					Parameters: params,
-				},
-			}
-			sources = append(sources, source)
+	// Build list of destination names
+	var destinations []string
+	if v := d.Get("destinations").(*schema.Set); v != nil {
+		for _, v := range v.List() {
+			name := v.(string)
+			destinations = append(destinations, name)
 		}
+	}
 
-		opts = append(opts, configuration.WithSources(sources))
-
-		// Convert the destinations terraform set to a string list
-		var destinations []string
-		if v := d.Get("destinations").(*schema.Set); v != nil {
-			for _, v := range v.List() {
-				name := v.(string)
-				destinations = append(destinations, name)
-			}
-		}
-		opts = append(opts, configuration.WithDestinationsByName(destinations))
+	opts := []configuration.Option{
+		configuration.WithName(name),
+		configuration.WithLabels(labels),
+		configuration.WithMatchLabels(matchLabels),
+		configuration.WithSourcesByName(sources),
+		configuration.WithDestinationsByName(destinations),
 	}
 
 	config, err := configuration.NewV1(opts...)
@@ -175,12 +136,20 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			}
 			return tfresource.NonRetryableError(err)
 		}
+
+		if rollout {
+			if err := bindplane.Rollout(name); err != nil {
+				return tfresource.NonRetryableError(
+					fmt.Errorf("failed to start rollout for config '%s': %v", name, err))
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("create retries exhausted: %v", err)
 	}
-	d.SetId(id) // TODO: is this necessary or will read handle this?
+	d.SetId(id)
 
 	return resourceConfigurationRead(d, meta)
 }
@@ -227,7 +196,17 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
 
-	// TODO(jsirianni): Set params
+	// for _, source := range config.Spec.Sources {
+	// 	paramStr, err := parameter.ParametersToString(source.Parameters)
+	// 	if err != nil {
+	// 		return fmt.Errorf(
+	// 			"failed to convert source parameters into 'parameters_json' for source type '%s': %v",
+	// 			source.Type, err)
+	// 	}
+	// 	if err := d.Set("parameters_json", paramStr); err != nil {
+	// 		return fmt.Errorf("failed to set resource parameters: %v", err)
+	// 	}
+	// }
 
 	d.SetId(config.ID())
 	return nil

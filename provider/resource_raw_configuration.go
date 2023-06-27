@@ -106,7 +106,7 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		return fmt.Errorf("create retries exhausted: %v", err)
 	}
-	d.SetId(id) // TODO: is this necessary or will read handle this?
+	d.SetId(id)
 
 	return resourceConfigurationRead(d, meta)
 }

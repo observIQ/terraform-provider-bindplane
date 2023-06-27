@@ -43,6 +43,7 @@ EOT
 }
 
 resource "bindplane_configuration" "config" {
+  rollout = true
   name = "testtf"
   labels = {
     purpose = "tf"
@@ -50,32 +51,15 @@ resource "bindplane_configuration" "config" {
   match_labels = {
     purpose = "tf"
   }
-  
-  source {
-    type = "host"
-    parameters_json = jsonencode({
-      "metric_filtering": [
-        "system.disk.operation_time"
-      ]
-      "enable_process": false,
-      "collection_interval": 20
-    })
-  }
-
-  source {
-    type = "otlp"
-  }
-
-  source {
-    type = "otlp"
-    parameters_json = jsonencode({
-      "http_port": 44318,
-      "grpc_port": 0
-    })
-  }
 
   destinations = [
     bindplane_destination.google_dest.name
+  ]
+
+  sources = [
+    bindplane_source.otlp.name,
+    bindplane_source.otlp-custom.name,
+    bindplane_source.host.name
   ]
 }
 
@@ -84,5 +68,31 @@ resource "bindplane_destination" "google_dest" {
   type = "googlecloud"
   parameters_json = jsonencode({
     "project": "abcd"
+  })
+}
+
+resource "bindplane_source" "otlp" {
+  name = "otlp-default"
+  type = "otlp"
+}
+
+resource "bindplane_source" "otlp-custom" {
+  name = "otlp-custom"
+  type = "otlp"
+  parameters_json = jsonencode({
+    "http_port": 44318,
+    "grpc_port": 0
+  })
+}
+
+resource "bindplane_source" "host" {
+  name = "my-host"
+  type = "host"
+  parameters_json = jsonencode({
+    "metric_filtering": [
+      "system.disk.operation_time"
+    ],
+    "enable_process": false,
+    "collection_interval": 20
   })
 }

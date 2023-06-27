@@ -57,11 +57,16 @@ func WithRawOTELConfig(raw string) Option {
 	}
 }
 
-// WithSources is a Option that configures a configuration's
+// WithSourcesByName is a Option that configures a configuration's
 // sources.
-func WithSources(sources []model.ResourceConfiguration) Option {
+func WithSourcesByName(s []string) Option {
 	return func(c *model.Configuration) error {
-		c.Spec.Sources = sources
+		for _, s := range s {
+			r := model.ResourceConfiguration{
+				Name: s,
+			}
+			c.Spec.Sources = append(c.Spec.Sources, r)
+		}
 		return nil
 	}
 }
@@ -72,9 +77,7 @@ func WithDestinationsByName(d []string) Option {
 	return func(c *model.Configuration) error {
 		for _, d := range d {
 			r := model.ResourceConfiguration{
-				Name:              d,
-				DisplayName:       "",
-				ParameterizedSpec: model.ParameterizedSpec{},
+				Name: d,
 			}
 			c.Spec.Destinations = append(c.Spec.Destinations, r)
 		}
