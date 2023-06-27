@@ -119,6 +119,21 @@ func (i *BindPlane) Apply(r *model.AnyResource) (string, error) {
 		return "", fmt.Errorf("expected BindPlane to return one resource status, got %d", x)
 	}
 
+	resource := status[0]
+
+	// Apply expects the resource to be unchanged, configured, or
+	// created. All other statuses are unexpected and should result
+	// in an error from this method.
+	switch resource.Status {
+	case model.StatusUnchanged, model.StatusConfigured, model.StatusCreated:
+		break
+	default:
+		return "", fmt.Errorf(
+			"unexpected status when applying resource: %s, status: %s",
+			r.Name(),
+			resource.Status)
+	}
+
 	id := status[0].Resource.ID()
 	return id, nil
 }
