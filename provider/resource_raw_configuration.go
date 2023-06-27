@@ -16,8 +16,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -30,11 +28,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceConfiguration() *schema.Resource {
+func resourceRawConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Update: resourceConfigurationCreate, // Run create as update
-		Read:   resourceConfigurationRead,
+		Create: resourceRawConfigurationCreate,
+		Update: resourceRawConfigurationCreate, // Run create as update
+		Read:   resourceRawConfigurationRead,
 		Delete: resourceGenericConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,30 +50,10 @@ func resourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: false,
 			},
-			"source": {
-				Type:     schema.TypeList,
+			"raw_configuration": {
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: false,
-						},
-						"parameters_json": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: false,
-						},
-					},
-				},
-			},
-			"destinations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: false,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -86,7 +64,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
+func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
 		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
@@ -101,67 +79,15 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithName(d.Get("name").(string)),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
-	}
-
-	var sources []model.ResourceConfiguration
-
-	// raw list of sources
-	if v := d.Get("source").([]any); v != nil {
-		sources = []model.ResourceConfiguration{}
-
-		// for each raw source
-		for _, raw := range v {
-			data := raw.(map[string]interface{})
-
-			sourceType, ok := data["type"].(string)
-			if !ok || sourceType == "" {
-				return errors.New("source configuration's 'type' parameter must be set")
-			}
-
-			params := []model.Parameter{}
-			rawParams, ok := data["parameters_json"].(string)
-			if ok && rawParams != "" {
-				rawParamsJson := make(map[string]any)
-				if err := json.Unmarshal([]byte(rawParams), &rawParamsJson); err != nil {
-					return fmt.Errorf("failed to unmarshal 'parameters_json' for source type '%s': %v", sourceType, err)
-				}
-				for k, v := range rawParamsJson {
-					param := model.Parameter{
-						Name:  k,
-						Value: v,
-					}
-					params = append(params, param)
-				}
-			}
-
-			source := model.ResourceConfiguration{
-				ParameterizedSpec: model.ParameterizedSpec{
-					Type:       sourceType,
-					Parameters: params,
-				},
-			}
-			sources = append(sources, source)
-		}
-
-		opts = append(opts, configuration.WithSources(sources))
-
-		// Convert the destinations terraform set to a string list
-		var destinations []string
-		if v := d.Get("destinations").(*schema.Set); v != nil {
-			for _, v := range v.List() {
-				name := v.(string)
-				destinations = append(destinations, name)
-			}
-		}
-		opts = append(opts, configuration.WithDestinationsByName(destinations))
+		configuration.WithRawOTELConfig(d.Get("raw_configuration").(string)),
 	}
 
 	config, err := configuration.NewV1(opts...)
 	if err != nil {
-		return fmt.Errorf("failed to create new configuration: %v", err)
+		return fmt.Errorf("failed to create new raw configuration: %v", err)
 	}
 
-	resource := resource.AnyResourceFromConfiguration(config)
+	resource := resource.AnyResourceFromRawConfiguration(config)
 
 	bindplane := meta.(*client.BindPlane)
 
@@ -185,7 +111,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	return resourceConfigurationRead(d, meta)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
+func resourceRawConfigurationRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	config := &model.Configuration{}
@@ -219,6 +145,10 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource labels: %v", err)
 	}
 
+	if err := d.Set("raw_configuration", config.Spec.Raw); err != nil {
+		return fmt.Errorf("failed to set resource raw_configuration: %v", err)
+	}
+
 	matchLabels := make(map[string]string)
 	for k, v := range config.Spec.Selector.MatchLabels {
 		matchLabels[k] = v
@@ -226,8 +156,6 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	if err := d.Set("match_labels", matchLabels); err != nil {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
-
-	// TODO(jsirianni): Set params
 
 	d.SetId(config.ID())
 	return nil
