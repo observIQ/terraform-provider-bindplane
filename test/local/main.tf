@@ -48,9 +48,16 @@ resource "bindplane_configuration" "config" {
     purpose = "tf"
   }
 
-  destinations = [
-    bindplane_destination.logging.name
-  ]
+  destination {
+    name = bindplane_destination.logging.name
+    processors = [
+      bindplane_processor.batch-options.name
+    ]
+  }
+
+  destination {
+    name = bindplane_destination.logging2.name
+  }
 
   source {
     type = "host"
@@ -74,11 +81,17 @@ resource "bindplane_configuration" "config" {
     )
   }
 
-  # sources = [
-  #   bindplane_source.otlp.name,
-  #   bindplane_source.otlp-custom.name,
-  #   bindplane_source.host.name
-  # ]
+  source {
+    name = bindplane_source.otlp.name
+  }
+
+  # source {
+  #   name = bindplane_source.otlp-custom.name
+  # }
+
+  # source {
+  #   name = bindplane_source.host.name
+  # }
 }
 
 // Do not attach to test config. Will fail to startup
@@ -101,6 +114,24 @@ resource "bindplane_destination" "google_dest" {
 resource "bindplane_destination" "logging" {
   rollout = true
   name = "logging"
+  type = "custom"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": ["Metrics", "Logs", "Traces"]
+      },
+      {
+        "name": "configuration",
+        "value": "logging:"
+      }
+    ]
+  )
+}
+
+resource "bindplane_destination" "logging2" {
+  rollout = true
+  name = "logging-2"
   type = "custom"
   parameters_json = jsonencode(
     [

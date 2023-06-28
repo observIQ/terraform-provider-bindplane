@@ -68,9 +68,9 @@ func WithRawOTELConfig(raw string) Option {
 	}
 }
 
-// WithSourcesInline is a Option that configures a configuration's
+// WithSources is a Option that configures a configuration's
 // nested sources.
-func WithSourcesInline(s []model.ResourceConfiguration) Option {
+func WithSources(s []model.ResourceConfiguration) Option {
 	return func(c *model.Configuration) error {
 		if s == nil {
 			return nil

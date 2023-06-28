@@ -78,24 +78,28 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						// Reference a re-usable source created with bindplane_source resource.
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "Use in combination with the bindplane_source resource. Cannot be used with 'type' or 'parameters_json'",
+						},
+						// Embeded source, when not referencing a re-usable source.
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: false,
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The source type to embed into this configuration. Cannot be used with 'name'",
 						},
 						"parameters_json": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: false,
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The configuration parameters to use for the embeded source. Cannot be used with 'name'",
 						},
 					},
 				},
-			},
-			"sources": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: false,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"destination": {
 				Type:     schema.TypeList,
@@ -146,41 +150,46 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		"configuration": name,
 	}
 
-	// // Build inline sources
-	inlineSources := []model.ResourceConfiguration{}
+	sources := []model.ResourceConfiguration{}
 	if d.Get("source") != nil {
-		inlineSourcesRaw := d.Get("source").([]any)
+		sourcesRaw := d.Get("source").([]any)
 
-		for _, v := range inlineSourcesRaw {
+		for _, v := range sourcesRaw {
 			inlineSource := v.(map[string]any)
 
-			// Build source without params
-			source := model.ResourceConfiguration{
-				ParameterizedSpec: model.ParameterizedSpec{
-					Type: inlineSource["type"].(string),
-				},
-			}
-
-			if s := inlineSource["parameters_json"].(string); s != "" {
-				params, err := parameter.StringToParameter(s)
-				if err != nil {
-					return err
+			name := inlineSource["name"].(string)
+			sourceType := inlineSource["type"].(string)
+			switch {
+			// Cannot specify a named source and an embeded source type
+			case name != "" && sourceType != "":
+				return fmt.Errorf("parameters 'name' and 'type' cannot be set together")
+			// Reference source by name
+			case name != "":
+				source := model.ResourceConfiguration{
+					Name: name,
 				}
-				source.ParameterizedSpec.Parameters = params
+				sources = append(sources, source)
+			// Build embeded source by using sourceType and the optional
+			// parameters.
+			case sourceType != "":
+				source := model.ResourceConfiguration{
+					ParameterizedSpec: model.ParameterizedSpec{
+						Type: inlineSource["type"].(string),
+					},
+				}
+
+				if s := inlineSource["parameters_json"].(string); s != "" {
+					params, err := parameter.StringToParameter(s)
+					if err != nil {
+						return err
+					}
+					source.ParameterizedSpec.Parameters = params
+				}
+
+				sources = append(sources, source)
+			default:
+				return fmt.Errorf("paramet 'name' or 'type' must be set")
 			}
-
-			inlineSources = append(inlineSources, source)
-		}
-	}
-
-	// Build list of source names
-	// TODO(jsirianni): Ensure this still works when no sources
-	// are configured.
-	var sources []string
-	if v := d.Get("sources").(*schema.Set); v != nil {
-		for _, v := range v.List() {
-			name := v.(string)
-			sources = append(sources, name)
 		}
 	}
 
@@ -211,8 +220,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
-		configuration.WithSourcesInline(inlineSources),
-		configuration.WithSourcesByName(sources),
+		configuration.WithSources(sources),
 		configuration.WithDestinationsByName(destinations),
 	}
 
