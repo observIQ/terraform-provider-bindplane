@@ -27,9 +27,6 @@ import (
 // StringToParameter unmarshals serialized json parameters
 // to a list of BindPlane parameters.
 func StringToParameter(s string) ([]model.Parameter, error) {
-	if s == "null" {
-		return nil, nil
-	}
 	parameters := []model.Parameter{}
 	if err := json.Unmarshal([]byte(s), &parameters); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal parameters '%s': %v", s, err)
