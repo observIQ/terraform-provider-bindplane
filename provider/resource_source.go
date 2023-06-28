@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
-	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
 // TODO(jsirianni): Decide if sources should be supported. Currently not implemented by the provider.
@@ -74,6 +74,13 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
 
+	parameters := []model.Parameter{}
+	if paramStr := d.Get("parameters_json").(string); paramStr != "" {
+		if err := json.Unmarshal([]byte(paramStr), &parameters); err != nil {
+			return fmt.Errorf("failed to unmarshal parameters '%s': %v", paramStr, err)
+		}
+	}
+
 	resource := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
 			APIVersion: "bindplane.observiq.com/v1",
@@ -83,18 +90,9 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 			},
 		},
 		Spec: map[string]any{
-			"type": sourceType,
+			"type":       sourceType,
+			"parameters": parameters,
 		},
-	}
-
-	rawParams := d.Get("parameters_json").(string)
-	if rawParams != "" {
-		var err error
-		parameters, err := parameter.StringToParameter(rawParams)
-		if err != nil {
-			return fmt.Errorf("failed to parse 'parameters_json' for source type '%s' with name '%s': %v", sourceType, name, err)
-		}
-		resource.Spec["parameters"] = parameters
 	}
 
 	bindplane := meta.(*client.BindPlane)
@@ -160,17 +158,13 @@ func resourceSourceRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	if len(source.Spec.Parameters) > 0 {
-		paramStr, err := parameter.ParametersToString(source.Spec.Parameters)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to convert source parameters into 'parameters_json' for source type '%s' with name '%s': %v",
-				sourceType, source.Name(), err)
-		}
+	paramStr, err := json.Marshal(source.Spec.Parameters)
+	if err != nil {
+		return fmt.Errorf("failed to marshal parameters: %v", err)
+	}
 
-		if err := d.Set("parameters_json", paramStr); err != nil {
-			return fmt.Errorf("failed to set resource parameters_json: %v", err)
-		}
+	if err := d.Set("parameters_json", string(paramStr)); err != nil {
+		return fmt.Errorf("failed to set resource parameters_json: %v", err)
 	}
 
 	d.SetId(source.ID())

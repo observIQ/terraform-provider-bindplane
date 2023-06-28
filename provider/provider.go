@@ -88,7 +88,7 @@ func Provider() *schema.Provider {
 			"bindplane_configuration":     resourceConfiguration(),
 			"bindplane_raw_configuration": resourceRawConfiguration(),
 			"bindplane_destination":       resourceDestination(),
-			// "bindplane_source":            resourceSource(), // TODO(jsirianni): Determine if sources should be supported.
+			"bindplane_source":            resourceSource(), // TODO(jsirianni): Determine if sources should be supported.
 		},
 	}
 

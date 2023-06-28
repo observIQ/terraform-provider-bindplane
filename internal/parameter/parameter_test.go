@@ -17,135 +17,135 @@
 
 package parameter
 
-import (
-	"testing"
+// import (
+// 	"testing"
 
-	"github.com/observiq/bindplane-op/model"
-	"github.com/stretchr/testify/require"
-)
+// 	"github.com/observiq/bindplane-op/model"
+// 	"github.com/stretchr/testify/require"
+// )
 
-func TestStringToParameter(t *testing.T) {
-	cases := []struct {
-		name      string
-		input     string
-		expect    []model.Parameter
-		expectErr string
-	}{
-		{
-			"valid",
-			`{"project":"my-gcp-project"}`,
-			[]model.Parameter{
-				{
-					Name:  "project",
-					Value: "my-gcp-project",
-				},
-			},
-			"",
-		},
-		{
-			"multi-valid",
-			`{"project":"my-gcp-project","a":"b","int":12,"map":{"x":"y","num":401,"bool":true}}`,
-			[]model.Parameter{
-				{
-					Name:  "a",
-					Value: "b",
-				},
-				{
-					Name:  "int",
-					Value: float64(12),
-				},
-				{
-					Name: "map",
-					Value: map[string]any{
-						"bool": true,
-						"num":  float64(401),
-						"x":    "y",
-					},
-				},
-				{
-					Name:  "project",
-					Value: "my-gcp-project",
-				},
-			},
-			"",
-		},
-		{
-			"invalid",
-			`{"project"}`,
-			nil,
-			"failed to convert string parameters to map[string]any",
-		},
-	}
+// func TestStringToParameter(t *testing.T) {
+// 	cases := []struct {
+// 		name      string
+// 		input     string
+// 		expect    []model.Parameter
+// 		expectErr string
+// 	}{
+// 		{
+// 			"valid",
+// 			`{"project":"my-gcp-project"}`,
+// 			[]model.Parameter{
+// 				{
+// 					Name:  "project",
+// 					Value: "my-gcp-project",
+// 				},
+// 			},
+// 			"",
+// 		},
+// 		{
+// 			"multi-valid",
+// 			`{"project":"my-gcp-project","a":"b","int":12,"map":{"x":"y","num":401,"bool":true}}`,
+// 			[]model.Parameter{
+// 				{
+// 					Name:  "a",
+// 					Value: "b",
+// 				},
+// 				{
+// 					Name:  "int",
+// 					Value: float64(12),
+// 				},
+// 				{
+// 					Name: "map",
+// 					Value: map[string]any{
+// 						"bool": true,
+// 						"num":  float64(401),
+// 						"x":    "y",
+// 					},
+// 				},
+// 				{
+// 					Name:  "project",
+// 					Value: "my-gcp-project",
+// 				},
+// 			},
+// 			"",
+// 		},
+// 		{
+// 			"invalid",
+// 			`{"project"}`,
+// 			nil,
+// 			"failed to convert string parameters to map[string]any",
+// 		},
+// 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := StringToParameter(tc.input)
-			if tc.expectErr != "" {
-				require.Error(t, err)
-				require.ErrorContains(t, err, tc.expectErr)
-				return
-			}
-			require.ElementsMatch(t, tc.expect, output)
-		})
-	}
-}
+// 	for _, tc := range cases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			output, err := StringToParameter(tc.input)
+// 			if tc.expectErr != "" {
+// 				require.Error(t, err)
+// 				require.ErrorContains(t, err, tc.expectErr)
+// 				return
+// 			}
+// 			require.ElementsMatch(t, tc.expect, output)
+// 		})
+// 	}
+// }
 
-func TestParametersToSring(t *testing.T) {
-	cases := []struct {
-		name      string
-		input     []model.Parameter
-		expect    string
-		expectErr string
-	}{
-		{
-			"valid",
-			[]model.Parameter{
-				{
-					Name:  "project",
-					Value: "my-gcp-project",
-				},
-			},
-			`{"project":"my-gcp-project"}`,
-			"",
-		},
-		{
-			"multi-valid",
-			[]model.Parameter{
-				{
-					Name:  "a",
-					Value: "b",
-				},
-				{
-					Name:  "int",
-					Value: float64(12),
-				},
-				{
-					Name: "map",
-					Value: map[string]any{
-						"bool": true,
-						"num":  float64(401),
-						"x":    "y",
-					},
-				},
-				{
-					Name:  "project",
-					Value: "my-gcp-project",
-				},
-			},
-			`{"a":"b","int":12,"map":{"bool":true,"num":401,"x":"y"},"project":"my-gcp-project"}`,
-			"",
-		},
-	}
+// func TestParametersToSring(t *testing.T) {
+// 	cases := []struct {
+// 		name      string
+// 		input     []model.Parameter
+// 		expect    string
+// 		expectErr string
+// 	}{
+// 		{
+// 			"valid",
+// 			[]model.Parameter{
+// 				{
+// 					Name:  "project",
+// 					Value: "my-gcp-project",
+// 				},
+// 			},
+// 			`{"project":"my-gcp-project"}`,
+// 			"",
+// 		},
+// 		{
+// 			"multi-valid",
+// 			[]model.Parameter{
+// 				{
+// 					Name:  "a",
+// 					Value: "b",
+// 				},
+// 				{
+// 					Name:  "int",
+// 					Value: float64(12),
+// 				},
+// 				{
+// 					Name: "map",
+// 					Value: map[string]any{
+// 						"bool": true,
+// 						"num":  float64(401),
+// 						"x":    "y",
+// 					},
+// 				},
+// 				{
+// 					Name:  "project",
+// 					Value: "my-gcp-project",
+// 				},
+// 			},
+// 			`{"a":"b","int":12,"map":{"bool":true,"num":401,"x":"y"},"project":"my-gcp-project"}`,
+// 			"",
+// 		},
+// 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			output, err := ParametersToString(tc.input)
-			if tc.expectErr != "" {
-				require.Error(t, err)
-				require.ErrorContains(t, err, tc.expectErr)
-				return
-			}
-			require.Equal(t, tc.expect, output)
-		})
-	}
-}
+// 	for _, tc := range cases {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			output, err := ParametersToString(tc.input)
+// 			if tc.expectErr != "" {
+// 				require.Error(t, err)
+// 				require.ErrorContains(t, err, tc.expectErr)
+// 				return
+// 			}
+// 			require.Equal(t, tc.expect, output)
+// 		})
+// 	}
+// }

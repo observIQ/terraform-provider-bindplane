@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
-	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
 func resourceDestination() *schema.Resource {
@@ -73,9 +73,16 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
 
-	parameters, err := parameter.StringToParameter(d.Get("parameters_json").(string))
-	if err != nil {
-		return fmt.Errorf("failed to parse 'parameters_json' for destination type '%s' with name '%s': %v", destType, name, err)
+	// parameters, err := parameter.StringToParameter(d.Get("parameters_json").(string))
+	// if err != nil {
+	// 	return fmt.Errorf("failed to parse 'parameters_json' for destination type '%s' with name '%s': %v", destType, name, err)
+	// }
+
+	parameters := []model.Parameter{}
+	if paramStr := d.Get("parameters_json").(string); paramStr != "" {
+		if err := json.Unmarshal([]byte(paramStr), &parameters); err != nil {
+			return fmt.Errorf("failed to unmarshal parameters '%s': %v", paramStr, err)
+		}
 	}
 
 	resource := model.AnyResource{
@@ -94,7 +101,7 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 
 	bindplane := meta.(*client.BindPlane)
 
-	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
 		err := bindplane.Apply(&resource, rollout)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
@@ -155,13 +162,20 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
+	// paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
+	// if err != nil {
+	// 	return fmt.Errorf(
+	// 		"failed to convert destination parameters into 'parameters_json' for destination type '%s' with name '%s': %v",
+	// 		destinationType, destination.Name(), err)
+	// }
+	paramStr, err := json.Marshal(destination.Spec.Parameters)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to convert destination parameters into 'parameters_json' for destination type '%s' with name '%s': %v",
-			destinationType, destination.Name(), err)
+		return fmt.Errorf("failed to marshal parameters: %v", err)
 	}
-	d.Set("parameters_json", paramStr)
+
+	if err := d.Set("parameters_json", string(paramStr)); err != nil {
+		return fmt.Errorf("failed to set resource parameters_json: %v", err)
+	}
 
 	d.SetId(destination.ID())
 

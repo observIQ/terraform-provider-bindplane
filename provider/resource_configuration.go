@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -23,7 +24,6 @@ import (
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
-	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -140,22 +140,17 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		for _, v := range inlineSourcesRaw {
 			inlineSource := v.(map[string]any)
 
-			// Get the source type
-			sourceType := inlineSource["type"].(string)
-
 			// Build source without params
 			source := model.ResourceConfiguration{
 				ParameterizedSpec: model.ParameterizedSpec{
-					Type: sourceType,
+					Type: inlineSource["type"].(string),
 				},
 			}
 
-			// Get the source's parameters
-			p := inlineSource["parameters_json"].(string)
-			if p != "" {
-				params, err := parameter.StringToParameter(p)
-				if err != nil {
-					return fmt.Errorf("failed to create parameters from %s parameters: %v", sourceType, err)
+			if paramStr := inlineSource["parameters_json"].(string); paramStr != "" {
+				params := []model.Parameter{}
+				if err := json.Unmarshal([]byte(paramStr), &params); err != nil {
+					return fmt.Errorf("failed to unmarshal parameters '%s': %v", paramStr, err)
 				}
 				source.ParameterizedSpec.Parameters = params
 			}
@@ -277,6 +272,11 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
 
+	// TODO(jsirianni): Read source params and save to state
+	/*for _, source := range config.Spec.Sources {
+
+	}*/
+
 	// for _, source := range config.Spec.Sources {
 	// 	paramStr, err := parameter.ParametersToString(source.Parameters)
 	// 	if err != nil {
@@ -284,7 +284,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	// 			"failed to convert source parameters into 'parameters_json' for source type '%s': %v",
 	// 			source.Type, err)
 	// 	}
-	// 	if err := d.Set("parameters_json", paramStr); err != nil {
+	// 	if err := d.Set("parameters_json", string(paramStr)); err != nil {
 	// 		return fmt.Errorf("failed to set resource parameters: %v", err)
 	// 	}
 	// }

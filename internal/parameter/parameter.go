@@ -17,45 +17,38 @@
 
 package parameter
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"github.com/observiq/bindplane-op/model"
-)
-
 // StringToParameter converts serialized json key values pairs
 // to a list of BindPlane parameters.
-func StringToParameter(s string) ([]model.Parameter, error) {
-	paramMap := make(map[string]any)
-	if err := json.Unmarshal([]byte(s), &paramMap); err != nil {
-		return nil, fmt.Errorf("failed to convert string parameters to map[string]any: %v", err)
-	}
+// func StringToParameter(s string) ([]model.Parameter, error) {
+// 	paramMap := make(map[string]any)
+// 	if err := json.Unmarshal([]byte(s), &paramMap); err != nil {
+// 		return nil, fmt.Errorf("failed to convert string parameters to map[string]any: %v", err)
+// 	}
 
-	parameters := []model.Parameter{}
+// 	parameters := []model.Parameter{}
 
-	for k, v := range paramMap {
-		parameters = append(parameters, model.Parameter{
-			Name:  k,
-			Value: v,
-		})
-	}
+// 	for k, v := range paramMap {
+// 		parameters = append(parameters, model.Parameter{
+// 			Name:  k,
+// 			Value: v,
+// 		})
+// 	}
 
-	return parameters, nil
-}
+// 	return parameters, nil
+// }
 
-// ParametersToSring converts a list of parameters to
-// serialized json key values pairs.
-func ParametersToString(params []model.Parameter) (string, error) {
-	paramMap := make(map[string]any, len(params))
-	for _, param := range params {
-		paramMap[param.Name] = param.Value
-	}
+// // ParametersToSring converts a list of parameters to
+// // serialized json key values pairs.
+// func ParametersToString(params []model.Parameter) (string, error) {
+// 	paramMap := make(map[string]any, len(params))
+// 	for _, param := range params {
+// 		paramMap[param.Name] = param.Value
+// 	}
 
-	b, err := json.Marshal(paramMap)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal parameters to json string %v", err)
-	}
+// 	b, err := json.Marshal(paramMap)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to marshal parameters to json string %v", err)
+// 	}
 
-	return string(b), nil
-}
+// 	return string(b), nil
+// }

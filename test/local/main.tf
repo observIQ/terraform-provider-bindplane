@@ -54,13 +54,24 @@ resource "bindplane_configuration" "config" {
 
   source {
     type = "host"
-    parameters_json = jsonencode({
-      "metric_filtering": [
-        "system.disk.operation_time"
+    parameters_json = jsonencode(
+      [
+        {
+          "name": "collection_interval",
+          "value": 20
+        },
+        {
+          "name": "enable_process",
+          "value": false
+        },
+        {
+          "name": "metric_filtering",
+          "value": [
+            "system.disk.operation_time"
+          ]
+        }
       ]
-      "enable_process": false,
-      "collection_interval": 20
-    })
+    )
   }
 
   source {
@@ -81,46 +92,78 @@ resource "bindplane_destination" "google_dest" {
   rollout = true
   name = "google-test"
   type = "googlecloud"
-  parameters_json = jsonencode({
-    "project": "abcd"
-  })
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "project",
+        "value": "abcd"
+      },
+    ]
+  )
 }
 
 resource "bindplane_destination" "logging" {
   rollout = true
   name = "logging"
   type = "custom"
-  parameters_json = jsonencode({
-    "telemetry_types": ["Metrics", "Logs", "Traces"]
-    "configuration": "logging:"
-  })
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": ["Metrics", "Logs", "Traces"]
+      },
+      {
+        "name": "configuration",
+        "value": "logging:"
+      }
+    ]
+  )
 }
 
-# resource "bindplane_source" "otlp" {
-#   rollout = true
-#   name = "otlp-default"
-#   type = "otlp"
-# }
+resource "bindplane_source" "otlp" {
+  rollout = true
+  name = "otlp-default"
+  type = "otlp"
+}
 
-# resource "bindplane_source" "otlp-custom" {
-#   rollout = true
-#   name = "otlp-custom"
-#   type = "otlp"
-#   parameters_json = jsonencode({
-#     "http_port": 44313,
-#     "grpc_port": 0
-#   })
-# }
+resource "bindplane_source" "otlp-custom" {
+  rollout = true
+  name = "otlp-custom"
+  type = "otlp"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "http_port",
+        "value": 44313
+      },
+      {
+        "name": "grpc_port",
+        "value": 0
+      }
+    ]
+  )
+}
 
-# resource "bindplane_source" "host" {
-#   rollout = true
-#   name = "my-host"
-#   type = "host"
-#   parameters_json = jsonencode({
-#     "metric_filtering": [
-#       "system.disk.operation_time"
-#     ],
-#     "enable_process": false,
-#     "collection_interval": 30
-#   })
-# }
+resource "bindplane_source" "host" {
+  rollout = true
+  name = "my-host"
+  type = "host"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "collection_interval",
+        "value": 20
+      },
+      {
+        "name": "enable_process",
+        "value": false
+      },
+      {
+        "name": "metric_filtering",
+        "value": [
+          "system.disk.operation_time"
+        ]
+      }
+    ]
+  )
+}
