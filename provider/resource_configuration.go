@@ -23,7 +23,6 @@ import (
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
-	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -78,25 +77,10 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// Reference a re-usable source created with bindplane_source resource.
 						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    false,
-							Description: "Use in combination with the bindplane_source resource. Cannot be used with 'type' or 'parameters_json'",
-						},
-						// Embeded source, when not referencing a re-usable source.
-						"type": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    false,
-							Description: "The source type to embed into this configuration. Cannot be used with 'name'",
-						},
-						"parameters_json": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    false,
-							Description: "The configuration parameters to use for the embeded source. Cannot be used with 'name'",
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: false,
 						},
 					},
 				},
@@ -155,41 +139,12 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		sourcesRaw := d.Get("source").([]any)
 
 		for _, v := range sourcesRaw {
-			inlineSource := v.(map[string]any)
-
-			name := inlineSource["name"].(string)
-			sourceType := inlineSource["type"].(string)
-			switch {
-			// Cannot specify a named source and an embeded source type
-			case name != "" && sourceType != "":
-				return fmt.Errorf("parameters 'name' and 'type' cannot be set together")
-			// Reference source by name
-			case name != "":
-				source := model.ResourceConfiguration{
-					Name: name,
-				}
-				sources = append(sources, source)
-			// Build embeded source by using sourceType and the optional
-			// parameters.
-			case sourceType != "":
-				source := model.ResourceConfiguration{
-					ParameterizedSpec: model.ParameterizedSpec{
-						Type: inlineSource["type"].(string),
-					},
-				}
-
-				if s := inlineSource["parameters_json"].(string); s != "" {
-					params, err := parameter.StringToParameter(s)
-					if err != nil {
-						return err
-					}
-					source.ParameterizedSpec.Parameters = params
-				}
-
-				sources = append(sources, source)
-			default:
-				return fmt.Errorf("paramet 'name' or 'type' must be set")
+			s := v.(map[string]any)
+			source := model.ResourceConfiguration{
+				Name: s["name"].(string),
 			}
+			sources = append(sources, source)
+
 		}
 	}
 
