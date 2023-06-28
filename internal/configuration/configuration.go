@@ -71,20 +71,20 @@ func WithSourcesInline(s []model.ResourceConfiguration) Option {
 
 // WithSourcesByName is a Option that configures a configuration's
 // sources.
-// func WithSourcesByName(s []string) Option {
-// 	return func(c *model.Configuration) error {
-// 		if s == nil {
-// 			return nil
-// 		}
-// 		for _, s := range s {
-// 			r := model.ResourceConfiguration{
-// 				Name: s,
-// 			}
-// 			c.Spec.Sources = append(c.Spec.Sources, r)
-// 		}
-// 		return nil
-// 	}
-// }
+func WithSourcesByName(s []string) Option {
+	return func(c *model.Configuration) error {
+		if s == nil {
+			return nil
+		}
+		for _, s := range s {
+			r := model.ResourceConfiguration{
+				Name: s,
+			}
+			c.Spec.Sources = append(c.Spec.Sources, r)
+		}
+		return nil
+	}
+}
 
 // WithDestinationsByName is a Option that configures a configuration's
 // destinations.

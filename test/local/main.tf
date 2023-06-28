@@ -78,11 +78,11 @@ resource "bindplane_configuration" "config" {
     type = "otlp"
   }
 
-  # sources = [
-  #   bindplane_source.otlp.name,
-  #   bindplane_source.otlp-custom.name,
-  #   bindplane_source.host.name
-  # ]
+  sources = [
+    bindplane_source.otlp.name,
+    bindplane_source.otlp-custom.name,
+    bindplane_source.host.name
+  ]
 }
 
 // Do not attach to test config. Will fail to startup

@@ -91,15 +91,15 @@ func resourceConfiguration() *schema.Resource {
 					},
 				},
 			},
-			// "sources": {
-			// 	Type:     schema.TypeSet,
-			// 	Required: true, // TODO(jsirianni): Change to optional if source is re-enabled
-			// 	ForceNew: false,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// },
+			"sources": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: false,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"destinations": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -162,13 +162,13 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	// Build list of source names
 	// TODO(jsirianni): Ensure this still works when no sources
 	// are configured.
-	// var sources []string
-	// if v := d.Get("sources").(*schema.Set); v != nil {
-	// 	for _, v := range v.List() {
-	// 		name := v.(string)
-	// 		sources = append(sources, name)
-	// 	}
-	// }
+	var sources []string
+	if v := d.Get("sources").(*schema.Set); v != nil {
+		for _, v := range v.List() {
+			name := v.(string)
+			sources = append(sources, name)
+		}
+	}
 
 	// Build list of destination names
 	// TODO(jsirianni): Ensure this still works when no destinations
@@ -186,7 +186,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesInline(inlineSources),
-		// configuration.WithSourcesByName(sources),
+		configuration.WithSourcesByName(sources),
 		configuration.WithDestinationsByName(destinations),
 	}
 
@@ -272,22 +272,14 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
 
-	// TODO(jsirianni): Read source params and save to state
+	// TODO(jsirianni): Read source params and save to state.
+	// Right now we do not have a way to identify embeded sources, therefor
+	// we will run into issues when it comes to mutliple sources of the same
+	// source type.
+	// Embeded sources
 	/*for _, source := range config.Spec.Sources {
 
 	}*/
-
-	// for _, source := range config.Spec.Sources {
-	// 	paramStr, err := parameter.ParametersToString(source.Parameters)
-	// 	if err != nil {
-	// 		return fmt.Errorf(
-	// 			"failed to convert source parameters into 'parameters_json' for source type '%s': %v",
-	// 			source.Type, err)
-	// 	}
-	// 	if err := d.Set("parameters_json", string(paramStr)); err != nil {
-	// 		return fmt.Errorf("failed to set resource parameters: %v", err)
-	// 	}
-	// }
 
 	d.SetId(config.ID())
 	return nil
