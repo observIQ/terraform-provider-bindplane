@@ -72,7 +72,7 @@ func resourceConfiguration() *schema.Resource {
 				Computed: true,
 				ForceNew: false,
 			},
-			"sources_inline": {
+			"source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: false,
@@ -93,7 +93,7 @@ func resourceConfiguration() *schema.Resource {
 			},
 			// "sources": {
 			// 	Type:     schema.TypeSet,
-			// 	Required: true, // TODO(jsirianni): Change to optional if sources_inline is re-enabled
+			// 	Required: true, // TODO(jsirianni): Change to optional if source is re-enabled
 			// 	ForceNew: false,
 			// 	Elem:     &schema.Schema{Type: schema.TypeString},
 			// },
@@ -134,8 +134,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	// // Build inline sources
 	inlineSources := []model.ResourceConfiguration{}
-	if d.Get("sources_inline") != nil {
-		inlineSourcesRaw := d.Get("sources_inline").([]any)
+	if d.Get("source") != nil {
+		inlineSourcesRaw := d.Get("source").([]any)
 
 		for _, v := range inlineSourcesRaw {
 			inlineSource := v.(map[string]any)

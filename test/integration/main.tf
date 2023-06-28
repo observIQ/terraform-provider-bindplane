@@ -63,7 +63,7 @@ resource "bindplane_configuration" "config" {
     bindplane_destination.logging.name
   ]
 
-  sources_inline {
+  source {
     type = "host"
     parameters_json = jsonencode({
       "metric_filtering": [
@@ -74,7 +74,7 @@ resource "bindplane_configuration" "config" {
     })
   }
 
-  sources_inline {
+  source {
     type = "otlp"
   }
 
