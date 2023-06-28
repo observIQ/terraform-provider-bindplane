@@ -25,11 +25,9 @@ provider "bindplane" {
 
 resource "bindplane_raw_configuration" "raw" {
   name = "testtf-raw"
+  platform = "linux"
   labels = {
     purpose = "tf-raw"
-  }
-  match_labels = {
-    configuration = "tf-raw"
   }
   raw_configuration = <<EOT
 receivers:
@@ -56,16 +54,25 @@ EOT
 resource "bindplane_configuration" "config" {
   rollout = true
   name = "testtf"
+  platform = "linux"
   labels = {
     purpose = "tf"
-  }
-  match_labels = {
-    configuration = "tf"
   }
 
   destinations = [
     bindplane_destination.logging.name
   ]
+
+  # sources_inline {
+  #   type = "host"
+  #   parameters_json = jsonencode({
+  #     "metric_filtering": [
+  #       "system.disk.operation_time"
+  #     ]
+  #     "enable_process": false,
+  #     "collection_interval": 20
+  #   })
+  # }
 
   sources = [
     bindplane_source.otlp.name,

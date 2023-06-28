@@ -68,7 +68,7 @@ func resourceRawConfiguration() *schema.Resource {
 			},
 			"match_labels": {
 				Type:     schema.TypeMap,
-				Required: true,
+				Computed: true,
 				ForceNew: false,
 			},
 			"raw_configuration": {
@@ -86,19 +86,21 @@ func resourceRawConfiguration() *schema.Resource {
 }
 
 func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
+	name := d.Get("name").(string)
+
 	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
 		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
 	}
 	labels["platform"] = d.Get("platform").(string)
 
-	matchLabels, err := stringMapFromTFMap(d.Get("match_labels").(map[string]any))
-	if err != nil {
-		return fmt.Errorf("failed to read match labels from resource configuration: %v", err)
+	// Match labels should always be configuration=<name>
+	matchLabels := map[string]string{
+		"configuration": name,
 	}
 
 	opts := []configuration.Option{
-		configuration.WithName(d.Get("name").(string)),
+		configuration.WithName(name),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithRawOTELConfig(d.Get("raw_configuration").(string)),

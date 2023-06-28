@@ -68,12 +68,31 @@ func resourceConfiguration() *schema.Resource {
 			},
 			"match_labels": {
 				Type:     schema.TypeMap,
-				Required: true,
+				Computed: true,
 				ForceNew: false,
 			},
+			// "sources_inline": {
+			// 	Type:     schema.TypeList,
+			// 	Optional: true,
+			// 	ForceNew: false,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"type": {
+			// 				Type:     schema.TypeString,
+			// 				Required: true,
+			// 				ForceNew: false,
+			// 			},
+			// 			"parameters_json": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 				ForceNew: false,
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"sources": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Required: true, // TODO(jsirianni): Change to optional if sources_inline is re-enabled
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -107,12 +126,42 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	}
 	labels["platform"] = d.Get("platform").(string)
 
-	matchLabels, err := stringMapFromTFMap(d.Get("match_labels").(map[string]any))
-	if err != nil {
-		return fmt.Errorf("failed to read match labels from resource configuration: %v", err)
+	// Match labels should always be configuration=<name>
+	matchLabels := map[string]string{
+		"configuration": name,
 	}
 
+	// // Build inline sources
+	// inlineSources := []model.ResourceConfiguration{}
+	// if d.Get("sources_inline") != nil {
+	// 	inlineSourcesRaw := d.Get("sources_inline").([]any)
+
+	// 	for _, v := range inlineSourcesRaw {
+	// 		inlineSource := v.(map[string]any)
+
+	// 		// Get the source type
+	// 		sourceType := inlineSource["type"].(string)
+
+	// 		// Get the source's parameters
+	// 		params, err := parameter.StringToParameter(inlineSource["parameters_json"].(string))
+	// 		if err != nil {
+	// 			return fmt.Errorf("failed to create parameters from inline source's parameters_json")
+	// 		}
+
+	// 		source := model.ResourceConfiguration{
+	// 			ParameterizedSpec: model.ParameterizedSpec{
+	// 				Type:       sourceType,
+	// 				Parameters: params,
+	// 			},
+	// 		}
+
+	// 		inlineSources = append(inlineSources, source)
+	// 	}
+	// }
+
 	// Build list of source names
+	// TODO(jsirianni): Ensure this still works when no sources
+	// are configured.
 	var sources []string
 	if v := d.Get("sources").(*schema.Set); v != nil {
 		for _, v := range v.List() {
@@ -122,6 +171,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	}
 
 	// Build list of destination names
+	// TODO(jsirianni): Ensure this still works when no destinations
+	// are configured.
 	var destinations []string
 	if v := d.Get("destinations").(*schema.Set); v != nil {
 		for _, v := range v.List() {
@@ -134,6 +185,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
+		// configuration.WithSourcesInline(inlineSources),
 		configuration.WithSourcesByName(sources),
 		configuration.WithDestinationsByName(destinations),
 	}

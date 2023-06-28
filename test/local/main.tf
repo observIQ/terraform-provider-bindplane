@@ -18,9 +18,6 @@ resource "bindplane_raw_configuration" "raw" {
   labels = {
     purpose = "tf-raw"
   }
-  match_labels = {
-    configuration = "tf-raw"
-  }
   raw_configuration = <<EOT
 receivers:
   prometheus:
@@ -50,13 +47,21 @@ resource "bindplane_configuration" "config" {
   labels = {
     purpose = "tf"
   }
-  match_labels = {
-    configuration = "tf"
-  }
 
   destinations = [
     bindplane_destination.logging.name
   ]
+
+  # sources_inline {
+  #   type = "host"
+  #   parameters_json = jsonencode({
+  #     "metric_filtering": [
+  #       "system.disk.operation_time"
+  #     ]
+  #     "enable_process": false,
+  #     "collection_interval": 20
+  #   })
+  # }
 
   sources = [
     bindplane_source.otlp.name,
@@ -112,6 +117,6 @@ resource "bindplane_source" "host" {
       "system.disk.operation_time"
     ],
     "enable_process": false,
-    "collection_interval": 20
+    "collection_interval": 30
   })
 }
