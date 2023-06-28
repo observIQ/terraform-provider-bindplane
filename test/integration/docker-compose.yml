@@ -23,16 +23,12 @@ services:
       - "../../internal/client/tls/bindplane.key:/bindplane.key:ro"
 
   agent:
-    build:
-      context: docker/collector
-    # TODO(cant mix env and config file). Docker build process bakes in
-    # the manager.yaml which has TLS options. TLS options do not exist as
-    # envirionment variables yet.
-    # environment:
-    #   - OPAMP_AGENT_NAME=agent
-    #   - OPAMP_ENDPOINT=wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp
-    #   - OPAMP_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
-    #   - OPAMP_LABELS=purpose=tf
+    image: observiq/observiq-otel-collector:1.27.0
+    environment:
+      - OPAMP_AGENT_NAME=agent
+      - OPAMP_ENDPOINT=wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp
+      - OPAMP_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
+      - OPAMP_LABELS=configuration=testtf
     restart: always
     depends_on:
       - bindplane
