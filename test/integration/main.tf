@@ -85,10 +85,6 @@ resource "bindplane_configuration" "config" {
     )
   }
 
-  source {
-    type = "otlp"
-  }
-
   sources = [
     bindplane_source.otlp.name,
     bindplane_source.otlp-custom.name,

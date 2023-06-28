@@ -74,15 +74,11 @@ resource "bindplane_configuration" "config" {
     )
   }
 
-  source {
-    type = "otlp"
-  }
-
-  sources = [
-    bindplane_source.otlp.name,
-    bindplane_source.otlp-custom.name,
-    bindplane_source.host.name
-  ]
+  # sources = [
+  #   bindplane_source.otlp.name,
+  #   bindplane_source.otlp-custom.name,
+  #   bindplane_source.host.name
+  # ]
 }
 
 // Do not attach to test config. Will fail to startup
@@ -169,6 +165,34 @@ resource "bindplane_source" "host" {
         "value": [
           "system.disk.operation_time"
         ]
+      }
+    ]
+  )
+}
+
+resource "bindplane_processor" "batch" {
+  rollout = true
+  name = "my-batch"
+  type = "batch"
+}
+
+resource "bindplane_processor" "batch-options" {
+  rollout = true
+  name = "my-batch-options"
+  type = "batch"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "send_batch_size",
+        "value": 200
+      },
+      {
+        "name": "send_batch_max_size",
+        "value": 400
+      },
+      {
+        "name": "timeout",
+        "value": "2s"
       }
     ]
   )

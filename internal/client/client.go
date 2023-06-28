@@ -224,6 +224,30 @@ func (i *BindPlane) DeleteSource(name string) error {
 	return nil
 }
 
+// Processor takes a name and returns the matching processor
+func (i *BindPlane) Processor(name string) (*model.Processor, error) {
+	r, err := i.client.Processor(context.TODO(), name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get processor with name %s: %v", name, err)
+	}
+	return r, nil
+}
+
+// DeleteProcessor will delete a BindPlane processor
+func (i *BindPlane) DeleteProcessor(name string) error {
+	err := i.client.DeleteProcessor(context.TODO(), name)
+	if err != nil {
+		return fmt.Errorf("error while deleting processor with name %s: %w", name, err)
+	}
+	return nil
+}
+
 // TODO(jsirianni): BindPlane should probably have error types so we can check
 // error.Is.
 func isNotFoundError(err error) bool {
