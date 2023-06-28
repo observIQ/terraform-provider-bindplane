@@ -19,9 +19,9 @@ import "strings"
 // Errors that should result in a retry are checked here
 func retryableError(err error) bool {
 	switch e := err.Error(); {
-	case strings.Contains(e, errClientConnectionRefused):
+	case strings.Contains(e, "connect: connection refused"):
 		return true
-	case strings.Contains(e, errClientTimeoutRetry):
+	case strings.Contains(e, "Client.Timeout exceeded while awaiting headers"):
 		return true
 	}
 	return false
