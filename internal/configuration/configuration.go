@@ -59,32 +59,32 @@ func WithRawOTELConfig(raw string) Option {
 
 // WithSourcesInline is a Option that configures a configuration's
 // nested sources.
-// func WithSourcesInline(s []model.ResourceConfiguration) Option {
-// 	return func(c *model.Configuration) error {
-// 		if s == nil {
-// 			return nil
-// 		}
-// 		c.Spec.Sources = append(c.Spec.Sources, s...)
-// 		return nil
-// 	}
-// }
-
-// WithSourcesByName is a Option that configures a configuration's
-// sources.
-func WithSourcesByName(s []string) Option {
+func WithSourcesInline(s []model.ResourceConfiguration) Option {
 	return func(c *model.Configuration) error {
 		if s == nil {
 			return nil
 		}
-		for _, s := range s {
-			r := model.ResourceConfiguration{
-				Name: s,
-			}
-			c.Spec.Sources = append(c.Spec.Sources, r)
-		}
+		c.Spec.Sources = append(c.Spec.Sources, s...)
 		return nil
 	}
 }
+
+// WithSourcesByName is a Option that configures a configuration's
+// sources.
+// func WithSourcesByName(s []string) Option {
+// 	return func(c *model.Configuration) error {
+// 		if s == nil {
+// 			return nil
+// 		}
+// 		for _, s := range s {
+// 			r := model.ResourceConfiguration{
+// 				Name: s,
+// 			}
+// 			c.Spec.Sources = append(c.Spec.Sources, r)
+// 		}
+// 		return nil
+// 	}
+// }
 
 // WithDestinationsByName is a Option that configures a configuration's
 // destinations.

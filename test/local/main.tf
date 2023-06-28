@@ -52,22 +52,26 @@ resource "bindplane_configuration" "config" {
     bindplane_destination.logging.name
   ]
 
-  # sources_inline {
-  #   type = "host"
-  #   parameters_json = jsonencode({
-  #     "metric_filtering": [
-  #       "system.disk.operation_time"
-  #     ]
-  #     "enable_process": false,
-  #     "collection_interval": 20
-  #   })
-  # }
+  sources_inline {
+    type = "host"
+    parameters_json = jsonencode({
+      "metric_filtering": [
+        "system.disk.operation_time"
+      ]
+      "enable_process": false,
+      "collection_interval": 20
+    })
+  }
 
-  sources = [
-    bindplane_source.otlp.name,
-    bindplane_source.otlp-custom.name,
-    bindplane_source.host.name
-  ]
+  sources_inline {
+    type = "otlp"
+  }
+
+  # sources = [
+  #   bindplane_source.otlp.name,
+  #   bindplane_source.otlp-custom.name,
+  #   bindplane_source.host.name
+  # ]
 }
 
 // Do not attach to test config. Will fail to startup
@@ -92,31 +96,31 @@ resource "bindplane_destination" "logging" {
   })
 }
 
-resource "bindplane_source" "otlp" {
-  rollout = true
-  name = "otlp-default"
-  type = "otlp"
-}
+# resource "bindplane_source" "otlp" {
+#   rollout = true
+#   name = "otlp-default"
+#   type = "otlp"
+# }
 
-resource "bindplane_source" "otlp-custom" {
-  rollout = true
-  name = "otlp-custom"
-  type = "otlp"
-  parameters_json = jsonencode({
-    "http_port": 44313,
-    "grpc_port": 0
-  })
-}
+# resource "bindplane_source" "otlp-custom" {
+#   rollout = true
+#   name = "otlp-custom"
+#   type = "otlp"
+#   parameters_json = jsonencode({
+#     "http_port": 44313,
+#     "grpc_port": 0
+#   })
+# }
 
-resource "bindplane_source" "host" {
-  rollout = true
-  name = "my-host"
-  type = "host"
-  parameters_json = jsonencode({
-    "metric_filtering": [
-      "system.disk.operation_time"
-    ],
-    "enable_process": false,
-    "collection_interval": 30
-  })
-}
+# resource "bindplane_source" "host" {
+#   rollout = true
+#   name = "my-host"
+#   type = "host"
+#   parameters_json = jsonencode({
+#     "metric_filtering": [
+#       "system.disk.operation_time"
+#     ],
+#     "enable_process": false,
+#     "collection_interval": 30
+#   })
+# }

@@ -27,6 +27,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
+// TODO(jsirianni): Decide if sources should be supported. Currently not implemented by the provider.
 func resourceSource() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceSourceCreate,
