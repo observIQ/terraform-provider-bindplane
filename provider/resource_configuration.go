@@ -97,11 +97,19 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"destinations": {
-				Type:     schema.TypeSet,
+			"destination": {
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: false,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: false,
+						},
+					},
+				},
 			},
 			"rollout": {
 				Type:     schema.TypeBool,
@@ -170,13 +178,12 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	// Build list of destination names
-	// TODO(jsirianni): Ensure this still works when no destinations
-	// are configured.
 	var destinations []string
-	if v := d.Get("destinations").(*schema.Set); v != nil {
-		for _, v := range v.List() {
-			name := v.(string)
+	if d.Get("destination") != nil {
+		destinationsRaw := d.Get("destination").([]any)
+		for _, v := range destinationsRaw {
+			destinationRaw := v.(map[string]any)
+			name := destinationRaw["name"].(string)
 			destinations = append(destinations, name)
 		}
 	}
