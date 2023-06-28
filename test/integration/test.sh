@@ -18,6 +18,8 @@ set -eE
 cd "$(dirname "$0")"
 
 clean () {
+    read -p "Ready to cleanup. Press enter to continue."
+
     rm -rf terraform.tfstate*
     rm -rf providers
 
@@ -58,7 +60,7 @@ destroy () {
 export TF_CLI_CONFIG_FILE=./dev.tfrc
 
 start_containers
-sleep 5
+sleep 10
 apply
 configure
 destroy

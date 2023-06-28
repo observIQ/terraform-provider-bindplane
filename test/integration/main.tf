@@ -73,7 +73,7 @@ resource "bindplane_configuration" "config" {
   source {
     name = bindplane_source.otlp.name
     processors = [
-      bindplane_processor.count_telemetry.name
+      bindplane_processor.add_fields.name
     ]
   }
 
@@ -221,9 +221,23 @@ resource "bindplane_processor" "batch-options" {
   )
 }
 
-resource "bindplane_processor" "count_telemetry" {
+resource "bindplane_processor" "add_fields" {
   rollout = true
-  name = "count-telemetry"
-  type = "count_telemetry"
+  name = "add-fields"
+  type = "add_fields"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "enable_logs"
+        "value": true
+      },
+      {
+        "name": "log_resource_attributes",
+        "value": {
+          "key": "value"
+        }
+      }
+    ]
+  )
 }
 
