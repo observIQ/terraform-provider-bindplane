@@ -127,7 +127,7 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 		switch status.Status {
 		case model.StatusUnchanged:
 		case model.StatusConfigured, model.StatusCreated:
-			if rollout {
+			if rollout && status.Resource.Kind == model.KindConfiguration {
 				if err := i.Rollout(resource.Name()); err != nil {
 					errs = errors.Wrap(errs, err.Error())
 				}
