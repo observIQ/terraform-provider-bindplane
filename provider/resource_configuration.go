@@ -82,6 +82,12 @@ func resourceConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: false,
 						},
+						"processors": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: false,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
@@ -134,27 +140,34 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		"configuration": name,
 	}
 
-	sources := []model.ResourceConfiguration{}
+	// List of sources and their processors
+	sources := []configuration.ResourceConfig{}
 	if d.Get("source") != nil {
 		sourcesRaw := d.Get("source").([]any)
-
 		for _, v := range sourcesRaw {
-			s := v.(map[string]any)
-			source := model.ResourceConfiguration{
-				Name: s["name"].(string),
-			}
-			sources = append(sources, source)
+			sourcesRaw := v.(map[string]any)
 
+			processors := []string{}
+			if v := sourcesRaw["processors"].(*schema.Set); v != nil {
+				for _, processorName := range v.List() {
+					processors = append(processors, processorName.(string))
+				}
+			}
+
+			sourceConf := configuration.ResourceConfig{
+				Name:       sourcesRaw["name"].(string),
+				Processors: processors,
+			}
+			sources = append(sources, sourceConf)
 		}
 	}
 
-	destinations := []configuration.DestinationConfig{}
+	// List of destinations and their processors
+	destinations := []configuration.ResourceConfig{}
 	if d.Get("destination") != nil {
 		destinationsRaw := d.Get("destination").([]any)
 		for _, v := range destinationsRaw {
 			destinationRaw := v.(map[string]any)
-
-			name := destinationRaw["name"].(string)
 
 			processors := []string{}
 			if v := destinationRaw["processors"].(*schema.Set); v != nil {
@@ -163,8 +176,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				}
 			}
 
-			destConfig := configuration.DestinationConfig{
-				Name:       name,
+			destConfig := configuration.ResourceConfig{
+				Name:       destinationRaw["name"].(string),
 				Processors: processors,
 			}
 			destinations = append(destinations, destConfig)
@@ -175,7 +188,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
-		configuration.WithSources(sources),
+		configuration.WithSourcesByName(sources),
 		configuration.WithDestinationsByName(destinations),
 	}
 

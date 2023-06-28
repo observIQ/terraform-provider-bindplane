@@ -22,14 +22,14 @@ import (
 	"github.com/observiq/bindplane-op/model"
 )
 
-// DestinationConfig represents the configuration of a destination
-// that will be attached to a configuration.
-type DestinationConfig struct {
-	// The name of the destination the configuration should
-	// attach.
+// ResourceConfig represents the configuration of a destination
+// or source that will be attached to a configuration.
+type ResourceConfig struct {
+	// The name of the resource (destination / source) that should be
+	// attached to the configuration
 	Name string
 
-	// A list of processor names to attach to the destination
+	// A list of processor names to attach to the resource
 	Processors []string
 }
 
@@ -68,63 +68,20 @@ func WithRawOTELConfig(raw string) Option {
 	}
 }
 
-// WithSources is a Option that configures a configuration's
-// nested sources.
-func WithSources(s []model.ResourceConfiguration) Option {
-	return func(c *model.Configuration) error {
-		if s == nil {
-			return nil
-		}
-		c.Spec.Sources = append(c.Spec.Sources, s...)
-		return nil
-	}
-}
-
 // WithSourcesByName is a Option that configures a configuration's
 // sources.
-func WithSourcesByName(s []string) Option {
+func WithSourcesByName(s []ResourceConfig) Option {
 	return func(c *model.Configuration) error {
-		if s == nil {
-			return nil
-		}
-		for _, s := range s {
-			r := model.ResourceConfiguration{
-				Name: s,
-			}
-			c.Spec.Sources = append(c.Spec.Sources, r)
-		}
+		c.Spec.Sources = append(c.Spec.Sources, withResourcesByName(s)...)
 		return nil
 	}
 }
 
 // WithDestinationsByName is a Option that configures a configuration's
 // destinations.
-func WithDestinationsByName(d []DestinationConfig) Option {
+func WithDestinationsByName(d []ResourceConfig) Option {
 	return func(c *model.Configuration) error {
-		if d == nil {
-			return nil
-		}
-
-		for _, d := range d {
-			// build list of processor resource objects by name
-			processorResources := []model.ResourceConfiguration{}
-			for _, name := range d.Processors {
-				processor := model.ResourceConfiguration{
-					Name: name,
-				}
-				processorResources = append(processorResources, processor)
-			}
-
-			// Build destination resource with name and list
-			// of processor resources
-			r := model.ResourceConfiguration{
-				Name: d.Name,
-				ParameterizedSpec: model.ParameterizedSpec{
-					Processors: processorResources,
-				},
-			}
-			c.Spec.Destinations = append(c.Spec.Destinations, r)
-		}
+		c.Spec.Destinations = append(c.Spec.Destinations, withResourcesByName(d)...)
 		return nil
 	}
 }
@@ -143,7 +100,7 @@ func NewV1(options ...Option) (*model.Configuration, error) {
 	const (
 		version     = "bindplane.observiq.com/v1"
 		kind        = "Configuration"
-		contentType = "text/yaml"
+		contentType = "text/yaml" // TODO(jsirianni): Is this required and does it make sense?
 	)
 
 	c := &model.Configuration{
@@ -166,4 +123,32 @@ func NewV1(options ...Option) (*model.Configuration, error) {
 	}
 
 	return c, nil
+}
+
+// WithResourcesByName takes a list of resource configurations
+// and returns a list of bindplane model.ResourceConfigurations.
+func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
+	resources := []model.ResourceConfiguration{}
+
+	for _, r := range r {
+		// build list of processor resource objects by name
+		processorResources := []model.ResourceConfiguration{}
+		for _, name := range r.Processors {
+			processor := model.ResourceConfiguration{
+				Name: name,
+			}
+			processorResources = append(processorResources, processor)
+		}
+
+		// Build source resource with name and list
+		// of processor resources
+		r := model.ResourceConfiguration{
+			Name: r.Name,
+			ParameterizedSpec: model.ParameterizedSpec{
+				Processors: processorResources,
+			},
+		}
+		resources = append(resources, r)
+	}
+	return resources
 }
