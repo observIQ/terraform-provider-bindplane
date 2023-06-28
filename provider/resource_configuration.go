@@ -16,7 +16,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -24,6 +23,7 @@ import (
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
+	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -147,10 +147,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				},
 			}
 
-			if paramStr := inlineSource["parameters_json"].(string); paramStr != "" {
-				params := []model.Parameter{}
-				if err := json.Unmarshal([]byte(paramStr), &params); err != nil {
-					return fmt.Errorf("failed to unmarshal parameters '%s': %v", paramStr, err)
+			if s := inlineSource["parameters_json"].(string); s != "" {
+				params, err := parameter.StringToParameter(s)
+				if err != nil {
+					return err
 				}
 				source.ParameterizedSpec.Parameters = params
 			}

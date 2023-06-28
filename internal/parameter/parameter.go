@@ -17,38 +17,37 @@
 
 package parameter
 
-// StringToParameter converts serialized json key values pairs
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/observiq/bindplane-op/model"
+)
+
+// StringToParameter unmarshals serialized json parameters
 // to a list of BindPlane parameters.
-// func StringToParameter(s string) ([]model.Parameter, error) {
-// 	paramMap := make(map[string]any)
-// 	if err := json.Unmarshal([]byte(s), &paramMap); err != nil {
-// 		return nil, fmt.Errorf("failed to convert string parameters to map[string]any: %v", err)
-// 	}
+func StringToParameter(s string) ([]model.Parameter, error) {
+	if s == "null" {
+		return nil, nil
+	}
+	parameters := []model.Parameter{}
+	if err := json.Unmarshal([]byte(s), &parameters); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal parameters '%s': %v", s, err)
+	}
+	return parameters, nil
+}
 
-// 	parameters := []model.Parameter{}
+// ParametersToSring converts a list of parameters to
+// serialized json key values pairs.
+func ParametersToString(p []model.Parameter) (string, error) {
+	if len(p) == 0 {
+		return "", nil
+	}
 
-// 	for k, v := range paramMap {
-// 		parameters = append(parameters, model.Parameter{
-// 			Name:  k,
-// 			Value: v,
-// 		})
-// 	}
+	paramBytes, err := json.Marshal(p)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal parameters: %v", err)
+	}
 
-// 	return parameters, nil
-// }
-
-// // ParametersToSring converts a list of parameters to
-// // serialized json key values pairs.
-// func ParametersToString(params []model.Parameter) (string, error) {
-// 	paramMap := make(map[string]any, len(params))
-// 	for _, param := range params {
-// 		paramMap[param.Name] = param.Value
-// 	}
-
-// 	b, err := json.Marshal(paramMap)
-// 	if err != nil {
-// 		return "", fmt.Errorf("failed to marshal parameters to json string %v", err)
-// 	}
-
-// 	return string(b), nil
-// }
+	return string(paramBytes), nil
+}

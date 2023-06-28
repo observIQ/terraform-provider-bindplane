@@ -16,7 +16,6 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 
 func resourceDestination() *schema.Resource {
@@ -73,16 +73,13 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
 
-	// parameters, err := parameter.StringToParameter(d.Get("parameters_json").(string))
-	// if err != nil {
-	// 	return fmt.Errorf("failed to parse 'parameters_json' for destination type '%s' with name '%s': %v", destType, name, err)
-	// }
-
 	parameters := []model.Parameter{}
-	if paramStr := d.Get("parameters_json").(string); paramStr != "" {
-		if err := json.Unmarshal([]byte(paramStr), &parameters); err != nil {
-			return fmt.Errorf("failed to unmarshal parameters '%s': %v", paramStr, err)
+	if s := d.Get("parameters_json").(string); s != "" {
+		params, err := parameter.StringToParameter(s)
+		if err != nil {
+			return err
 		}
+		parameters = params
 	}
 
 	resource := model.AnyResource{
@@ -162,15 +159,9 @@ func resourceDestinationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource type: %v", err)
 	}
 
-	// paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
-	// if err != nil {
-	// 	return fmt.Errorf(
-	// 		"failed to convert destination parameters into 'parameters_json' for destination type '%s' with name '%s': %v",
-	// 		destinationType, destination.Name(), err)
-	// }
-	paramStr, err := json.Marshal(destination.Spec.Parameters)
+	paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
 	if err != nil {
-		return fmt.Errorf("failed to marshal parameters: %v", err)
+		return err
 	}
 
 	if err := d.Set("parameters_json", string(paramStr)); err != nil {

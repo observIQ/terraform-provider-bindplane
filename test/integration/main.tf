@@ -131,6 +131,12 @@ resource "bindplane_destination" "logging" {
   )
 }
 
+resource "bindplane_destination" "prometheus" {
+  rollout = true
+  name = "prometheus"
+  type = "prometheus"
+}
+
 resource "bindplane_source" "otlp" {
   rollout = true
   name = "otlp-default"
