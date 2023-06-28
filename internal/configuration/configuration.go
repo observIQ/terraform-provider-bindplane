@@ -22,6 +22,17 @@ import (
 	"github.com/observiq/bindplane-op/model"
 )
 
+// DestinationConfig represents the configuration of a destination
+// that will be attached to a configuration.
+type DestinationConfig struct {
+	// The name of the destination the configuration should
+	// attach.
+	Name string
+
+	// A list of processor names to attach to the destination
+	Processors []string
+}
+
 // Option is a function that configures a
 // bindplane model.Configuration
 type Option func(*model.Configuration) error
@@ -88,14 +99,29 @@ func WithSourcesByName(s []string) Option {
 
 // WithDestinationsByName is a Option that configures a configuration's
 // destinations.
-func WithDestinationsByName(d []string) Option {
+func WithDestinationsByName(d []DestinationConfig) Option {
 	return func(c *model.Configuration) error {
 		if d == nil {
 			return nil
 		}
+
 		for _, d := range d {
+			// build list of processor resource objects by name
+			processorResources := []model.ResourceConfiguration{}
+			for _, name := range d.Processors {
+				processor := model.ResourceConfiguration{
+					Name: name,
+				}
+				processorResources = append(processorResources, processor)
+			}
+
+			// Build destination resource with name and list
+			// of processor resources
 			r := model.ResourceConfiguration{
-				Name: d,
+				Name: d.Name,
+				ParameterizedSpec: model.ParameterizedSpec{
+					Processors: processorResources,
+				},
 			}
 			c.Spec.Destinations = append(c.Spec.Destinations, r)
 		}

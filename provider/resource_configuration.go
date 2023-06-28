@@ -108,6 +108,12 @@ func resourceConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: false,
 						},
+						"processors": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: false,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			},
@@ -178,13 +184,26 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	var destinations []string
+	destinations := []configuration.DestinationConfig{}
 	if d.Get("destination") != nil {
 		destinationsRaw := d.Get("destination").([]any)
 		for _, v := range destinationsRaw {
 			destinationRaw := v.(map[string]any)
+
 			name := destinationRaw["name"].(string)
-			destinations = append(destinations, name)
+
+			processors := []string{}
+			if v := destinationRaw["processors"].(*schema.Set); v != nil {
+				for _, processorName := range v.List() {
+					processors = append(processors, processorName.(string))
+				}
+			}
+
+			destConfig := configuration.DestinationConfig{
+				Name:       name,
+				Processors: processors,
+			}
+			destinations = append(destinations, destConfig)
 		}
 	}
 
