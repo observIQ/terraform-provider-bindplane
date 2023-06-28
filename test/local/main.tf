@@ -14,6 +14,7 @@ provider "bindplane" {
 
 resource "bindplane_raw_configuration" "raw" {
   name = "testtf-raw"
+  platform = "linux"
   labels = {
     purpose = "tf-raw"
   }
@@ -45,6 +46,7 @@ EOT
 resource "bindplane_configuration" "config" {
   rollout = true
   name = "testtf"
+  platform = "linux"
   labels = {
     purpose = "tf"
   }

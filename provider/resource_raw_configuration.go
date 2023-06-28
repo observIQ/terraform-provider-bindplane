@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -40,10 +41,30 @@ func resourceRawConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"platform": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+					platform := val.(string)
+					if !isValidPlatform(platform) {
+						errs = append(errs, fmt.Errorf("%s is not a valid platform", platform))
+					}
+					return nil, errs
+				},
+			},
 			"labels": {
 				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: false,
+				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+					labels := val.(map[string]any)
+					_, ok := labels["platform"]
+					if ok {
+						errs = append(errs, errors.New("label 'platform' will be overwritten by the configured platform"))
+					}
+					return
+				},
 			},
 			"match_labels": {
 				Type:     schema.TypeMap,
@@ -69,6 +90,7 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	if err != nil {
 		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
 	}
+	labels["platform"] = d.Get("platform").(string)
 
 	matchLabels, err := stringMapFromTFMap(d.Get("match_labels").(map[string]any))
 	if err != nil {
@@ -139,7 +161,19 @@ func resourceRawConfigurationRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to set resource name: %v", err)
 	}
 
-	if err := d.Set("labels", config.Metadata.Labels.AsMap()); err != nil {
+	labels := config.Metadata.Labels.AsMap()
+	platform, ok := labels["platform"]
+	if ok {
+		if err := d.Set("platform", platform); err != nil {
+			return fmt.Errorf("failed to set resource platform: %v", err)
+		}
+		// Remove the platform label from the labels map
+		// because Terraform's state does not expect it.
+		delete(labels, "platform")
+	}
+
+	// Save the labels map to state, which has the 'platform' label removed.
+	if err := d.Set("labels", labels); err != nil {
 		return fmt.Errorf("failed to set resource labels: %v", err)
 	}
 

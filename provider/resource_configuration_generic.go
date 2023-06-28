@@ -47,3 +47,25 @@ func resourceGenericConfigurationDelete(d *schema.ResourceData, meta any) error 
 
 	return resourceConfigurationRead(d, meta)
 }
+
+func isValidPlatform(platform string) bool {
+	// TODO(jsirianni): We should use a bindplane-op package to determine
+	// valid platforms.
+	const (
+		platformWindows             = "windows"
+		platformLinux               = "linux"
+		platformMacOS               = "macos"
+		platformK8sDaemonset        = "kubernetes-daemonset"
+		platformK8sDeployment       = "kubernetes-deployment"
+		platformOpenshiftDaemonset  = "openshift-daemonset"
+		platformOpenshiftDeployment = "openshift-deployment"
+	)
+	switch platform {
+	case platformWindows, platformLinux, platformMacOS,
+		platformK8sDaemonset, platformK8sDeployment,
+		platformOpenshiftDaemonset, platformOpenshiftDeployment:
+		return true
+	default:
+		return false
+	}
+}
