@@ -37,9 +37,7 @@ func TestApply(t *testing.T) {
 	i, err := New()
 	require.NoError(t, err)
 	require.NotNil(t, i)
-
-	_, err = i.Apply(&model.AnyResource{})
-	require.Error(t, err)
+	require.Error(t, i.Apply(&model.AnyResource{}, false))
 }
 
 // BindPlane is not configured, API calls should fail

@@ -46,7 +46,6 @@ configure () {
 
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
-    eval docker exec integration-bindplane-1 /bindplane rollout start testtf
     sleep 5
     eval docker exec integration-bindplane-1 /bindplane get agent -o yaml "$args"
     docker exec integration-agent-1 cat /etc/otel/config.yaml

@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFromConfiguration(t *testing.T) {
+func TestAnyResourceFromRawConfiguration(t *testing.T) {
 	cases := []struct {
 		name   string
 		input  *model.Configuration
@@ -86,7 +86,7 @@ func TestFromConfiguration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			output := AnyResourceFromConfiguration(tc.input)
+			output := AnyResourceFromRawConfiguration(tc.input)
 			require.Equal(t, tc.expect, output)
 		})
 	}

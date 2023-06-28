@@ -29,7 +29,7 @@ resource "bindplane_raw_configuration" "raw" {
     purpose = "tf-raw"
   }
   match_labels = {
-    purpose = "tf-raw"
+    configuration = "tf-raw"
   }
   raw_configuration = <<EOT
 receivers:
@@ -60,41 +60,67 @@ resource "bindplane_configuration" "config" {
     purpose = "tf"
   }
   match_labels = {
-    purpose = "tf"
-  }
-  
-  source {
-    type = "host"
-    parameters_json = jsonencode({
-      "metric_filtering": [
-        "system.disk.operation_time"
-      ]
-      "enable_process": false,
-      "collection_interval": 20
-    })
-  }
-
-  source {
-    type = "otlp"
-  }
-
-  source {
-    type = "otlp"
-    parameters_json = jsonencode({
-      "http_port": 44318,
-      "grpc_port": 0
-    })
+    configuration = "tf"
   }
 
   destinations = [
-    bindplane_destination.google_dest.name
+    bindplane_destination.logging.name
+  ]
+
+  sources = [
+    bindplane_source.otlp.name,
+    bindplane_source.otlp-custom.name,
+    bindplane_source.host.name
   ]
 }
 
+// Do not attach to test config. Will fail to startup
+// due to missing credentials. Used as an example
+// on how to create a GCP destination.
 resource "bindplane_destination" "google_dest" {
+  rollout = true
   name = "google-test"
   type = "googlecloud"
   parameters_json = jsonencode({
     "project": "abcd"
+  })
+}
+
+resource "bindplane_destination" "logging" {
+  rollout = true
+  name = "logging"
+  type = "custom"
+  parameters_json = jsonencode({
+    "telemetry_types": ["Metrics", "Logs", "Traces"]
+    "configuration": "logging:"
+  })
+}
+
+resource "bindplane_source" "otlp" {
+  rollout = true
+  name = "otlp-default"
+  type = "otlp"
+}
+
+resource "bindplane_source" "otlp-custom" {
+  rollout = true
+  name = "otlp-custom"
+  type = "otlp"
+  parameters_json = jsonencode({
+    "http_port": 44313,
+    "grpc_port": 0
+  })
+}
+
+resource "bindplane_source" "host" {
+  rollout = true
+  name = "my-host"
+  type = "host"
+  parameters_json = jsonencode({
+    "metric_filtering": [
+      "system.disk.operation_time"
+    ],
+    "enable_process": false,
+    "collection_interval": 20
   })
 }

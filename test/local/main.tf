@@ -18,7 +18,7 @@ resource "bindplane_raw_configuration" "raw" {
     purpose = "tf-raw"
   }
   match_labels = {
-    purpose = "tf-raw"
+    configuration = "tf-raw"
   }
   raw_configuration = <<EOT
 receivers:
@@ -49,11 +49,11 @@ resource "bindplane_configuration" "config" {
     purpose = "tf"
   }
   match_labels = {
-    purpose = "tf"
+    configuration = "tf"
   }
 
   destinations = [
-    bindplane_destination.google_dest.name
+    bindplane_destination.logging.name
   ]
 
   sources = [
@@ -63,12 +63,25 @@ resource "bindplane_configuration" "config" {
   ]
 }
 
+// Do not attach to test config. Will fail to startup
+// due to missing credentials. Used as an example
+// on how to create a GCP destination.
 resource "bindplane_destination" "google_dest" {
   rollout = true
   name = "google-test"
   type = "googlecloud"
   parameters_json = jsonencode({
     "project": "abcd"
+  })
+}
+
+resource "bindplane_destination" "logging" {
+  rollout = true
+  name = "logging"
+  type = "custom"
+  parameters_json = jsonencode({
+    "telemetry_types": ["Metrics", "Logs", "Traces"]
+    "configuration": "logging:"
   })
 }
 

@@ -125,8 +125,8 @@ func TestIntegration_http(t *testing.T) {
 		configuration.WithName("test"),
 	)
 	require.NoError(t, err)
-	r := resource.AnyResourceFromConfiguration(config)
-	require.NoError(t, i.Apply(&r))
+	r := resource.AnyResourceFromRawConfiguration(config)
+	require.NoError(t, i.Apply(&r, true))
 
 	outputConfig, err := i.Configuration("test")
 	require.NoError(t, err)

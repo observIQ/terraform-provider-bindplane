@@ -125,7 +125,13 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 		// created. All other statuses are unexpected and should result
 		// in an error from this method.
 		switch status.Status {
-		case model.StatusUnchanged, model.StatusConfigured, model.StatusCreated:
+		case model.StatusUnchanged:
+		case model.StatusConfigured, model.StatusCreated:
+			if rollout {
+				if err := i.Rollout(resource.Name()); err != nil {
+					errs = errors.Wrap(errs, err.Error())
+				}
+			}
 		default:
 			err := fmt.Errorf(
 				"unexpected status when applying resource: %s, status: %s",
@@ -133,14 +139,6 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 				status.Status)
 			// TODO(jsirianni): can this be handled in a nicer way?
 			errs = errors.Wrap(errs, err.Error())
-		}
-
-		if resource.Kind == model.KindConfiguration && status.Status == model.StatusConfigured {
-			if rollout {
-				if err := i.Rollout(resource.Name()); err != nil {
-					errs = errors.Wrap(errs, err.Error())
-				}
-			}
 		}
 	}
 
