@@ -71,38 +71,19 @@ resource "bindplane_configuration" "config" {
   }
 
   source {
-    type = "host"
-    parameters_json = jsonencode(
-      [
-        {
-          "name": "collection_interval",
-          "value": 20
-        },
-        {
-          "name": "enable_process",
-          "value": false
-        },
-        {
-          "name": "metric_filtering",
-          "value": [
-            "system.disk.operation_time"
-          ]
-        }
-      ]
-    )
+    name = bindplane_source.otlp.name
+    processors = [
+      bindplane_processor.count_telemetry.name
+    ]
   }
 
   source {
-    name = bindplane_source.otlp.name
+    name = bindplane_source.otlp-custom.name
   }
 
-  # source {
-  #   name = bindplane_source.otlp-custom.name
-  # }
-
-  # source {
-  #   name = bindplane_source.host.name
-  # }
+  source {
+    name = bindplane_source.host.name
+  }
 }
 
 // Do not attach to test config. Will fail to startup
@@ -239,3 +220,10 @@ resource "bindplane_processor" "batch-options" {
     ]
   )
 }
+
+resource "bindplane_processor" "count_telemetry" {
+  rollout = true
+  name = "count-telemetry"
+  type = "count_telemetry"
+}
+

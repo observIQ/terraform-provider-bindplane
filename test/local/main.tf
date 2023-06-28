@@ -61,6 +61,9 @@ resource "bindplane_configuration" "config" {
 
   source {
     name = bindplane_source.otlp.name
+    processors = [
+      bindplane_processor.count_telemetry.name
+    ]
   }
 
   source {
@@ -206,3 +209,10 @@ resource "bindplane_processor" "batch-options" {
     ]
   )
 }
+
+resource "bindplane_processor" "count_telemetry" {
+  rollout = true
+  name = "count-telemetry"
+  type = "count_telemetry"
+}
+
