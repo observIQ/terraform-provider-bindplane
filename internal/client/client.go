@@ -23,10 +23,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/observiq/bindplane-op/client"
 	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -126,10 +126,11 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 		// in an error from this method.
 		switch status.Status {
 		case model.StatusUnchanged:
+			panic("unchanged")
 		case model.StatusConfigured, model.StatusCreated:
 			if rollout && status.Resource.Kind == model.KindConfiguration {
 				if err := i.Rollout(resource.Name()); err != nil {
-					errs = errors.Wrap(errs, err.Error())
+					errs = multierror.Append(errs, err)
 				}
 			}
 		default:
@@ -138,7 +139,7 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 				resource.Name(),
 				status.Status)
 			// TODO(jsirianni): can this be handled in a nicer way?
-			errs = errors.Wrap(errs, err.Error())
+			errs = multierror.Append(errs, err)
 		}
 	}
 
