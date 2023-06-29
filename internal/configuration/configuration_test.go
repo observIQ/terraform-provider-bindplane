@@ -33,7 +33,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -46,7 +46,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 					Metadata: model.Metadata{
 						Name: "observiq",
 					},
@@ -62,7 +62,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -87,7 +87,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -126,7 +126,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -160,7 +160,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 					Metadata: model.Metadata{
 						Labels: func() model.Labels {
 							in := map[string]string{
@@ -189,7 +189,7 @@ func TestNewV1(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",

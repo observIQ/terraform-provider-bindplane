@@ -99,7 +99,7 @@ func WithMatchLabels(match map[string]string) Option {
 func NewV1(options ...Option) (*model.Configuration, error) {
 	const (
 		version     = "bindplane.observiq.com/v1"
-		kind        = "Configuration"
+		kind        = model.KindConfiguration
 		contentType = "text/yaml" // TODO(jsirianni): Is this required and does it make sense?
 	)
 

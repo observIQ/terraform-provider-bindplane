@@ -21,7 +21,77 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAnyResourceFromConfiguration(t *testing.T) {
+func TestAnyResourceV1(t *testing.T) {
+	cases := []struct {
+		name        string
+		rName       string
+		rType       string
+		rkind       model.Kind
+		rParameters []model.Parameter
+		expectErr   string
+	}{
+		{
+			"source",
+			"my-host",
+			"host",
+			model.KindSource,
+			[]model.Parameter{
+				{
+					Name:  "collection_interval",
+					Value: 60,
+				},
+				{
+					Name:  "tags",
+					Value: []string{"test"},
+				},
+			},
+			"",
+		},
+		{
+			"destination",
+			"my-destination",
+			"googlecloud",
+			model.KindDestination,
+			[]model.Parameter{
+				{
+					Name:  "project",
+					Value: "my-project",
+				},
+			},
+			"",
+		},
+		{
+			"processor",
+			"my-filter",
+			"filter",
+			model.KindProcessor,
+			nil,
+			"",
+		},
+		{
+			"invalid-kind",
+			"my-resource",
+			"resource",
+			model.KindAgent,
+			nil,
+			"unknown bindplane resource kind: Agent",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := AnyResourceV1(tc.rName, tc.rType, tc.rkind, tc.rParameters)
+			if tc.expectErr != "" {
+				require.Error(t, err)
+				require.ErrorContains(t, err, tc.expectErr)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAnyResourceFromConfigurationV1(t *testing.T) {
 	cases := []struct {
 		name   string
 		input  *model.Configuration
@@ -32,7 +102,7 @@ func TestAnyResourceFromConfiguration(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -41,7 +111,7 @@ func TestAnyResourceFromConfiguration(t *testing.T) {
 			model.AnyResource{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: map[string]any{
 					"contentType": "text/yaml",
@@ -56,7 +126,7 @@ func TestAnyResourceFromConfiguration(t *testing.T) {
 			&model.Configuration{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
@@ -97,7 +167,7 @@ func TestAnyResourceFromConfiguration(t *testing.T) {
 			model.AnyResource{
 				ResourceMeta: model.ResourceMeta{
 					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       "Configuration",
+					Kind:       model.KindConfiguration,
 				},
 				Spec: map[string]any{
 					"contentType": "text/yaml",
@@ -143,13 +213,13 @@ func TestAnyResourceFromConfiguration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			output := AnyResourceFromConfiguration(tc.input)
+			output := AnyResourceFromConfigurationV1(tc.input)
 			require.Equal(t, tc.expect, output)
 		})
 	}
 }
 
-func TestAnyResourceFromRawConfiguration(t *testing.T) {
+func TestAnyResourceFromRawConfigurationV1(t *testing.T) {
 	cases := []struct {
 		name   string
 		input  *model.Configuration
@@ -214,7 +284,7 @@ func TestAnyResourceFromRawConfiguration(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			output := AnyResourceFromRawConfiguration(tc.input)
+			output := AnyResourceFromRawConfigurationV1(tc.input)
 			require.Equal(t, tc.expect, output)
 		})
 	}

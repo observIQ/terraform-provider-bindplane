@@ -115,7 +115,7 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to create new raw configuration: %v", err)
 	}
 
-	resource := resource.AnyResourceFromRawConfiguration(config)
+	resource := resource.AnyResourceFromRawConfigurationV1(config)
 	bindplane := meta.(*client.BindPlane)
 	ctx := context.TODO()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute

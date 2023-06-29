@@ -195,7 +195,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to create new configuration: %v", err)
 	}
 
-	resource := resource.AnyResourceFromConfiguration(config)
+	resource := resource.AnyResourceFromConfigurationV1(config)
 	bindplane := meta.(*client.BindPlane)
 	ctx := context.TODO()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute

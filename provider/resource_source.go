@@ -24,6 +24,7 @@ import (
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
+	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 )
 
 // TODO(jsirianni): Decide if sources should be supported. Currently not implemented by the provider.
@@ -82,24 +83,15 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	resource := model.AnyResource{
-		ResourceMeta: model.ResourceMeta{
-			APIVersion: "bindplane.observiq.com/v1",
-			Kind:       "Source",
-			Metadata: model.Metadata{
-				Name: name,
-			},
-		},
-		Spec: map[string]any{
-			"type":       sourceType,
-			"parameters": parameters,
-		},
+	r, err := resource.AnyResourceV1(name, sourceType, model.KindSource, parameters)
+	if err != nil {
+		return err
 	}
 
 	bindplane := meta.(*client.BindPlane)
 	ctx := context.TODO()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
-	if err := bindplane.ApplyWithRetry(ctx, timeout, &resource, rollout); err != nil {
+	if err := bindplane.ApplyWithRetry(ctx, timeout, &r, rollout); err != nil {
 		return err
 	}
 
