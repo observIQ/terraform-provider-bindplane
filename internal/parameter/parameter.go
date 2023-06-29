@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package resource provides functions for defining bindplane
-// generic resources.
-
+// Package parameter provides functions for marshalling and unmarshalling
+// BindPlane resource parameters.
 package parameter
 
 import (
@@ -34,7 +33,7 @@ func StringToParameter(s string) ([]model.Parameter, error) {
 	return parameters, nil
 }
 
-// ParametersToSring converts a list of parameters to
+// ParametersToString converts a list of parameters to
 // serialized json key values pairs.
 func ParametersToString(p []model.Parameter) (string, error) {
 	if len(p) == 0 {
