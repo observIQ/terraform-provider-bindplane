@@ -18,8 +18,6 @@ set -eE
 cd "$(dirname "$0")"
 
 clean () {
-    read -p "Ready to cleanup. Press enter to continue."
-
     rm -rf terraform.tfstate*
     rm -rf providers
 
