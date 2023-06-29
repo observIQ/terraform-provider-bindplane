@@ -2,7 +2,6 @@
 ==========================
 
 [![CI](https://github.com/observIQ/terraform-provider-bindplane/actions/workflows/ci.yml/badge.svg)](https://github.com/observIQ/terraform-provider-bindplane/actions/workflows/ci.yml)
-[![release](https://github.com/observIQ/terraform-provider-bindplane/actions/workflows/release.yml/badge.svg)](https://github.com/observIQ/terraform-provider-bindplane/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 Terraform provider for observIQ's agent management platform, [BindPlane](https://github.com/observIQ/bindplane).
@@ -16,12 +15,12 @@ and environment variables.
 
 | Option                      | Evironment               | Default  | Description                  |
 | --------------------------- | ------------------------ | -------- | ---------------------------- |
-| `remote_url`                | `BINDPLANE_CONFIG_REMOTE_URL` | required | The URL for the BindPlane server  |
-| `username`                  | `BINDPLANE_CONFIG_USERNAME`   | required | The BindPlane basic auth username |
-| `password`                  | `BINDPLANE_CONFIG_PASSWORD`   | required | The BindPlane basic auth password |
-| `tls_certificate_authority` | `BINDPLANE_CONFIG_TLS_CA`     | optional | Path to x509 PEM encoded certificate authority to trust when connecting to BindPlane |
-| `tls_certificate`           | `BINDPLANE_CONFIG_TLS_CERT`   | optional | Path to x509 PEM encoded client certificate to use when mTLS is desired |
-| `tls_private_key`           | `BINDPLANE_CONFIG_TLS_KEY`    | optional | Path to x509 PEM encoded private key to use when mTLS is desired |
+| `remote_url`                | `BINDPLANE_TF_REMOTE_URL` | required | The URL for the BindPlane server  |
+| `username`                  | `BINDPLANE_TF_USERNAME`   | required | The BindPlane basic auth username |
+| `password`                  | `BINDPLANE_TF_PASSWORD`   | required | The BindPlane basic auth password |
+| `tls_certificate_authority` | `BINDPLANE_TF_TLS_CA`     | optional | Path to x509 PEM encoded certificate authority to trust when connecting to BindPlane |
+| `tls_certificate`           | `BINDPLANE_TF_TLS_CERT`   | optional | Path to x509 PEM encoded client certificate to use when mTLS is desired |
+| `tls_private_key`           | `BINDPLANE_TF_TLS_KEY`    | optional | Path to x509 PEM encoded private key to use when mTLS is desired |
 
 **Configure with options:**
 
@@ -36,7 +35,7 @@ provider "bindplane" {
 **Configure with options and environment variables:**
 
 ```tf
-// Assumes the BINDPLANE_CONFIG_USERNAME and BINDPLANE_CONFIG_PASSWORD
+// Assumes the BINDPLANE_TF_USERNAME and BINDPLANE_TF_PASSWORD
 // environment variables are set.
 provider "bindplane" {
   remote_url = "http://192.168.1.10:3001"

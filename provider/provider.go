@@ -26,12 +26,12 @@ import (
 )
 
 const (
-	envServerURL = "BINDPLANE_CONFIG_REMOTE_URL"
-	envUsername  = "BINDPLANE_CONFIG_USERNAME" // #nosec, credentials are not hardcoded
-	envPassword  = "BINDPLANE_CONFIG_PASSWORD" // #nosec, credentials are not hardcoded
-	envTLSCa     = "BINDPLANE_CONFIG_TLS_CA"
-	envTLSCrt    = "BINDPLANE_CONFIG_TLS_CERT"
-	envTLSKey    = "BINDPLANE_CONFIG_TLS_KEY"
+	envServerURL = "BINDPLANE_TF_REMOTE_URL"
+	envUsername  = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
+	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
+	envTLSCa     = "BINDPLANE_TF_TLS_CA"
+	envTLSCrt    = "BINDPLANE_TF_TLS_CERT"
+	envTLSKey    = "BINDPLANE_TF_TLS_KEY"
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5
