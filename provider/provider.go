@@ -41,23 +41,28 @@ const (
 func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
+			"profile": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the bindplane client profile in ~/.bindplane. All other configuration options will override values set by the profile.",
+			},
 			"remote_url": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envServerURL,
 				}, nil),
 			},
 			"username": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envUsername,
 				}, nil),
 			},
 			"password": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envPassword,
 				}, nil),
@@ -103,52 +108,36 @@ func Provider() *schema.Provider {
 // providerConfigure configures the BindPlane client, which can be accessed from data / resource
 // functions with with 'bindplane := meta.(client.BindPlane)'
 func providerConfigure(_ context.Context, d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
-	var (
-		endpoint string
-		username string
-		password string
-
-		// tls
-		ca   string
-		cert string
-		key  string
-	)
-
-	if v, ok := d.Get("remote_url").(string); ok {
-		endpoint = v
+	profile := ""
+	if v, ok := d.Get("profile").(string); ok {
+		profile = v
 	}
 
-	if v, ok := d.Get("username").(string); ok {
-		username = v
+	clientOpts := []client.Option{}
+
+	if v, ok := d.Get("remote_url").(string); ok && v != "" {
+		clientOpts = append(clientOpts, client.WithEndpoint(v))
 	}
 
-	if v, ok := d.Get("password").(string); ok {
-		password = v
+	if v, ok := d.Get("username").(string); ok && v != "" {
+		clientOpts = append(clientOpts, client.WithUsername(v))
 	}
 
-	if v, ok := d.Get("tls_certificate_authority").(string); ok {
-		ca = v
+	if v, ok := d.Get("password").(string); ok && v != "" {
+		clientOpts = append(clientOpts, client.WithPassword(v))
 	}
 
-	if v, ok := d.Get("tls_certificate").(string); ok {
-		cert = v
+	if v, ok := d.Get("tls_certificate_authority").(string); ok && v != "" {
+		clientOpts = append(clientOpts, client.WithTLSTrustedCA(v))
 	}
 
-	if v, ok := d.Get("tls_private_key").(string); ok {
-		key = v
+	if crt, ok := d.Get("tls_certificate").(string); ok && crt != "" {
+		if key, ok := d.Get("tls_private_key").(string); ok && key != "" {
+			clientOpts = append(clientOpts, client.WithTLS(crt, key))
+		}
 	}
 
-	i, err := client.New(
-		client.WithEndpoint(endpoint),
-		client.WithUsername(username),
-		client.WithPassword(password),
-
-		// client side tls
-		client.WithTLSTrustedCA(ca),
-
-		// mutual tls
-		client.WithTLS(cert, key),
-	)
+	i, err := client.New(profile, clientOpts...)
 	if err != nil {
 		err = fmt.Errorf("failed to initialize bindplane client: %w", err)
 		return nil, diag.FromErr(err)

@@ -110,6 +110,7 @@ func TestIntegration_http_raw_config(t *testing.T) {
 	}
 
 	i, err := New(
+		"",
 		WithEndpoint(endpoint.String()),
 		WithUsername(username),
 		WithPassword(password),
@@ -168,6 +169,7 @@ func TestIntegration_http_config(t *testing.T) {
 	}
 
 	i, err := New(
+		"",
 		WithEndpoint(endpoint.String()),
 		WithUsername(username),
 		WithPassword(password),
@@ -326,6 +328,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 	}
 
 	i, err := New(
+		"",
 		WithEndpoint(endpoint.String()),
 		WithUsername(username),
 		WithPassword(password),
@@ -362,6 +365,7 @@ func TestIntegration_https(t *testing.T) {
 	}
 
 	i, err := New(
+		"",
 		WithEndpoint(endpoint.String()),
 		WithUsername(username),
 		WithPassword(password),
@@ -402,6 +406,7 @@ func TestIntegration_https(t *testing.T) {
 // 	}
 
 // 	i, err := New(
+//      "",
 // 		WithEndpoint(endpoint.String()),
 // 		WithUsername(username),
 // 		WithPassword(password),
@@ -440,6 +445,7 @@ func TestIntegration_mtls(t *testing.T) {
 	}
 
 	i, err := New(
+		"",
 		WithEndpoint(endpoint.String()),
 		WithUsername(username),
 		WithPassword(password),

@@ -21,20 +21,35 @@ package client
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/observiq/bindplane-op/cli/commands/profile"
 	"github.com/observiq/bindplane-op/client"
 	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
-// New takes configuration options and returns a BindPlane client.
-func New(options ...Option) (*BindPlane, error) {
+// New takes an optional profile name and configuration options and returns a BindPlane client.
+// Configuration options will override any parameters that are set in the profile.
+func New(profileName string, options ...Option) (*BindPlane, error) {
 	config := &config.Config{}
+	var err error
+
+	if profileName != "" {
+		// reading a profile will set default values into the config
+		// which can be overriden by options.
+		config, err = readProfile(profileName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read named profile: %v", err)
+		}
+	}
 
 	for _, option := range options {
 		if option != nil {
@@ -51,6 +66,31 @@ func New(options ...Option) (*BindPlane, error) {
 
 	i, err := client.NewBindPlane(config, logger)
 	return &BindPlane{i}, err
+}
+
+// readProfile reads a BindPlane profile from the user's bindplane
+// directory. It is assumed that the path is '~/.bindplane'.
+func readProfile(name string) (*config.Config, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to lookup user's home directory: %v", err)
+	}
+
+	dir := path.Clean(fmt.Sprintf("%s/.bindplane/profiles", home))
+
+	profiler := profile.NewProfiler(dir)
+
+	b, err := profiler.ReadProfileBytes(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read profile %s: %v", name, err)
+	}
+
+	conf := &config.Config{}
+	if err := yaml.Unmarshal(b, conf); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal profile into config: %v", err)
+	}
+
+	return conf, nil
 }
 
 // Option is a function that configures a BindPlane client configuration
