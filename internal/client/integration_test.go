@@ -30,6 +30,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
+	"github.com/observiq/bindplane-op/model"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -83,7 +84,7 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 	return container
 }
 
-func TestIntegration_http(t *testing.T) {
+func TestIntegration_http_raw_config(t *testing.T) {
 	env := map[string]string{
 		"BINDPLANE_USERNAME":       username,
 		"BINDPLANE_PASSWORD":       password,
@@ -139,6 +140,158 @@ func TestIntegration_http(t *testing.T) {
 	outputConfig, err = i.Configuration("test")
 	require.Nil(t, err, "reading a configuration that does not exist should return a nil error")
 	require.Nil(t, outputConfig, "reading a configuration that does not exist should return a nil configuration")
+}
+
+func TestIntegration_http_config(t *testing.T) {
+	env := map[string]string{
+		"BINDPLANE_USERNAME":       username,
+		"BINDPLANE_PASSWORD":       password,
+		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
+		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+	}
+
+	container := bindplaneContainer(t, env)
+	defer func() {
+		require.NoError(t, container.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+
+	time.Sleep(time.Second * 20)
+
+	hostname, err := container.Host(context.Background())
+	require.NoError(t, err)
+
+	endpoint := url.URL{
+		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Scheme: "http",
+	}
+
+	i, err := New(
+		WithEndpoint(endpoint.String()),
+		WithUsername(username),
+		WithPassword(password),
+	)
+	require.NoError(t, err)
+	_, err = i.client.Version(context.Background())
+	require.NoError(t, err)
+
+	processorResource := model.AnyResource{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v1",
+			Kind:       "Processor",
+			Metadata: model.Metadata{
+				Name: "my-processor",
+			},
+		},
+		Spec: map[string]any{
+			"type": "batch",
+		},
+	}
+	require.NoError(t, i.Apply(&processorResource, false), "did not expect an error when creating processor")
+	_, err = i.Processor("my-processor")
+	require.NoError(t, err)
+	require.NoError(t, i.DeleteProcessor("my-processor"))
+
+	sourceResource := model.AnyResource{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v1",
+			Kind:       "Source",
+			Metadata: model.Metadata{
+				Name: "my-host",
+			},
+		},
+		Spec: map[string]any{
+			"type": "host",
+		},
+	}
+	require.NoError(t, i.Apply(&sourceResource, false), "did not expect error when creating source")
+
+	_, err = i.Source("my-host")
+	require.NoError(t, err)
+
+	destResource := model.AnyResource{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v1",
+			Kind:       "Destination",
+			Metadata: model.Metadata{
+				Name: "logging",
+			},
+		},
+		Spec: map[string]any{
+			"type": "custom",
+		},
+	}
+	require.NoError(t, i.Apply(&destResource, false), "did not expect error when creating destination")
+
+	_, err = i.Destination("logging")
+	require.NoError(t, err)
+
+	// Missing resources should return nil because Terraform will take the
+	// empty object and mark it as missing (to be created).
+	_, err = i.Source("source-not-exist")
+	require.NoError(t, err, "an error is not expected when looking up a source that does not exist")
+	_, err = i.Destination("dest-not-exist")
+	require.NoError(t, err, "an error is not expected when looking up a destination that does not exist")
+	_, err = i.Processor("invalid-processor")
+	require.NoError(t, err, "an error is not expected when looking up a processor that does not exist")
+
+	// config params
+	name := "test"
+	labels := map[string]string{
+		"purpose": "test",
+	}
+	matchLabels := map[string]string{
+		"configuration": name,
+	}
+	sources := []configuration.ResourceConfig{
+		{
+			Name: "my-host",
+		},
+	}
+	destinations := []configuration.ResourceConfig{
+		{
+			Name: "logging",
+		},
+	}
+
+	config, err := configuration.NewV1(
+		configuration.WithName(name),
+		configuration.WithLabels(labels),
+		configuration.WithMatchLabels(matchLabels),
+		configuration.WithSourcesByName(sources),
+		configuration.WithDestinationsByName(destinations),
+	)
+	require.NoError(t, err)
+	r := resource.AnyResourceFromConfiguration(config)
+	require.NoError(t, i.Apply(&r, true))
+
+	config, err = i.Configuration(name)
+	require.NoError(t, err)
+	require.NotNil(t, config)
+	require.Equal(t, name, config.Metadata.Name)
+	require.Equal(t, labels, config.Metadata.Labels.AsMap())
+
+	outputMatchLabels := make(map[string]string)
+	for k, v := range config.Spec.Selector.MatchLabels {
+		outputMatchLabels[k] = v
+	}
+	require.Equal(t, matchLabels, outputMatchLabels)
+
+	err = i.DeleteSource("my-host")
+	require.Error(t, err, "expected an error when deleting a source that has a dependent resource")
+
+	err = i.DeleteDestination("logging")
+	require.Error(t, err, "expected an error when deleting a destination that has a dependent resource")
+
+	err = i.DeleteConfiguration("test")
+	require.NoError(t, err)
+
+	err = i.DeleteSource("my-host")
+	require.NoError(t, err)
+
+	err = i.DeleteDestination("logging")
+	require.NoError(t, err)
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {

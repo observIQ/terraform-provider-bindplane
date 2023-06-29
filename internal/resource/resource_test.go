@@ -21,6 +21,134 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestAnyResourceFromConfiguration(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  *model.Configuration
+		expect model.AnyResource
+	}{
+		{
+			"valid-no-resources",
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+			model.AnyResource{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: map[string]any{
+					"contentType": "text/yaml",
+					"selector": model.AgentSelector{
+						MatchLabels: nil,
+					},
+				},
+			},
+		},
+		{
+			"valid-resources",
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Sources: []model.ResourceConfiguration{
+						{
+							Name: "source-a",
+						},
+						{
+							ParameterizedSpec: model.ParameterizedSpec{
+								Type: "host",
+								Parameters: []model.Parameter{
+									{
+										Name:  "collection_interval",
+										Value: "60",
+									},
+								},
+							},
+						},
+					},
+					Destinations: []model.ResourceConfiguration{
+						{
+							Name: "logging",
+						},
+						{
+							ParameterizedSpec: model.ParameterizedSpec{
+								Type: "custom",
+								Parameters: []model.Parameter{
+									{
+										Name:  "configuration",
+										Value: "logging:",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			model.AnyResource{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: map[string]any{
+					"contentType": "text/yaml",
+					"selector": model.AgentSelector{
+						MatchLabels: nil,
+					},
+					"sources": []model.ResourceConfiguration{
+						{
+							Name: "source-a",
+						},
+						{
+							ParameterizedSpec: model.ParameterizedSpec{
+								Type: "host",
+								Parameters: []model.Parameter{
+									{
+										Name:  "collection_interval",
+										Value: "60",
+									},
+								},
+							},
+						},
+					},
+					"destinations": []model.ResourceConfiguration{
+						{
+							Name: "logging",
+						},
+						{
+							ParameterizedSpec: model.ParameterizedSpec{
+								Type: "custom",
+								Parameters: []model.Parameter{
+									{
+										Name:  "configuration",
+										Value: "logging:",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output := AnyResourceFromConfiguration(tc.input)
+			require.Equal(t, tc.expect, output)
+		})
+	}
+}
+
 func TestAnyResourceFromRawConfiguration(t *testing.T) {
 	cases := []struct {
 		name   string

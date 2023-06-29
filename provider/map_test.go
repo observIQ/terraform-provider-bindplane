@@ -54,6 +54,11 @@ func TestStringMapFromTFMap(t *testing.T) {
 			},
 			nil,
 		},
+		{
+			"nil",
+			nil,
+			nil,
+		},
 	}
 
 	for _, tc := range cases {

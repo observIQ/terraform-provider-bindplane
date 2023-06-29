@@ -21,8 +21,15 @@ import "github.com/observiq/bindplane-op/model"
 // AnyResourceFromConfiguration takes a BindPlane configuration and returns a BindPlane AnyResource
 func AnyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 	a := anyResourceFromConfiguration(c)
-	a.Spec["sources"] = c.Spec.Sources
-	a.Spec["destinations"] = c.Spec.Destinations
+
+	if len(c.Spec.Sources) > 0 {
+		a.Spec["sources"] = c.Spec.Sources
+	}
+
+	if len(c.Spec.Destinations) > 0 {
+		a.Spec["destinations"] = c.Spec.Destinations
+	}
+
 	return a
 }
 

@@ -71,6 +71,84 @@ func TestNewV1(t *testing.T) {
 			},
 		},
 		{
+			"sources",
+			func() Option {
+				r := []ResourceConfig{
+					{
+						Name: "test",
+						Processors: []string{
+							"count",
+							"batch",
+						},
+					},
+				}
+				return WithSourcesByName(r)
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Sources: []model.ResourceConfiguration{
+						{
+							Name: "test",
+							ParameterizedSpec: model.ParameterizedSpec{
+								Processors: []model.ResourceConfiguration{
+									{
+										Name: "count",
+									},
+									{
+										Name: "batch",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			"destinations",
+			func() Option {
+				r := []ResourceConfig{
+					{
+						Name: "test",
+						Processors: []string{
+							"count",
+							"batch",
+						},
+					},
+				}
+				return WithDestinationsByName(r)
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       "Configuration",
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Destinations: []model.ResourceConfiguration{
+						{
+							Name: "test",
+							ParameterizedSpec: model.ParameterizedSpec{
+								Processors: []model.ResourceConfiguration{
+									{
+										Name: "count",
+									},
+									{
+										Name: "batch",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			"labels",
 			func() Option {
 				labels := map[string]string{

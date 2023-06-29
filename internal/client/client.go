@@ -126,7 +126,6 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 		// in an error from this method.
 		switch status.Status {
 		case model.StatusUnchanged:
-			panic("unchanged")
 		case model.StatusConfigured, model.StatusCreated:
 			if rollout && status.Resource.Kind == model.KindConfiguration {
 				if err := i.Rollout(resource.Name()); err != nil {

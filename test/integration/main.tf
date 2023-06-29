@@ -159,7 +159,7 @@ resource "bindplane_source" "otlp-custom" {
     [
       {
         "name": "http_port",
-        "value": 44313
+        "value": 44314
       },
       {
         "name": "grpc_port",
@@ -234,10 +234,9 @@ resource "bindplane_processor" "add_fields" {
       {
         "name": "log_resource_attributes",
         "value": {
-          "key": "value"
+          "key": "value2"
         }
       }
     ]
   )
 }
-
