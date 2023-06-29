@@ -21,7 +21,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2.1.4
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -42,7 +42,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Vet
         run: go vet ./...
 
@@ -56,7 +56,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -76,7 +76,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -96,7 +96,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -116,7 +116,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -136,7 +136,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -159,7 +159,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20
+          go-version: "1.20"
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
@@ -178,7 +178,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.20   
+          go-version: "1.20"   
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
