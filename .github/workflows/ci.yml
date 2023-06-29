@@ -10,7 +10,7 @@ on:
 
 concurrency:
   group: ${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   setup-environment:
@@ -18,16 +18,19 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+
       - name: Setup Go
         uses: actions/setup-go@v2.1.4
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Install Tools
         if: steps.tool-cache.outputs.cache-hit != 'true'
         run: make install-tools
@@ -39,10 +42,12 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Vet
         run: go vet ./...
 
@@ -53,16 +58,19 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Gosec
         run: make gosec
 
@@ -71,18 +79,22 @@ jobs:
     needs:
       - setup-environment
     steps:
+
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Check License Headers
         run: make check-license
 
@@ -93,16 +105,19 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Lint
         run: make lint
 
@@ -113,16 +128,19 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Check Format
         run: make check-fmt
 
@@ -133,16 +151,19 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - name: Misspell
         run: make misspell
 
@@ -153,19 +174,23 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - uses: KengoTODA/actions-setup-docker-compose@main
         with:
           version: '2.7.0'
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
       - run: make test-end-to-end
 
   build:
@@ -175,16 +200,26 @@ jobs:
     steps:
       - name: Check out source code
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: "1.20"   
+
       - name: Cache Tools
         id: tool-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: paultyng/ghaction-import-gpg@v2.1.0
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
+  
       - name: Test GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -192,5 +227,6 @@ jobs:
           args: release --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+
       - name: Scan Binaries
         run: lichen --config=./license.yaml $(find dist/provider_* -type f | grep terraform-provider-bindplane | xargs)
