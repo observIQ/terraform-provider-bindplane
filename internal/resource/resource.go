@@ -47,7 +47,7 @@ func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Pa
 	}
 }
 
-// AnyResourceFromConfiguration takes a BindPlane configuration and returns a
+// AnyResourceFromConfigurationV1 takes a BindPlane configuration and returns a
 // bindplane.observiq.com/v1.AnyResource
 func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 	a := anyResourceFromConfiguration(c)

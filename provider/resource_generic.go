@@ -64,11 +64,7 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	if err != nil {
 		return err
 	}
-	if err := d.Set("parameters_json", paramStr); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("parameters_json", paramStr)
 }
 
 // genericResourceDelete can delete configurations, sources,
