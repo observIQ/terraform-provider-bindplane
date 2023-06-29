@@ -22,8 +22,10 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/observiq/bindplane-op/client"
 	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
@@ -143,6 +145,23 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 	}
 
 	return errs
+}
+
+// ApplyWithRetry wraps Apply with the ability to retry on retryable errors
+func (i *BindPlane) ApplyWithRetry(ctx context.Context, timeout time.Duration, r *model.AnyResource, rollout bool) error {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		if err := i.Apply(r, rollout); err != nil {
+			if retryableError(err) {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("bindplane apply retries exhausted: %v", err)
+	}
+	return nil
 }
 
 // Rollout starts a rollout against a named config

@@ -15,11 +15,6 @@
 package provider
 
 import (
-	"context"
-	"fmt"
-	"time"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 )
@@ -27,24 +22,10 @@ import (
 // resourceGenericConfigurationDelete can delete configurations and raw configurations.
 func resourceGenericConfigurationDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
-
-	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
-		name := d.Get("name").(string)
-		err := bindplane.DeleteConfiguration(name)
-		if err != nil {
-			err := fmt.Errorf("failed to delete configuration '%s' by name: %v", name, err)
-			if retryableError(err) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
+	err := bindplane.DeleteConfiguration(d.Get("name").(string))
 	if err != nil {
-		return fmt.Errorf("delete retries exhausted: %v", err)
+		return err
 	}
-
 	return resourceConfigurationRead(d, meta)
 }
 

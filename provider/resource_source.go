@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
@@ -98,20 +97,10 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	}
 
 	bindplane := meta.(*client.BindPlane)
-
-	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
-		err := bindplane.Apply(&resource, rollout)
-		if err != nil {
-			err := fmt.Errorf("failed to apply resource: %v", err)
-			if retryableError(err) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if err != nil {
-		return fmt.Errorf("create retries exhausted: %v", err)
+	ctx := context.TODO()
+	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
+	if err := bindplane.ApplyWithRetry(ctx, timeout, &resource, rollout); err != nil {
+		return err
 	}
 
 	return resourceSourceRead(d, meta)
@@ -120,22 +109,9 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 func resourceSourceRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	source := &model.Source{}
-
-	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *retry.RetryError {
-		var err error
-		name := d.Get("name").(string)
-		source, err = bindplane.Source(name)
-		if err != nil {
-			if retryableError(err) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
+	source, err := bindplane.Source(d.Get("name").(string))
 	if err != nil {
-		return fmt.Errorf("read retries exhausted: %v", err)
+		return err
 	}
 
 	if source == nil {
@@ -143,14 +119,11 @@ func resourceSourceRead(d *schema.ResourceData, meta any) error {
 		return nil
 	}
 
-	name := source.Name()
-	version := source.Version()
-
-	if err := d.Set("name", name); err != nil {
+	if err := d.Set("name", source.Name()); err != nil {
 		return fmt.Errorf("failed to set resource name: %v", err)
 	}
 
-	if err := d.Set("version", version); err != nil {
+	if err := d.Set("version", source.Version()); err != nil {
 		return fmt.Errorf("failed to set resource version: %v", err)
 	}
 
@@ -176,23 +149,9 @@ func resourceSourceRead(d *schema.ResourceData, meta any) error {
 
 func resourceSourceDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
-
-	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
-		name := d.Get("name").(string)
-		err := bindplane.DeleteSource(name)
-		if err != nil {
-			err := fmt.Errorf("failed to delete source '%s' by name: %v", name, err)
-			if retryableError(err) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
+	err := bindplane.DeleteSource(d.Get("name").(string))
 	if err != nil {
-		return fmt.Errorf("delete retries exhausted: %v", err)
+		return err
 	}
-
 	return resourceSourceRead(d, meta)
 }

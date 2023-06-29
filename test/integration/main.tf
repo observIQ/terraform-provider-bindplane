@@ -24,6 +24,7 @@ provider "bindplane" {
 }
 
 resource "bindplane_raw_configuration" "raw" {
+  rollout = true
   name = "testtf-raw"
   platform = "linux"
   labels = {

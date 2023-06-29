@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package provider
+package client
 
-import "strings"
+import (
+	"errors"
+	"testing"
 
-// Errors that should result in a retry are checked here
-func retryableError(err error) bool {
-	switch e := err.Error(); {
-	case strings.Contains(e, "connect: connection refused"):
-		return true
-	case strings.Contains(e, "Client.Timeout exceeded while awaiting headers"):
-		return true
-	}
-	return false
+	"github.com/stretchr/testify/require"
+)
+
+func TestRetryableError(t *testing.T) {
+	require.True(t, retryableError(errors.New("connect: connection refused")))
+	require.True(t, retryableError(errors.New("Client.Timeout exceeded while awaiting headers")))
+	require.False(t, retryableError(errors.New("")))
+	require.False(t, retryableError(errors.New("resource is invalid")))
 }

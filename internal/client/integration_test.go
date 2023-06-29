@@ -188,7 +188,10 @@ func TestIntegration_http_config(t *testing.T) {
 			"type": "batch",
 		},
 	}
-	require.NoError(t, i.Apply(&processorResource, false), "did not expect an error when creating processor")
+	require.NoError(t, i.ApplyWithRetry(
+		context.TODO(),
+		time.Duration(time.Minute*1),
+		&processorResource, false), "did not expect an error when creating processor")
 	_, err = i.Processor("my-processor")
 	require.NoError(t, err)
 	require.NoError(t, i.DeleteProcessor("my-processor"))
