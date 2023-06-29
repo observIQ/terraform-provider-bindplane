@@ -10,6 +10,7 @@ allow:
   - "Zlib"
   - "ISC"
   - "MPL-2.0"
+  - "Unicode-DFS-2016"
 
 exceptions:
   unresolvableLicense:
