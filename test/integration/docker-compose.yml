@@ -3,7 +3,7 @@ version: "3.9"
 services:
   bindplane:
     hostname: bindplane.bindplane-dev.svc.cluster.local
-    image: ghcr.io/observiq/bindplane:1.17.1
+    image: observiq/bindplane:1.17.1
     restart: always
     ports:
       - "3100:3001"

@@ -267,6 +267,87 @@ func (i *BindPlane) DeleteProcessor(name string) error {
 	return nil
 }
 
+// Delete will delete a BindPlane configuration, source, destination or processor
+func (i *BindPlane) Delete(k model.Kind, name string) error {
+	switch k {
+	case model.KindConfiguration:
+		return i.DeleteConfiguration(name)
+	case model.KindDestination:
+		return i.DeleteDestination(name)
+	case model.KindSource:
+		return i.DeleteSource(name)
+	case model.KindProcessor:
+		return i.DeleteProcessor(name)
+	default:
+		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
+	}
+}
+
+// GenericResource represents a BindPlane resource's
+// id, name, version, and ParameterizedSpec.
+type GenericResource struct {
+	ID      string
+	Name    string
+	Version model.Version
+	Spec    model.ParameterizedSpec
+}
+
+// GenericResource looks up a BindPlane destination, source, or process
+// and returns a GenericResource. The returned GenericResource will be nil
+// if it does not exist. It is up to the caller to check.
+func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource, error) {
+	g := &GenericResource{}
+
+	switch k {
+	case model.KindDestination:
+		r, err := i.Destination(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if r == nil {
+			return nil, nil
+		}
+
+		g.ID = r.ID()
+		g.Name = r.Name()
+		g.Version = r.Version()
+		g.Spec = r.Spec
+	case model.KindSource:
+		r, err := i.Source(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if r == nil {
+			return nil, nil
+		}
+
+		g.ID = r.ID()
+		g.Name = r.Name()
+		g.Version = r.Version()
+		g.Spec = r.Spec
+	case model.KindProcessor:
+		r, err := i.Processor(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if r == nil {
+			return nil, nil
+		}
+
+		g.ID = r.ID()
+		g.Name = r.Name()
+		g.Version = r.Version()
+		g.Spec = r.Spec
+	default:
+		return nil, fmt.Errorf("GenericResource does not support bindplane kind '%s'", k)
+	}
+
+	return g, nil
+}
+
 // TODO(jsirianni): BindPlane should probably have error types so we can check
 // error.Is.
 func isNotFoundError(err error) bool {

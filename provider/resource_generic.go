@@ -15,7 +15,6 @@
 package provider
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,83 +29,38 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	bindplane := meta.(*client.BindPlane)
 	resourceName := d.Get("name").(string)
 
-	var id string
-	var name string
-	var version model.Version
-	var spec model.ParameterizedSpec
+	g, err := bindplane.GenericResource(rKind, resourceName)
+	if err != nil {
+		return err
+	}
 
-	switch rKind {
-	case model.KindDestination:
-		r, err := bindplane.Destination(resourceName)
-		if err != nil {
-			return err
-		}
-
-		// When a resource does not exist, always set the id to "" and return a nil error.
-		if r == nil {
-			d.SetId("")
-			return nil
-		}
-
-		id = r.ID()
-		name = r.Name()
-		version = r.Version()
-		spec = r.Spec
-	case model.KindSource:
-		r, err := bindplane.Source(resourceName)
-		if err != nil {
-			return err
-		}
-
-		// When a resource does not exist, always set the id to "" and return a nil error.
-		if r == nil {
-			d.SetId("")
-			return nil
-		}
-
-		id = r.ID()
-		name = r.Name()
-		version = r.Version()
-		spec = r.Spec
-	case model.KindProcessor:
-		r, err := bindplane.Processor(resourceName)
-		if err != nil {
-			return err
-		}
-
-		// When a resource does not exist, always set the id to "" and return a nil error.
-		if r == nil {
-			d.SetId("")
-			return nil
-		}
-
-		id = r.ID()
-		name = r.Name()
-		version = r.Version()
-		spec = r.Spec
-
-	default:
-		return fmt.Errorf("genericResourceRead does not support bindplane kind '%s'", rKind)
+	// A nil return from GenericResource indicates that the resource
+	// did not exist. Terraform read operations should always set the
+	// ID to "" and return a nil error. This will allow Terraform to
+	// re-create the resource or comfirm that it was deleted.
+	if g == nil {
+		d.SetId("")
+		return nil
 	}
 
 	// Save values returned by bindplane to Terraform's state
 
-	d.SetId(id)
+	d.SetId(g.ID)
 
-	if err := d.Set("name", name); err != nil {
+	if err := d.Set("name", g.Name); err != nil {
 		return err
 	}
 
-	if err := d.Set("version", version); err != nil {
+	if err := d.Set("version", g.Version); err != nil {
 		return err
 	}
 
-	rType := strings.Split(spec.Type, ":")[0]
+	rType := strings.Split(g.Spec.Type, ":")[0]
 	if err := d.Set("type", rType); err != nil {
 		return err
 	}
 
-	paramStr, err := parameter.ParametersToString(spec.Parameters)
+	paramStr, err := parameter.ParametersToString(g.Spec.Parameters)
 	if err != nil {
 		return err
 	}
@@ -123,21 +77,7 @@ func genericResourceDelete(rKind model.Kind, d *schema.ResourceData, meta any) e
 	bindplane := meta.(*client.BindPlane)
 	name := d.Get("name").(string)
 
-	var err error
-	switch rKind {
-	case model.KindConfiguration:
-		err = bindplane.DeleteConfiguration(name)
-	case model.KindDestination:
-		err = bindplane.DeleteDestination(name)
-	case model.KindSource:
-		err = bindplane.DeleteSource(name)
-	case model.KindProcessor:
-		err = bindplane.DeleteProcessor(name)
-	default:
-		return fmt.Errorf("genericResourceDelete does not support bindplane kind '%s'", rKind)
-	}
-
-	if err != nil {
+	if err := bindplane.Delete(rKind, name); err != nil {
 		return err
 	}
 	return resourceProcessorRead(d, meta)

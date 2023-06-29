@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	bindplaneImage   = "ghcr.io/observiq/bindplane:1.17.1"
+	bindplaneImage   = "observiq/bindplane:1.17.1"
 	bindplaneExtPort = 3100
 
 	username = "int-test-user"
@@ -192,9 +192,9 @@ func TestIntegration_http_config(t *testing.T) {
 		context.TODO(),
 		time.Duration(time.Minute*1),
 		&processorResource, false), "did not expect an error when creating processor")
-	_, err = i.Processor("my-processor")
+	_, err = i.GenericResource(model.KindProcessor, "my-processor")
 	require.NoError(t, err)
-	require.NoError(t, i.DeleteProcessor("my-processor"))
+	require.NoError(t, i.Delete(model.KindProcessor, "my-processor"))
 
 	sourceResource := model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
@@ -210,7 +210,7 @@ func TestIntegration_http_config(t *testing.T) {
 	}
 	require.NoError(t, i.Apply(&sourceResource, false), "did not expect error when creating source")
 
-	_, err = i.Source("my-host")
+	_, err = i.GenericResource(model.KindSource, "my-host")
 	require.NoError(t, err)
 
 	destResource := model.AnyResource{
@@ -227,16 +227,16 @@ func TestIntegration_http_config(t *testing.T) {
 	}
 	require.NoError(t, i.Apply(&destResource, false), "did not expect error when creating destination")
 
-	_, err = i.Destination("logging")
+	_, err = i.GenericResource(model.KindDestination, "logging")
 	require.NoError(t, err)
 
 	// Missing resources should return nil because Terraform will take the
 	// empty object and mark it as missing (to be created).
-	_, err = i.Source("source-not-exist")
+	_, err = i.GenericResource(model.KindSource, "source-not-exist")
 	require.NoError(t, err, "an error is not expected when looking up a source that does not exist")
-	_, err = i.Destination("dest-not-exist")
+	_, err = i.GenericResource(model.KindDestination, "dest-not-exist")
 	require.NoError(t, err, "an error is not expected when looking up a destination that does not exist")
-	_, err = i.Processor("invalid-processor")
+	_, err = i.GenericResource(model.KindProcessor, "invalid-processor")
 	require.NoError(t, err, "an error is not expected when looking up a processor that does not exist")
 
 	// config params
@@ -281,20 +281,26 @@ func TestIntegration_http_config(t *testing.T) {
 	}
 	require.Equal(t, matchLabels, outputMatchLabels)
 
-	err = i.DeleteSource("my-host")
+	err = i.Delete(model.KindSource, "my-host")
 	require.Error(t, err, "expected an error when deleting a source that has a dependent resource")
 
-	err = i.DeleteDestination("logging")
+	err = i.Delete(model.KindDestination, "logging")
 	require.Error(t, err, "expected an error when deleting a destination that has a dependent resource")
 
-	err = i.DeleteConfiguration("test")
+	err = i.Delete(model.KindConfiguration, "test")
 	require.NoError(t, err)
 
-	err = i.DeleteSource("my-host")
+	err = i.Delete(model.KindSource, "my-host")
 	require.NoError(t, err)
 
-	err = i.DeleteDestination("logging")
+	err = i.Delete(model.KindDestination, "logging")
 	require.NoError(t, err)
+
+	err = i.Delete(model.KindAgent, "agent")
+	require.Error(t, err, "Generic delete does not support agent")
+
+	_, err = i.GenericResource(model.KindAgent, "agent")
+	require.Error(t, err, "Generic get does not support agent")
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {
