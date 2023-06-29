@@ -52,6 +52,7 @@ release-test:
 		--skip-validate \
 		--snapshot \
 		--rm-dist \
+		--skip-sign \
 		--config release/goreleaser.yml
 
 .PHONY: ci-check
