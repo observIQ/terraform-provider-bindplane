@@ -36,12 +36,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// New takes an optional profile name and configuration options and returns a BindPlane client.
-// Configuration options will override any parameters that are set in the profile.
+// New takes an optional profile name, configuration options and
+// returns a BindPlane client. Configuration options will override
+// any parameters that are set in the profile.
 func New(profileName string, options ...Option) (*BindPlane, error) {
 	config := &config.Config{}
 	var err error
 
+	// Profile is optional.
 	if profileName != "" {
 		// reading a profile will set default values into the config
 		// which can be overriden by options.
@@ -51,6 +53,7 @@ func New(profileName string, options ...Option) (*BindPlane, error) {
 		}
 	}
 
+	// Options can override values set by the profile.
 	for _, option := range options {
 		if option != nil {
 			option(config)
@@ -67,11 +70,6 @@ func New(profileName string, options ...Option) (*BindPlane, error) {
 	i, err := client.NewBindPlane(config, logger)
 	if err != nil {
 		return nil, err
-	}
-
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(time.Second*5))
-	if _, err := i.Version(ctx); err != nil {
-		return nil, fmt.Errorf("failed healthcheck to bindplane: %v", err)
 	}
 
 	return &BindPlane{i}, nil

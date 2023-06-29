@@ -25,7 +25,7 @@ import (
 func TestNew(t *testing.T) {
 	c, err := New(
 		"",
-		WithEndpoint("go.dev"),
+		WithEndpoint("http://go.dev"),
 		WithUsername("otelu"),
 		WithPassword("otelp"),
 	)
