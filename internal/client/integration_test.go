@@ -266,7 +266,7 @@ func TestIntegration_http_config(t *testing.T) {
 		configuration.WithDestinationsByName(destinations),
 	)
 	require.NoError(t, err)
-	r := resource.AnyResourceFromConfiguration(config)
+	r := resource.AnyResourceFromConfigurationV1(config)
 	require.NoError(t, i.Apply(&r, true))
 
 	config, err = i.Configuration(name)
