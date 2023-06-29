@@ -22,6 +22,7 @@ import (
 
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
+	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -92,7 +93,7 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
 
-	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
+	labels, err := maputil.StringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
 		return err
 	}
