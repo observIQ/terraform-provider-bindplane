@@ -107,7 +107,7 @@ test-integration-cover: dev-tls
 .PHONY: test-end-to-end
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
-	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
+	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
 	bash test/integration/test.sh
 
 # Test local configures test/local directory
@@ -119,7 +119,7 @@ test-end-to-end: test-integration provider
 test-local: provider
 	rm -rf test/local/providers
 	mkdir -p test/local/providers
-	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/local/providers/terraform-provider-bindplane_v0.0.0
+	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/local/providers/terraform-provider-bindplane_v0.0.0
 
 .PHONY: check-license
 check-license:
