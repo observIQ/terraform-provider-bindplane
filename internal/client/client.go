@@ -65,7 +65,16 @@ func New(profileName string, options ...Option) (*BindPlane, error) {
 	}
 
 	i, err := client.NewBindPlane(config, logger)
-	return &BindPlane{i}, err
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(time.Second*5))
+	if _, err := i.Version(ctx); err != nil {
+		return nil, fmt.Errorf("failed healthcheck to bindplane: %v", err)
+	}
+
+	return &BindPlane{i}, nil
 }
 
 // readProfile reads a BindPlane profile from the user's bindplane
