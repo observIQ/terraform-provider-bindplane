@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 )
@@ -28,15 +28,15 @@ import (
 func resourceGenericConfigurationDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *tfresource.RetryError {
+	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
 		name := d.Get("name").(string)
 		err := bindplane.DeleteConfiguration(name)
 		if err != nil {
 			err := fmt.Errorf("failed to delete configuration '%s' by name: %v", name, err)
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

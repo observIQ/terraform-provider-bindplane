@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
-	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -201,14 +201,14 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	bindplane := meta.(*client.BindPlane)
 
-	err = tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err = retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
 		err := bindplane.Apply(&resource, rollout)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -225,15 +225,15 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 
 	config := &model.Configuration{}
 
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *tfresource.RetryError {
+	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
 		var err error
 		name := d.Get("name").(string)
 		config, err = bindplane.Configuration(name)
 		if err != nil {
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -273,15 +273,6 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	if err := d.Set("match_labels", matchLabels); err != nil {
 		return fmt.Errorf("failed to set resource match labels: %v", err)
 	}
-
-	// TODO(jsirianni): Read source params and save to state.
-	// Right now we do not have a way to identify embeded sources, therefor
-	// we will run into issues when it comes to mutliple sources of the same
-	// source type.
-	// Embeded sources
-	/*for _, source := range config.Spec.Sources {
-
-	}*/
 
 	d.SetId(config.ID())
 	return nil

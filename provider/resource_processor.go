@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	tfresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/client"
@@ -98,14 +98,14 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 
 	bindplane := meta.(*client.BindPlane)
 
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *tfresource.RetryError {
+	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
 		err := bindplane.Apply(&resource, rollout)
 		if err != nil {
 			err := fmt.Errorf("failed to apply resource: %v", err)
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -121,15 +121,15 @@ func resourceProcessorRead(d *schema.ResourceData, meta any) error {
 
 	processor := &model.Processor{}
 
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *tfresource.RetryError {
+	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutRead)-time.Minute, func() *retry.RetryError {
 		var err error
 		name := d.Get("name").(string)
 		processor, err = bindplane.Processor(name)
 		if err != nil {
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -176,15 +176,15 @@ func resourceProcessorRead(d *schema.ResourceData, meta any) error {
 func resourceProcessorDelete(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	err := tfresource.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *tfresource.RetryError {
+	err := retry.RetryContext(context.TODO(), d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
 		name := d.Get("name").(string)
 		err := bindplane.DeleteProcessor(name)
 		if err != nil {
 			err := fmt.Errorf("failed to delete processor '%s' by name: %v", name, err)
 			if retryableError(err) {
-				return tfresource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return tfresource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
