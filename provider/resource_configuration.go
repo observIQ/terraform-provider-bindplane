@@ -32,7 +32,7 @@ func resourceConfiguration() *schema.Resource {
 		Create: resourceConfigurationCreate,
 		Update: resourceConfigurationCreate, // Run create as update
 		Read:   resourceConfigurationRead,
-		Delete: resourceGenericConfigurationDelete,
+		Delete: genericConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -129,7 +129,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	labels, err := stringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
-		return fmt.Errorf("failed to read labels from resource configuration: %v", err)
+		return err
 	}
 	labels["platform"] = d.Get("platform").(string)
 
@@ -220,14 +220,14 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	}
 
 	if err := d.Set("name", config.Name()); err != nil {
-		return fmt.Errorf("failed to set resource name: %v", err)
+		return err
 	}
 
 	labels := config.Metadata.Labels.AsMap()
 	platform, ok := labels["platform"]
 	if ok {
 		if err := d.Set("platform", platform); err != nil {
-			return fmt.Errorf("failed to set resource platform: %v", err)
+			return err
 		}
 		// Remove the platform label from the labels map
 		// because Terraform's state does not expect it.
@@ -236,7 +236,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 
 	// Save the labels map to state, which has the 'platform' label removed.
 	if err := d.Set("labels", labels); err != nil {
-		return fmt.Errorf("failed to set resource labels: %v", err)
+		return err
 	}
 
 	matchLabels := make(map[string]string)
@@ -244,7 +244,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		matchLabels[k] = v
 	}
 	if err := d.Set("match_labels", matchLabels); err != nil {
-		return fmt.Errorf("failed to set resource match labels: %v", err)
+		return err
 	}
 
 	d.SetId(config.ID())

@@ -16,8 +16,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -98,51 +96,9 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 }
 
 func resourceDestinationRead(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-
-	destination, err := bindplane.Destination(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-
-	if destination == nil {
-		d.SetId("")
-		return nil
-	}
-
-	if err := d.Set("name", destination.Name()); err != nil {
-		return fmt.Errorf("failed to set resource name: %v", err)
-	}
-
-	if err := d.Set("version", destination.Version()); err != nil {
-		return fmt.Errorf("failed to set resource version: %v", err)
-	}
-
-	// TODO(jsirianni): Should Terraform be version aware?
-	destinationType := strings.Split(destination.Spec.Type, ":")[0]
-	if err := d.Set("type", destinationType); err != nil {
-		return fmt.Errorf("failed to set resource type: %v", err)
-	}
-
-	paramStr, err := parameter.ParametersToString(destination.Spec.Parameters)
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("parameters_json", string(paramStr)); err != nil {
-		return fmt.Errorf("failed to set resource parameters_json: %v", err)
-	}
-
-	d.SetId(destination.ID())
-
-	return nil
+	return genericResourceRead(model.KindDestination, d, meta)
 }
 
 func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-	err := bindplane.DeleteDestination(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-	return resourceDestinationRead(d, meta)
+	return genericResourceDelete(model.KindDestination, d, meta)
 }

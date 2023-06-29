@@ -16,8 +16,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,51 +97,9 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 }
 
 func resourceSourceRead(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-
-	source, err := bindplane.Source(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-
-	if source == nil {
-		d.SetId("")
-		return nil
-	}
-
-	if err := d.Set("name", source.Name()); err != nil {
-		return fmt.Errorf("failed to set resource name: %v", err)
-	}
-
-	if err := d.Set("version", source.Version()); err != nil {
-		return fmt.Errorf("failed to set resource version: %v", err)
-	}
-
-	// TODO(jsirianni): Should Terraform be version aware?
-	sourceType := strings.Split(source.Spec.Type, ":")[0]
-	if err := d.Set("type", sourceType); err != nil {
-		return fmt.Errorf("failed to set resource type: %v", err)
-	}
-
-	paramStr, err := parameter.ParametersToString(source.Spec.Parameters)
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("parameters_json", string(paramStr)); err != nil {
-		return fmt.Errorf("failed to set resource parameters_json: %v", err)
-	}
-
-	d.SetId(source.ID())
-
-	return nil
+	return genericResourceRead(model.KindSource, d, meta)
 }
 
 func resourceSourceDelete(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-	err := bindplane.DeleteSource(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-	return resourceSourceRead(d, meta)
+	return genericResourceDelete(model.KindSource, d, meta)
 }

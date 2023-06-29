@@ -16,17 +16,12 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	"github.com/observiq/bindplane-op/model"
 )
 
-// resourceGenericConfigurationDelete can delete configurations and raw configurations.
-func resourceGenericConfigurationDelete(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-	err := bindplane.DeleteConfiguration(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-	return resourceConfigurationRead(d, meta)
+// genericConfigurationDelete deletes configurations and raw configurations.
+func genericConfigurationDelete(d *schema.ResourceData, meta any) error {
+	return genericResourceDelete(model.KindConfiguration, d, meta)
 }
 
 func isValidPlatform(platform string) bool {

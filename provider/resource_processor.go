@@ -16,8 +16,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -82,10 +80,7 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(
-		name,
-		processorType,
-		model.KindProcessor, parameters)
+	r, err := resource.AnyResourceV1(name, processorType, model.KindProcessor, parameters)
 	if err != nil {
 		return err
 	}
@@ -101,51 +96,9 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 }
 
 func resourceProcessorRead(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-
-	processor, err := bindplane.Processor(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-
-	if processor == nil {
-		d.SetId("")
-		return nil
-	}
-
-	if err := d.Set("name", processor.Name()); err != nil {
-		return fmt.Errorf("failed to set resource name: %v", err)
-	}
-
-	if err := d.Set("version", processor.Version()); err != nil {
-		return fmt.Errorf("failed to set resource version: %v", err)
-	}
-
-	// TODO(jsirianni): Should Terraform be version aware?
-	processorType := strings.Split(processor.Spec.Type, ":")[0]
-	if err := d.Set("type", processorType); err != nil {
-		return fmt.Errorf("failed to set resource type: %v", err)
-	}
-
-	paramStr, err := parameter.ParametersToString(processor.Spec.Parameters)
-	if err != nil {
-		return err
-	}
-
-	if err := d.Set("parameters_json", string(paramStr)); err != nil {
-		return fmt.Errorf("failed to set resource parameters_json: %v", err)
-	}
-
-	d.SetId(processor.ID())
-
-	return nil
+	return genericResourceRead(model.KindProcessor, d, meta)
 }
 
 func resourceProcessorDelete(d *schema.ResourceData, meta any) error {
-	bindplane := meta.(*client.BindPlane)
-	err := bindplane.DeleteProcessor(d.Get("name").(string))
-	if err != nil {
-		return err
-	}
-	return resourceProcessorRead(d, meta)
+	return genericResourceDelete(model.KindProcessor, d, meta)
 }
