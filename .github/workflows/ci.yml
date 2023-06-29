@@ -226,7 +226,7 @@ jobs:
           version: latest
           args: release --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
         env:
-          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
       - name: Scan Binaries
         run: lichen --config=./license.yaml $(find dist/provider_* -type f | grep terraform-provider-bindplane | xargs)
