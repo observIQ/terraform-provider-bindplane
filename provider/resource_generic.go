@@ -51,10 +51,6 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	if err := d.Set("version", g.Version); err != nil {
-		return err
-	}
-
 	rType := strings.Split(g.Spec.Type, ":")[0]
 	if err := d.Set("type", rType); err != nil {
 		return err

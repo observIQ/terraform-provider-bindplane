@@ -39,11 +39,6 @@ func resourceSource() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the source.",
 			},
-			"version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				ForceNew: false,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,

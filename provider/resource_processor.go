@@ -38,11 +38,6 @@ func resourceProcessor() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the processor.",
 			},
-			"version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				ForceNew: false,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,

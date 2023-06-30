@@ -38,11 +38,6 @@ func resourceDestination() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the destination.",
 			},
-			"version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				ForceNew: false,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
