@@ -36,9 +36,10 @@ func resourceRawConfiguration() *schema.Resource {
 		Delete: genericConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Name of the configuration.",
 			},
 			"platform": {
 				Type:     schema.TypeString,

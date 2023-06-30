@@ -52,6 +52,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envServerURL,
 				}, nil),
+				Description: "The endpoint used to connect to the BindPlane OP instance.",
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -59,6 +60,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envUsername,
 				}, nil),
+				Description: "The username used for authenticating to the BindPlane OP instance.",
 			},
 			"password": {
 				Type:     schema.TypeString,
@@ -66,6 +68,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envPassword,
 				}, nil),
+				Description: "The password used for authenticating to the BindPlane OP instance.",
 			},
 			"tls_certificate_authority": {
 				Type:     schema.TypeString,
@@ -73,6 +76,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envTLSCa,
 				}, nil),
+				Description: "File path to the x509 PEM certificate authority file used for verifying the BindPlane OP instance's TLS certificate. Not required if your workstation already trusts the certificate authority through your operating system's trust store.",
 			},
 			"tls_certificate": {
 				Type:     schema.TypeString,
@@ -80,6 +84,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envTLSCrt,
 				}, nil),
+				Description: "File path to the x509 PEM client TLS certificate, required when the BindPlane OP instance is configured for mutual TLS.",
 			},
 			"tls_private_key": {
 				Type:     schema.TypeString,
@@ -87,6 +92,7 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envTLSKey,
 				}, nil),
+				Description: "File path to the x509 PEM client private key, required when the BindPlane OP instance is configured for mutual TLS.",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{

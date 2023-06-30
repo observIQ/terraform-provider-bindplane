@@ -33,9 +33,10 @@ func resourceProcessor() *schema.Resource {
 		Delete: resourceProcessorDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Name of the processor.",
 			},
 			"version": {
 				Type:     schema.TypeInt,
