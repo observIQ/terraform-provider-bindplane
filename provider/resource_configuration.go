@@ -52,10 +52,11 @@ func resourceConfiguration() *schema.Resource {
 					}
 					return
 				},
+				Description: "The platform the configuration is for.",
 			},
 			"labels": {
 				Type:     schema.TypeMap,
-				Required: true,
+				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
 					labels := val.(map[string]any)
@@ -65,11 +66,13 @@ func resourceConfiguration() *schema.Resource {
 					}
 					return
 				},
+				Description: "Key value pairs which will be added to the configuration as labels.",
 			},
 			"match_labels": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				ForceNew: false,
+				Type:        schema.TypeMap,
+				Computed:    true,
+				ForceNew:    false,
+				Description: "Labels that BindPlane OP uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
 			},
 			"source": {
 				Type:     schema.TypeList,
@@ -78,18 +81,21 @@ func resourceConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: false,
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "Name of the source to attach.",
 						},
 						"processors": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: false,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:        schema.TypeSet,
+							Optional:    true,
+							ForceNew:    false,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "List of processor names to attach to the source.",
 						},
 					},
 				},
+				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
 			"destination": {
 				Type:     schema.TypeList,
@@ -98,23 +104,27 @@ func resourceConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: false,
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "Name of the destination to attach.",
 						},
 						"processors": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: false,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:        schema.TypeSet,
+							Optional:    true,
+							ForceNew:    false,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "List of processor names to attach to the destination.",
 						},
 					},
 				},
+				Description: "Destination name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
 			"rollout": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeBool,
+				Required:    true,
+				ForceNew:    false,
+				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{

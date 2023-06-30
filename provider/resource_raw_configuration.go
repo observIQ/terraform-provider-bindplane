@@ -52,6 +52,7 @@ func resourceRawConfiguration() *schema.Resource {
 					}
 					return nil, errs
 				},
+				Description: "The platform the configuration is for.",
 			},
 			"labels": {
 				Type:     schema.TypeMap,
@@ -65,21 +66,25 @@ func resourceRawConfiguration() *schema.Resource {
 					}
 					return
 				},
+				Description: "Key value pairs which will be added to the configuration as labels.",
 			},
 			"match_labels": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				ForceNew: false,
+				Type:        schema.TypeMap,
+				Computed:    true,
+				ForceNew:    false,
+				Description: "Labels that BindPlane OP uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
 			},
 			"raw_configuration": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "The OpenTelemetry collector configuration to use for the raw configuration.",
 			},
 			"rollout": {
-				Type:     schema.TypeBool,
-				Required: true,
-				ForceNew: false,
+				Type:        schema.TypeBool,
+				Required:    true,
+				ForceNew:    false,
+				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
