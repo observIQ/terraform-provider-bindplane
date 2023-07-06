@@ -64,7 +64,7 @@ apache_http      Apache HTTP      1
 ...
 ```
 
-You can view an individual source type's options with the `bindplane get source type <name> -o yaml` command:
+You can view an individual source type's options with the `bindplane get source-type <name> -o yaml` command:
 ```yaml
 # bindplane get source-type otlp -o yaml
 apiVersion: bindplane.observiq.com/v1
