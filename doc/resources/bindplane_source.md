@@ -10,7 +10,8 @@ source-type. The source can be used by multiple [configurations](./bindplane_con
 | `name`              | string | required | The source name.             |
 | `type`              | string | required | The source type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the source type's parameters. |
-| `rollout`           | bool   | required | Whether or not updates to the source should trigger an automatic rollout of the configuration. |
+| `rollout`           | bool   | required | Whether or not updates to the source should trigger an automatic rollout of any configuration that uses it. |
+
 
 ## Examples
 

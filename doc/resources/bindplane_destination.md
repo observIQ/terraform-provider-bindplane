@@ -10,7 +10,7 @@ destination-type. The destination can be used by multiple [configurations](./bin
 | `name`              | string | required | The destination name.             |
 | `type`              | string | required | The destination type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the destination type's parameters. |
-| `rollout`           | bool   | required | Whether or not updates to the destination should trigger an automatic rollout of the configuration. |
+| `rollout`           | bool   | required | Whether or not updates to the destination should trigger an automatic rollout of any configuration that uses it. |
 
 ## Examples
 
