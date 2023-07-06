@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	envServerURL = "BINDPLANE_TF_REMOTE_URL"
+	envProfile   = "BINDPLANE_TF_PROFILE"
+	envRemoteURL = "BINDPLANE_TF_REMOTE_URL"
 	envUsername  = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
 	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
 	envTLSCa     = "BINDPLANE_TF_TLS_CA"
@@ -42,15 +43,18 @@ func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"profile": {
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					envProfile,
+				}, nil),
 				Description: "Name of the bindplane client profile in ~/.bindplane. All other configuration options will override values set by the profile.",
 			},
 			"remote_url": {
 				Type:     schema.TypeString,
 				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					envServerURL,
+					envRemoteURL,
 				}, nil),
 				Description: "The endpoint used to connect to the BindPlane OP instance.",
 			},
