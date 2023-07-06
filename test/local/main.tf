@@ -231,3 +231,47 @@ resource "bindplane_processor" "add_fields" {
     ]
   )
 }
+
+resource "bindplane_destination" "prometheus2" {
+  rollout = true
+  name = "my-prometheus"
+  type = "prometheus"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "listen_address",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "listen_port",
+        "value": 9000,
+      },
+      {
+        "name": "namespace",
+        "value": "otel"
+      }
+    ]
+  )
+}
+
+resource "bindplane_processor" "batch2" {
+  rollout = true
+  name = "my-batch-2"
+  type = "batch"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "send_batch_size",
+        "value": 200
+      },
+      {
+        "name": "send_batch_max_size",
+        "value": 400
+      },
+      {
+        "name": "timeout",
+        "value": "2s"
+      }
+    ]
+  )
+}

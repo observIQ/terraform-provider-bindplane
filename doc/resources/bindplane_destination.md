@@ -14,7 +14,7 @@ destination-type. The destination can be used by multiple [configurations](./bin
 
 ## Examples
 
-### Prometheus w/ Default Options
+### Google Cloud w/ Default Options
 
 This example shows the [Google Cloud](https://docs.bindplane.observiq.com/docs/google-cloud) destination type
 with default parameters.
@@ -135,7 +135,7 @@ For example, `bindplane get destination-type prometheus -o json | jq .spec.param
 ```
 
 Use the JSON output as a reference when writing the `bindplane_destination` resource configuration. This example sets
-the `listen_address`, `listen_port` and `namespace` for an `prometheus` destination.
+the `listen_address`, `listen_port` and `namespace` for a `prometheus` destination.
 
 ```tf
 resource "bindplane_destination" "prometheus" {
