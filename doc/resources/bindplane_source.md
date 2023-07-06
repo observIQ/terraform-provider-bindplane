@@ -144,7 +144,6 @@ After applying the configuration with `terraform apply`, you can view the source
 the `bindplane get source` commands.
 
 ```bash
-$ bindplane get source
 NAME        	TYPE
 my-otlp     	otlp:1
 ```
