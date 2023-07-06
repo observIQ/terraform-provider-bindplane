@@ -86,7 +86,7 @@ spec:
 ...
 ```
 
-You can view the json representation of the source type's options with the `-o json` flag combined with jq.
+You can view the json representation of the source type's options with the `-o json` flag combined with `jq`.
 For example, `bindplane get source-type otlp -o json | jq .spec.parameters` produces the following:
 ```json
 [
@@ -138,4 +138,33 @@ resource "bindplane_source" "otlp" {
     ]
   )
 }
+```
+
+After applying the configuration with `terraform apply`, you can view the source with
+the `bindplane get source` commands.
+
+```bash
+$ bindplane get source
+NAME        	TYPE
+my-otlp     	otlp:1
+```
+```yaml
+# bindplane get source my-otlp -o yaml
+apiVersion: bindplane.observiq.com/v1
+kind: Source
+metadata:
+    id: 01H4KKQ2KGJW3T8A8VB4JS7VZ6
+    name: my-otlp
+    hash: 1e4e53cb713bbcc097af8315320a4c67cd7e86a5c46235aa0afe0ce7c1631af2
+    version: 1
+    dateModified: 2023-07-06T15:17:08.060680291-04:00
+spec:
+    type: otlp:3
+    parameters:
+        - name: http_port
+          value: 44314
+        - name: grpc_port
+          value: 0
+status:
+    latest: true
 ```
