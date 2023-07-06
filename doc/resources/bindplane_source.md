@@ -1,7 +1,7 @@
 # bindplane_source
 
 The `bindplane_source` resource creates a BindPlane source from a BindPlane
-source-type. The source can be used by multiple configurations.
+source-type. The source can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options
 
