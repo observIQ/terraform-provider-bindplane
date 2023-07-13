@@ -15,7 +15,6 @@ and environment variables.
 
 | Option                      | Evironment                | Description                  |
 | --------------------------- | ------------------------- | ---------------------------- |
-| `profile`                   | `BINDPLANE_TF_PROFILE`    | The name of the bindplane profile to use. Profile options are overridden by other configured options. | 
 | `remote_url`                | `BINDPLANE_TF_REMOTE_URL` | The URL for the BindPlane server.  |
 | `username`                  | `BINDPLANE_TF_USERNAME`   | The BindPlane basic auth username. |
 | `password`                  | `BINDPLANE_TF_PASSWORD`   | The BindPlane basic auth password. |
@@ -42,39 +41,6 @@ provider "bindplane" {
 // environment variables are set.
 provider "bindplane" {
   remote_url = "http://192.168.1.10:3001"
-}
-```
-
-#### Profile
-
-A BindPlane profile can be used instead of specifying each option.
-
-
-Asuming you have a profile named `local`, you can specify it in the provider configuration. This
-example shows a profile with `username`, `password`, and `remoteURL` configured.
-```bash
-$ bindplane profile get local
-name: local
-apiVersion: bindplane.observiq.com/v1
-auth:
-  username: admin
-  password: admin
-network:
-  remoteURL: http://localhost:3001
-
-```
-```tf
-provider "bindplane" {
-  profile = "local"
-}
-```
-
-You can override options set by the profile by specifying them in the
-provider configuration. This example shows that the `remote_url` can be overridden.
-```tf
-provider "bindplane" {
-  profile = "local"
-  remote_url = "https://bindplane.corp.net:443"
 }
 ```
 

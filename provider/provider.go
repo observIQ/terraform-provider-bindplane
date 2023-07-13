@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	envProfile   = "BINDPLANE_TF_PROFILE"
 	envRemoteURL = "BINDPLANE_TF_REMOTE_URL"
 	envUsername  = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
 	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
@@ -42,14 +41,6 @@ const (
 func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"profile": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
-					envProfile,
-				}, nil),
-				Description: "Name of the bindplane client profile in ~/.bindplane. All other configuration options will override values set by the profile.",
-			},
 			"remote_url": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -118,11 +109,6 @@ func Provider() *schema.Provider {
 // providerConfigure configures the BindPlane client, which can be accessed from data / resource
 // functions with with 'bindplane := meta.(client.BindPlane)'
 func providerConfigure(_ context.Context, d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
-	profile := ""
-	if v, ok := d.Get("profile").(string); ok {
-		profile = v
-	}
-
 	clientOpts := []client.Option{}
 
 	if v, ok := d.Get("remote_url").(string); ok && v != "" {
@@ -147,7 +133,7 @@ func providerConfigure(_ context.Context, d *schema.ResourceData, _ *schema.Prov
 		}
 	}
 
-	i, err := client.New(profile, clientOpts...)
+	i, err := client.New(clientOpts...)
 	if err != nil {
 		err = fmt.Errorf("failed to initialize bindplane client: %w", err)
 		return nil, diag.FromErr(err)

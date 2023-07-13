@@ -24,7 +24,6 @@ import (
 
 func TestNew(t *testing.T) {
 	c, err := New(
-		"",
 		WithEndpoint("http://go.dev"),
 		WithUsername("otelu"),
 		WithPassword("otelp"),
@@ -35,7 +34,7 @@ func TestNew(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestApply(t *testing.T) {
-	i, err := New("")
+	i, err := New()
 	require.NoError(t, err)
 	require.NotNil(t, i)
 	require.Error(t, i.Apply(&model.AnyResource{}, false))
@@ -43,7 +42,7 @@ func TestApply(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestConfiguration(t *testing.T) {
-	i, err := New("")
+	i, err := New()
 	require.NoError(t, err)
 	require.NotNil(t, i)
 
@@ -53,7 +52,7 @@ func TestConfiguration(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestDeleteConfiguration(t *testing.T) {
-	i, err := New("")
+	i, err := New()
 	require.NoError(t, err)
 	require.NotNil(t, i)
 
