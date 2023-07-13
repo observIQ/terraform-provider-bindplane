@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	bindplaneImage   = "observiq/bindplane:1.17.1"
+	bindplaneImage   = "observiq/bindplane:1.20.1"
 	bindplaneExtPort = 3100
 
 	username = "int-test-user"
@@ -109,17 +109,18 @@ func TestIntegration_http_raw_config(t *testing.T) {
 		Scheme: "http",
 	}
 
-	i, err := New(
-		WithEndpoint(endpoint.String()),
-		WithUsername(username),
-		WithPassword(password),
+	i, err := newTestConfig(
+		endpoint.String(),
+		username,
+		password,
+		"", "", "",
 	)
 	require.NoError(t, err)
 
-	_, err = i.client.Version(context.Background())
+	_, err = i.Client.Version(context.Background())
 	require.NoError(t, err)
 
-	_, err = i.client.Agents(context.Background(), client.QueryOptions{})
+	_, err = i.Client.Agents(context.Background(), client.QueryOptions{})
 	require.NoError(t, err)
 
 	config, err := configuration.NewV1(
@@ -167,13 +168,14 @@ func TestIntegration_http_config(t *testing.T) {
 		Scheme: "http",
 	}
 
-	i, err := New(
-		WithEndpoint(endpoint.String()),
-		WithUsername(username),
-		WithPassword(password),
+	i, err := newTestConfig(
+		endpoint.String(),
+		username,
+		password,
+		"", "", "",
 	)
 	require.NoError(t, err)
-	_, err = i.client.Version(context.Background())
+	_, err = i.Client.Version(context.Background())
 	require.NoError(t, err)
 
 	processorResource := model.AnyResource{
@@ -325,15 +327,15 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		Scheme: "https",
 	}
 
-	i, err := New(
-		WithEndpoint(endpoint.String()),
-		WithUsername(username),
-		WithPassword(password),
-		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+	i, err := newTestConfig(
+		endpoint.String(),
+		username,
+		password,
+		"tls/bindplane-ca.crt", "", "",
 	)
 	require.NoError(t, err)
 
-	_, err = i.client.Version(context.Background())
+	_, err = i.Client.Version(context.Background())
 	require.Error(t, err, "http: server gave HTTP response to HTTPS client")
 }
 
@@ -361,18 +363,18 @@ func TestIntegration_https(t *testing.T) {
 		Scheme: "https",
 	}
 
-	i, err := New(
-		WithEndpoint(endpoint.String()),
-		WithUsername(username),
-		WithPassword(password),
-		WithTLSTrustedCA("tls/bindplane-ca.crt"),
+	i, err := newTestConfig(
+		endpoint.String(),
+		username,
+		password,
+		"tls/bindplane-ca.crt", "", "",
 	)
 	require.NoError(t, err)
 
-	_, err = i.client.Version(context.Background())
+	_, err = i.Client.Version(context.Background())
 	require.NoError(t, err)
 
-	_, err = i.client.Agents(context.Background(), client.QueryOptions{})
+	_, err = i.Client.Agents(context.Background(), client.QueryOptions{})
 	require.NoError(t, err)
 }
 
@@ -409,7 +411,7 @@ func TestIntegration_https(t *testing.T) {
 // 	)
 // 	require.NoError(t, err)
 
-// 	_, err = i.client.Version(context.Background())
+// 	_, err = i.Client.Version(context.Background())
 // 	require.Error(t, err, "expect an error when client not in mtls mode")
 // 	require.Contains(t, err.Error(), "remote error: tls: bad certificate")
 // }
@@ -439,15 +441,16 @@ func TestIntegration_mtls(t *testing.T) {
 		Scheme: "https",
 	}
 
-	i, err := New(
-		WithEndpoint(endpoint.String()),
-		WithUsername(username),
-		WithPassword(password),
-		WithTLSTrustedCA("tls/bindplane-ca.crt"),
-		WithTLS("tls/bindplane-client.crt", "tls/bindplane-client.key"),
+	i, err := newTestConfig(
+		endpoint.String(),
+		username,
+		password,
+		"tls/bindplane-ca.crt",
+		"tls/bindplane-client.crt",
+		"tls/bindplane-client.key",
 	)
 	require.NoError(t, err)
 
-	_, err = i.client.Version(context.Background())
+	_, err = i.Client.Version(context.Background())
 	require.NoError(t, err)
 }

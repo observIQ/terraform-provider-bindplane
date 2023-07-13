@@ -12,15 +12,15 @@ provider "bindplane" {
   password = "tfp"
 
   // server's certificate is signed by this CA
-  tls_certificate_authority = "../../internal/client/tls/bindplane-ca.crt"
+  tls_certificate_authority = "../../client/tls/bindplane-ca.crt"
 
   // mtls client auth
-  tls_certificate = "../../internal/client/tls/bindplane-client.crt"
-  tls_private_key = "../../internal/client/tls/bindplane-client.key"
+  tls_certificate = "../../client/tls/bindplane-client.crt"
+  tls_private_key = "../../client/tls/bindplane-client.key"
 
   // invalid mtls, client ca is not trusted by the server
-  // tls_certificate = "../../internal/client/tls/test-client.crt"
-  // tls_private_key = "../../internal/client/tls/test-client.key"
+  // tls_certificate = "../../client/tls/test-client.crt"
+  // tls_private_key = "../../client/tls/test-client.key"
 }
 
 resource "bindplane_raw_configuration" "raw" {

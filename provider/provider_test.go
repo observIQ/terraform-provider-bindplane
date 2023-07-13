@@ -15,11 +15,10 @@
 package provider
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	"github.com/observiq/terraform-provider-bindplane/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,8 +30,7 @@ func TestProvider(t *testing.T) {
 var _ *schema.Provider = Provider()
 
 func TestProvider_providerConfigure(t *testing.T) {
-	ctx := context.Background()
-	output, diag := providerConfigure(ctx, &schema.ResourceData{}, nil)
+	output, diag := providerConfigure(&schema.ResourceData{}, nil)
 	require.Nil(t, diag)
 	require.NotNil(t, output)
 

@@ -27,98 +27,20 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/observiq/bindplane-op/client"
-	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
-	"go.uber.org/zap"
 )
-
-// New takes an configuration options and returns a BindPlane client.
-func New(options ...Option) (*BindPlane, error) {
-	config := &config.Config{}
-	var err error
-
-	for _, option := range options {
-		if option != nil {
-			option(config)
-		}
-	}
-
-	loggerConf := zap.NewProductionConfig()
-	loggerConf.OutputPaths = []string{"stdout"}
-	logger, err := loggerConf.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
-	}
-
-	i, err := client.NewBindPlane(config, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BindPlane{i}, nil
-}
-
-// Option is a function that configures a BindPlane client configuration
-type Option func(*config.Config)
-
-// WithEndpoint sets a client's endpoint
-func WithEndpoint(endpoint string) Option {
-	return func(c *config.Config) {
-		c.Network.RemoteURL = endpoint
-	}
-}
-
-// WithUsername sets a client's username
-func WithUsername(username string) Option {
-	return func(c *config.Config) {
-		c.Auth.Username = username
-	}
-}
-
-// WithPassword sets a client's password
-func WithPassword(password string) Option {
-	return func(c *config.Config) {
-		c.Auth.Password = password
-	}
-}
-
-// WithTLSTrustedCA sets a client's trusted
-// certificate authorities. A single terraform
-// client can talk to many BindPlane servers with
-// different certificate authorities.
-func WithTLSTrustedCA(path string) Option {
-	if path == "" {
-		return nil
-	}
-
-	return func(c *config.Config) {
-		c.Network.CertificateAuthority = []string{path}
-	}
-}
-
-// WithTLS sets a client's TLS certificate and key file
-func WithTLS(crt, key string) Option {
-	if crt == "" || key == "" {
-		return nil
-	}
-
-	return func(c *config.Config) {
-		c.Network.Certificate = crt
-		c.Network.PrivateKey = key
-	}
-}
 
 // BindPlane is a shim layer between Terraform and the
 // BindPlane client interface
 type BindPlane struct {
-	client client.BindPlane
+	Client client.BindPlane
 }
 
 // Apply creates or updates a single BindPlane resource and returns it's id.
 // If rollout is true, any configuration which is updated by the Apply
 // opteration will have a rollout started.
 func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
-	status, err := i.client.Apply(context.TODO(), []*model.AnyResource{r})
+	status, err := i.Client.Apply(context.TODO(), []*model.AnyResource{r})
 	if err != nil {
 		return fmt.Errorf("failed to apply BindPlane resources: %w", err)
 	}
@@ -172,13 +94,13 @@ func (i *BindPlane) ApplyWithRetry(ctx context.Context, timeout time.Duration, r
 // Rollout starts a rollout against a named config
 // TODO(jsirianni): Should Rollout block until it has finished or failed?
 func (i *BindPlane) Rollout(name string) error {
-	_, err := i.client.StartRollout(context.TODO(), name, nil)
+	_, err := i.Client.StartRollout(context.TODO(), name, nil)
 	return err
 }
 
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
-	c, err := i.client.Configuration(context.TODO(), name)
+	c, err := i.Client.Configuration(context.TODO(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -193,7 +115,7 @@ func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
 
 // DeleteConfiguration will delete a BindPlane configuration
 func (i *BindPlane) DeleteConfiguration(name string) error {
-	err := i.client.DeleteConfiguration(context.TODO(), name)
+	err := i.Client.DeleteConfiguration(context.TODO(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting configuration with name %s: %w", name, err)
 	}
@@ -202,7 +124,7 @@ func (i *BindPlane) DeleteConfiguration(name string) error {
 
 // Destination takes a name and returns the matching destination
 func (i *BindPlane) Destination(name string) (*model.Destination, error) {
-	r, err := i.client.Destination(context.TODO(), name)
+	r, err := i.Client.Destination(context.TODO(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -217,7 +139,7 @@ func (i *BindPlane) Destination(name string) (*model.Destination, error) {
 
 // DeleteDestination will delete a BindPlane destination
 func (i *BindPlane) DeleteDestination(name string) error {
-	err := i.client.DeleteDestination(context.TODO(), name)
+	err := i.Client.DeleteDestination(context.TODO(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting destination with name %s: %w", name, err)
 	}
@@ -226,7 +148,7 @@ func (i *BindPlane) DeleteDestination(name string) error {
 
 // Source takes a name and returns the matching source
 func (i *BindPlane) Source(name string) (*model.Source, error) {
-	r, err := i.client.Source(context.TODO(), name)
+	r, err := i.Client.Source(context.TODO(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -241,7 +163,7 @@ func (i *BindPlane) Source(name string) (*model.Source, error) {
 
 // DeleteSource will delete a BindPlane source
 func (i *BindPlane) DeleteSource(name string) error {
-	err := i.client.DeleteSource(context.TODO(), name)
+	err := i.Client.DeleteSource(context.TODO(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting source with name %s: %w", name, err)
 	}
@@ -250,7 +172,7 @@ func (i *BindPlane) DeleteSource(name string) error {
 
 // Processor takes a name and returns the matching processor
 func (i *BindPlane) Processor(name string) (*model.Processor, error) {
-	r, err := i.client.Processor(context.TODO(), name)
+	r, err := i.Client.Processor(context.TODO(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -265,7 +187,7 @@ func (i *BindPlane) Processor(name string) (*model.Processor, error) {
 
 // DeleteProcessor will delete a BindPlane processor
 func (i *BindPlane) DeleteProcessor(name string) error {
-	err := i.client.DeleteProcessor(context.TODO(), name)
+	err := i.Client.DeleteProcessor(context.TODO(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting processor with name %s: %w", name, err)
 	}

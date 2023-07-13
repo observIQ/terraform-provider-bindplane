@@ -33,4 +33,4 @@ dist/
 
 cover.out
 
-internal/client/tls
+client/tls

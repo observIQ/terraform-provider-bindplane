@@ -22,7 +22,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	ossClient "github.com/observiq/bindplane-op/client"
+	"github.com/observiq/bindplane-op/config"
+	"github.com/observiq/terraform-provider-bindplane/client"
+	"go.uber.org/zap"
 )
 
 const (
@@ -39,7 +42,18 @@ const (
 
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
-	provider := &schema.Provider{
+	provider := ProviderWithSchema()
+
+	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
+		return providerConfigure(d, provider)
+	}
+
+	return provider
+}
+
+// ProviderWithSchema returns the provider's schema.
+func ProviderWithSchema() *schema.Provider {
+	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"remote_url": {
 				Type:     schema.TypeString,
@@ -98,46 +112,60 @@ func Provider() *schema.Provider {
 			"bindplane_processor":         resourceProcessor(),
 		},
 	}
+}
 
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
-		return providerConfigure(ctx, d, provider)
+// NewLogger returns a zap logger suitable for
+// Terraform providers.
+func NewLogger() (*zap.Logger, error) {
+	loggerConf := zap.NewProductionConfig()
+	loggerConf.OutputPaths = []string{"stdout"}
+	logger, err := loggerConf.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
 	}
-
-	return provider
+	return logger, nil
 }
 
 // providerConfigure configures the BindPlane client, which can be accessed from data / resource
 // functions with with 'bindplane := meta.(client.BindPlane)'
-func providerConfigure(_ context.Context, d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
-	clientOpts := []client.Option{}
-
-	if v, ok := d.Get("remote_url").(string); ok && v != "" {
-		clientOpts = append(clientOpts, client.WithEndpoint(v))
-	}
+func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
+	config := &config.Config{}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
-		clientOpts = append(clientOpts, client.WithUsername(v))
+		config.Auth.Username = v
 	}
 
 	if v, ok := d.Get("password").(string); ok && v != "" {
-		clientOpts = append(clientOpts, client.WithPassword(v))
+		config.Auth.Password = v
+	}
+
+	if v, ok := d.Get("remote_url").(string); ok && v != "" {
+		config.Network.RemoteURL = v
 	}
 
 	if v, ok := d.Get("tls_certificate_authority").(string); ok && v != "" {
-		clientOpts = append(clientOpts, client.WithTLSTrustedCA(v))
+		config.Network.TLS.CertificateAuthority = []string{v}
 	}
 
 	if crt, ok := d.Get("tls_certificate").(string); ok && crt != "" {
 		if key, ok := d.Get("tls_private_key").(string); ok && key != "" {
-			clientOpts = append(clientOpts, client.WithTLS(crt, key))
+			config.Network.TLS.Certificate = crt
+			config.Network.TLS.PrivateKey = key
 		}
 	}
 
-	i, err := client.New(clientOpts...)
+	logger, err := NewLogger()
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	c, err := ossClient.NewBindPlane(config, logger)
 	if err != nil {
 		err = fmt.Errorf("failed to initialize bindplane client: %w", err)
 		return nil, diag.FromErr(err)
 	}
 
-	return i, nil
+	return &client.BindPlane{
+		Client: c,
+	}, nil
 }
