@@ -7,10 +7,9 @@ terraform {
 }
 
 provider "bindplane" {
-  profile = "local"
-  # remote_url = "http://localhost:3001"
-  # username = "admin"
-  # password = "admin"
+  remote_url = "http://localhost:3001"
+  username = "admin"
+  password = "admin"
 }
 
 resource "bindplane_raw_configuration" "raw" {
