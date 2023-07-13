@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/observiq/terraform-provider-bindplane/internal/client"
+	"github.com/observiq/terraform-provider-bindplane/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"

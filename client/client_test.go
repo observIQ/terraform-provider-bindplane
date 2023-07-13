@@ -16,17 +16,54 @@ package client
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
+	"github.com/observiq/bindplane-op/client"
+	"github.com/observiq/bindplane-op/config"
 	"github.com/observiq/bindplane-op/model"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
-func TestNew(t *testing.T) {
-	c, err := New(
-		WithEndpoint("http://go.dev"),
-		WithUsername("otelu"),
-		WithPassword("otelp"),
+func newTestConfig(endpoint, user, pass, ca, crt, key string) (*BindPlane, error) {
+	config := &config.Config{}
+	var err error
+
+	config.Network.RemoteURL = endpoint
+	config.Auth.Username = user
+	config.Auth.Password = pass
+	if ca != "" {
+		config.Network.TLS.CertificateAuthority = []string{ca}
+	}
+	if crt != "" && key != "" {
+		config.Network.TLS.Certificate = crt
+		config.Network.TLS.PrivateKey = key
+	}
+
+	loggerConf := zap.NewProductionConfig()
+	loggerConf.OutputPaths = []string{"stdout"}
+	logger, err := loggerConf.Build()
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
+	}
+
+	i, err := client.NewBindPlane(config, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BindPlane{i}, nil
+}
+
+func TestNewTestConfig(t *testing.T) {
+	c, err := newTestConfig(
+		"http://go.dev",
+		"otelu",
+		"otelp",
+		"",
+		"",
+		"",
 	)
 	require.NoError(t, err)
 	require.NotNil(t, c)
@@ -34,7 +71,7 @@ func TestNew(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestApply(t *testing.T) {
-	i, err := New()
+	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)
 	require.NotNil(t, i)
 	require.Error(t, i.Apply(&model.AnyResource{}, false))
@@ -42,7 +79,7 @@ func TestApply(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestConfiguration(t *testing.T) {
-	i, err := New()
+	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)
 	require.NotNil(t, i)
 
@@ -52,7 +89,7 @@ func TestConfiguration(t *testing.T) {
 
 // BindPlane is not configured, API calls should fail
 func TestDeleteConfiguration(t *testing.T) {
-	i, err := New()
+	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)
 	require.NotNil(t, i)
 

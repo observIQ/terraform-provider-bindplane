@@ -144,15 +144,15 @@ add-license:
 			echo "Add License finished successfully"; \
 		fi
 
-dev-tls: internal/client/tls
-internal/client/tls:
-	mkdir internal/client/tls
+dev-tls: client/tls
+client/tls:
+	mkdir client/tls
 	docker run \
 		-v ${PWD}/test/scripts/generate-dev-certificates.sh:/generate-dev-certificates.sh \
-		-v ${PWD}/internal/client/tls:/tls \
+		-v ${PWD}/client/tls:/tls \
 		--entrypoint=/bin/sh \
 		alpine/openssl /generate-dev-certificates.sh
 
 .PHONY: clean-dev-tls
 clean-dev-tls:
-	rm -rf internal/client/tls
+	rm -rf client/tls
