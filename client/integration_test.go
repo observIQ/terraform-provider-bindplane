@@ -191,7 +191,7 @@ func TestIntegration_http_config(t *testing.T) {
 		},
 	}
 	require.NoError(t, i.ApplyWithRetry(
-		context.TODO(),
+		context.Background(),
 		time.Duration(time.Minute*1),
 		&processorResource, false), "did not expect an error when creating processor")
 	_, err = i.GenericResource(model.KindProcessor, "my-processor")

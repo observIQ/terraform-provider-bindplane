@@ -209,7 +209,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	resource := resource.AnyResourceFromConfigurationV1(config)
 	bindplane := meta.(*client.BindPlane)
-	ctx := context.TODO()
+	ctx := context.Background()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
 	if err := bindplane.ApplyWithRetry(ctx, timeout, &resource, rollout); err != nil {
 		return err

@@ -40,7 +40,7 @@ type BindPlane struct {
 // If rollout is true, any configuration which is updated by the Apply
 // opteration will have a rollout started.
 func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
-	status, err := i.Client.Apply(context.TODO(), []*model.AnyResource{r})
+	status, err := i.Client.Apply(context.Background(), []*model.AnyResource{r})
 	if err != nil {
 		return fmt.Errorf("failed to apply BindPlane resources: %w", err)
 	}
@@ -93,13 +93,13 @@ func (i *BindPlane) ApplyWithRetry(ctx context.Context, timeout time.Duration, r
 // Rollout starts a rollout against a named config
 // TODO(jsirianni): Should Rollout block until it has finished or failed?
 func (i *BindPlane) Rollout(name string) error {
-	_, err := i.Client.StartRollout(context.TODO(), name, nil)
+	_, err := i.Client.StartRollout(context.Background(), name, nil)
 	return err
 }
 
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
-	c, err := i.Client.Configuration(context.TODO(), name)
+	c, err := i.Client.Configuration(context.Background(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -114,7 +114,7 @@ func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
 
 // DeleteConfiguration will delete a BindPlane configuration
 func (i *BindPlane) DeleteConfiguration(name string) error {
-	err := i.Client.DeleteConfiguration(context.TODO(), name)
+	err := i.Client.DeleteConfiguration(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting configuration with name %s: %w", name, err)
 	}
@@ -123,7 +123,7 @@ func (i *BindPlane) DeleteConfiguration(name string) error {
 
 // Destination takes a name and returns the matching destination
 func (i *BindPlane) Destination(name string) (*model.Destination, error) {
-	r, err := i.Client.Destination(context.TODO(), name)
+	r, err := i.Client.Destination(context.Background(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -138,7 +138,7 @@ func (i *BindPlane) Destination(name string) (*model.Destination, error) {
 
 // DeleteDestination will delete a BindPlane destination
 func (i *BindPlane) DeleteDestination(name string) error {
-	err := i.Client.DeleteDestination(context.TODO(), name)
+	err := i.Client.DeleteDestination(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting destination with name %s: %w", name, err)
 	}
@@ -147,7 +147,7 @@ func (i *BindPlane) DeleteDestination(name string) error {
 
 // Source takes a name and returns the matching source
 func (i *BindPlane) Source(name string) (*model.Source, error) {
-	r, err := i.Client.Source(context.TODO(), name)
+	r, err := i.Client.Source(context.Background(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -162,7 +162,7 @@ func (i *BindPlane) Source(name string) (*model.Source, error) {
 
 // DeleteSource will delete a BindPlane source
 func (i *BindPlane) DeleteSource(name string) error {
-	err := i.Client.DeleteSource(context.TODO(), name)
+	err := i.Client.DeleteSource(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting source with name %s: %w", name, err)
 	}
@@ -171,7 +171,7 @@ func (i *BindPlane) DeleteSource(name string) error {
 
 // Processor takes a name and returns the matching processor
 func (i *BindPlane) Processor(name string) (*model.Processor, error) {
-	r, err := i.Client.Processor(context.TODO(), name)
+	r, err := i.Client.Processor(context.Background(), name)
 	if err != nil {
 		// Do not return an error if the resource is not found. Terraform
 		// will understand that the resource does not exist when it receives
@@ -186,7 +186,7 @@ func (i *BindPlane) Processor(name string) (*model.Processor, error) {
 
 // DeleteProcessor will delete a BindPlane processor
 func (i *BindPlane) DeleteProcessor(name string) error {
-	err := i.Client.DeleteProcessor(context.TODO(), name)
+	err := i.Client.DeleteProcessor(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("error while deleting processor with name %s: %w", name, err)
 	}

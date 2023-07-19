@@ -86,7 +86,7 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	}
 
 	bindplane := meta.(*client.BindPlane)
-	ctx := context.TODO()
+	ctx := context.Background()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
 	if err := bindplane.ApplyWithRetry(ctx, timeout, &r, rollout); err != nil {
 		return err
