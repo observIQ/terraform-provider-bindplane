@@ -20,11 +20,11 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/observiq/bindplane-op/client"
 	"github.com/observiq/bindplane-op/model"
@@ -58,7 +58,7 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 		case model.StatusConfigured, model.StatusCreated:
 			if rollout && status.Resource.Kind == model.KindConfiguration {
 				if err := i.Rollout(resource.Name()); err != nil {
-					errs = multierror.Append(errs, err)
+					errs = errors.Join(errs, err)
 				}
 			}
 		default:
@@ -66,8 +66,7 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 				"unexpected status when applying resource: %s, status: %s",
 				resource.Name(),
 				status.Status)
-			// TODO(jsirianni): can this be handled in a nicer way?
-			errs = multierror.Append(errs, err)
+			errs = errors.Join(errs, err)
 		}
 	}
 
