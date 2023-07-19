@@ -42,7 +42,7 @@ const (
 
 // Provider returns a *schema.Provider.
 func Provider() *schema.Provider {
-	provider := ProviderWithSchema()
+	provider := Configure()
 
 	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		return providerConfigure(d, provider)
@@ -51,8 +51,8 @@ func Provider() *schema.Provider {
 	return provider
 }
 
-// ProviderWithSchema returns the provider's schema.
-func ProviderWithSchema() *schema.Provider {
+// Configure returns a configured provider with a schema.
+func Configure() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"remote_url": {
