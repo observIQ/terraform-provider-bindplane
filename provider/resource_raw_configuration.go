@@ -119,7 +119,7 @@ func resourceRawConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	config, err := configuration.NewV1(opts...)
 	if err != nil {
-		return fmt.Errorf("failed to create new raw configuration: %v", err)
+		return fmt.Errorf("failed to create new raw configuration: %w", err)
 	}
 
 	resource := resource.AnyResourceFromRawConfigurationV1(config)

@@ -85,7 +85,7 @@ func (i *BindPlane) ApplyWithRetry(ctx context.Context, timeout time.Duration, r
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("bindplane apply retries exhausted: %v", err)
+		return fmt.Errorf("bindplane apply retries exhausted: %w", err)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (i *BindPlane) Destination(name string) (*model.Destination, error) {
 		if isNotFoundError(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get destination with name %s: %v", name, err)
+		return nil, fmt.Errorf("failed to get destination with name %s: %w", name, err)
 	}
 	return r, nil
 }
@@ -155,7 +155,7 @@ func (i *BindPlane) Source(name string) (*model.Source, error) {
 		if isNotFoundError(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get source with name %s: %v", name, err)
+		return nil, fmt.Errorf("failed to get source with name %s: %w", name, err)
 	}
 	return r, nil
 }
@@ -179,7 +179,7 @@ func (i *BindPlane) Processor(name string) (*model.Processor, error) {
 		if isNotFoundError(err) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get processor with name %s: %v", name, err)
+		return nil, fmt.Errorf("failed to get processor with name %s: %w", name, err)
 	}
 	return r, nil
 }

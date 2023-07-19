@@ -204,7 +204,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	config, err := configuration.NewV1(opts...)
 	if err != nil {
-		return fmt.Errorf("failed to create new configuration: %v", err)
+		return fmt.Errorf("failed to create new configuration: %w", err)
 	}
 
 	resource := resource.AnyResourceFromConfigurationV1(config)

@@ -52,7 +52,7 @@ func WithLabels(labels map[string]string) Option {
 	return func(c *model.Configuration) error {
 		l, err := model.LabelsFromMap(labels)
 		if err != nil {
-			return fmt.Errorf("failed to set configuration labels: %v", err)
+			return fmt.Errorf("failed to set configuration labels: %w", err)
 		}
 		c.Metadata.Labels = l
 		return nil

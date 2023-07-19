@@ -28,7 +28,7 @@ import (
 func StringToParameter(s string) ([]model.Parameter, error) {
 	parameters := []model.Parameter{}
 	if err := json.Unmarshal([]byte(s), &parameters); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal parameters '%s': %v", s, err)
+		return nil, fmt.Errorf("failed to unmarshal parameters '%s': %w", s, err)
 	}
 	return parameters, nil
 }
@@ -42,7 +42,7 @@ func ParametersToString(p []model.Parameter) (string, error) {
 
 	paramBytes, err := json.Marshal(p)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal parameters: %v", err)
+		return "", fmt.Errorf("failed to marshal parameters: %w", err)
 	}
 
 	return string(paramBytes), nil
