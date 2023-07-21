@@ -47,6 +47,19 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 
 	d.SetId(g.ID)
 
+	// If the state ID is set but differs from the ID returned by,
+	// bindplane, mark the resource to be re-created by unsetting
+	// the ID. This will cause Terraform to attempt to create the resource
+	// instead of updating it. The creation step will fail because
+	// the resource already exists. This behavior is desirable, it will
+	// prevent Terraform from modifying resources created by other means.
+	if id := d.Id(); id != "" {
+		if g.ID != d.Id() {
+			d.SetId("")
+			return nil
+		}
+	}
+
 	if err := d.Set("name", g.Name); err != nil {
 		return err
 	}
