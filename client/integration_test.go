@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	bindplaneImage   = "observiq/bindplane:1.20.1"
+	bindplaneImage   = "observiq/bindplane:1.21.0"
 	bindplaneExtPort = 3100
 
 	username = "int-test-user"
