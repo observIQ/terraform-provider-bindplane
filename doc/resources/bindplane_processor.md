@@ -10,7 +10,7 @@ processor-type. The processor can be used by multiple [configurations](./bindpla
 | `name`              | string | required | The processor name.             |
 | `type`              | string | required | The processor type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the processor type's parameters. |
-| `rollout`           | bool   | required | Whether or not updates to the processor should trigger an automatic rollout of any configuration that uses it. |
+| `rollout`           | bool   | required | Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents. WARNING: A rollout will be triggered even if the configuration resource has rollout set to `false`. |
 
 ## Examples
 

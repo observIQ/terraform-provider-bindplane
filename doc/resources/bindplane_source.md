@@ -10,7 +10,7 @@ source-type. The source can be used by multiple [configurations](./bindplane_con
 | `name`              | string | required | The source name.             |
 | `type`              | string | required | The source type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the source type's parameters. |
-| `rollout`           | bool   | required | Whether or not updates to the source should trigger an automatic rollout of any configuration that uses it. |
+| `rollout`           | bool   | required | Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents. WARNING: A rollout will be triggered even if the configuration resource has rollout set to `false`. |
 
 
 ## Examples

@@ -10,7 +10,7 @@ destination-type. The destination can be used by multiple [configurations](./bin
 | `name`              | string | required | The destination name.             |
 | `type`              | string | required | The destination type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the destination type's parameters. |
-| `rollout`           | bool   | required | Whether or not updates to the destination should trigger an automatic rollout of any configuration that uses it. |
+| `rollout`           | bool   | required | Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents. WARNING: A rollout will be triggered even if the configuration resource has rollout set to `false`. |
 
 ## Examples
 

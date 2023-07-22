@@ -13,7 +13,7 @@ to one or more managed agents. Configurations are a combination of [sources](./b
 | `labels`       | map     | optional | Key value pairs representing labels to set on the configuration. |
 | `source`       | block   | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
 | `destination`  | block   | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section.
-| `rollout`      | bool    | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
+| `rollout`      | bool    | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. This applies to direct changes to the configuration. If set to `false`, auotmatic rollouts can still occur if the underlying sources, processors, or destinations have rollout set to `true`. |
 
 ### Source Block
 

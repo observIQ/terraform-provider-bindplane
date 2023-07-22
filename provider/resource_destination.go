@@ -54,7 +54,7 @@ func resourceDestination() *schema.Resource {
 				Type:        schema.TypeBool,
 				Required:    true,
 				ForceNew:    false,
-				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
+				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents. WARNING: A rollout will be triggered even if the configuration resource has rollout set to `false`",
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
