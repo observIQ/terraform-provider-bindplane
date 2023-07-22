@@ -1,7 +1,7 @@
 resource "bindplane_destination" "google_managed_prometheus" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-google-managd-prometheus"
+  type = "googlemanagedprometheus"
   parameters_json = jsonencode(
     [
       {

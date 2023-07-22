@@ -1,12 +1,6 @@
-# resource "bindplane_processor" "rename-fields-default" {
-#   rollout = false
-#   name = "example-rename-fields"
-#   type = "rename_field"
-# }
-
-resource "bindplane_processor" "rename-fields-custom" {
+resource "bindplane_processor" "rename-fields" {
   rollout = false
-  name = "example-rename-fields-custom"
+  name = "example-rename-fields"
   type = "rename_field"
   parameters_json = jsonencode(
     [

@@ -1,12 +1,6 @@
-resource "bindplane_processor" "add-fields-default" {
+resource "bindplane_processor" "add-fields" {
   rollout = false
   name = "example-add-fields"
-  type = "add_fields"
-}
-
-resource "bindplane_processor" "add-fields-custom" {
-  rollout = false
-  name = "example-add-fields-custom"
   type = "add_fields"
   parameters_json = jsonencode(
     [

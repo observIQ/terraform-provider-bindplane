@@ -1,12 +1,6 @@
-resource "bindplane_processor" "metric-name-filter-default" {
+resource "bindplane_processor" "metric-name-filter" {
   rollout = false
   name = "example-metric-name-filter"
-  type = "filter_metric_name"
-}
-
-resource "bindplane_processor" "metric-name-filter-custom" {
-  rollout = false
-  name = "example-metric-name-filter-custom"
   type = "filter_metric_name"
   parameters_json = jsonencode(
     [

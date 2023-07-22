@@ -1,12 +1,6 @@
-resource "bindplane_processor" "group-by-attributes-default" {
+resource "bindplane_processor" "group-by-attributes" {
   rollout = false
   name = "example-group-by-attributes"
-  type = "group_by_attributes"
-}
-
-resource "bindplane_processor" "group-by-attributes-custom" {
-  rollout = false
-  name = "example-group-by-attributes-custom"
   type = "group_by_attributes"
   parameters_json = jsonencode(
     [

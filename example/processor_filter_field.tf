@@ -1,12 +1,6 @@
-resource "bindplane_processor" "filter-field-default" {
+resource "bindplane_processor" "filter-field" {
   rollout = false
   name = "example-filter-field"
-  type = "filter_field"
-}
-
-resource "bindplane_processor" "filter-field-custom" {
-  rollout = false
-  name = "example-filter-field-custom"
   type = "filter_field"
   parameters_json = jsonencode(
     [

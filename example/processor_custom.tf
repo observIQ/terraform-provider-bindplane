@@ -1,12 +1,6 @@
-resource "bindplane_processor" "custom-default" {
+resource "bindplane_processor" "custom" {
   rollout = false
-  name = "custom-batch"
-  type = "custom"
-}
-
-resource "bindplane_processor" "custom-custom" {
-  rollout = false
-  name = "example-custom-custom"
+  name = "example"
   type = "custom"
   parameters_json = jsonencode(
     [

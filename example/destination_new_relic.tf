@@ -10,8 +10,7 @@ resource "bindplane_destination" "newrelic" {
       },
       {
         "name": "license_key",
-        "value": "(sensitive)",
-        "sensitive": true
+        "value": "xx-xxx-xxx"
       },
       {
         "name": "retry_on_failure_enabled",

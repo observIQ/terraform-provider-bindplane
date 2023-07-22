@@ -33,8 +33,7 @@ resource "bindplane_destination" "kafka" {
       },
       {
         "name": "basic_password",
-        "value": "(sensitive)",
-        "sensitive": true
+        "value": "my-pass",
       },
       {
         "name": "sasl_username",
@@ -42,8 +41,7 @@ resource "bindplane_destination" "kafka" {
       },
       {
         "name": "sasl_password",
-        "value": "(sensitive)",
-        "sensitive": true
+        "value": "my-pass",
       },
       {
         "name": "sasl_mechanism",
@@ -95,8 +93,7 @@ resource "bindplane_destination" "kafka" {
       },
       {
         "name": "kerberos_password",
-        "value": "(sensitive)",
-        "sensitive": true
+        "value": "my-pass",
       },
       {
         "name": "enable_metrics",
