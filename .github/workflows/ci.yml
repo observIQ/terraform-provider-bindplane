@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - main
-      - dev # TODO(jsirianni): temp, for initial dev
 
 concurrency:
   group: ${{ github.head_ref || github.ref_name }}
