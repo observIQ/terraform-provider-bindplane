@@ -40,6 +40,28 @@ type BindPlane struct {
 // If rollout is true, any configuration which is updated by the Apply
 // opteration will have a rollout started.
 func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
+	// The 'type' key should always exist and be a string, but we should
+	// check to be safe.
+	rType, ok := r.Spec["type"].(string)
+	if !ok {
+		return fmt.Errorf("expected AnyResource with name '%s' to have key 'type' of type string in the spec", r.Name())
+	}
+
+	// Fail early if a source, processor, or destination type does not exist
+	var lookupErr error
+	switch r.Kind {
+	case model.KindSource:
+		_, lookupErr = i.Client.SourceType(context.Background(), rType)
+	case model.KindProcessor:
+		_, lookupErr = i.Client.ProcessorType(context.Background(), rType)
+	case model.KindDestination:
+		_, lookupErr = i.Client.DestinationType(context.Background(), rType)
+	default:
+	}
+	if lookupErr != nil {
+		return fmt.Errorf("failed to lookup type '%s' for resource with name '%s': %w", rType, r.Name(), lookupErr)
+	}
+
 	status, err := i.Client.Apply(context.Background(), []*model.AnyResource{r})
 	if err != nil {
 		return fmt.Errorf("failed to apply BindPlane resources: %w", err)
