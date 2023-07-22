@@ -1,41 +1,29 @@
-resource "bindplane_destination" "google_managed_prometheus" {
+// Splunk Cloud uses the SignalFX exporter.
+resource "bindplane_destination" "splunk-cloud" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-splunk-cloud"
+  type = "signalfx"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "my-gmp-project"
+        "name": "token",
+        "value": "xxx-xxx-xxx"
       },
       {
-        "name": "auth_type",
-        "value": "json"
+        "name": "realm",
+        "value": "us0"
       },
       {
-        "name": "credentials",
-        "value": <<EOT
-{
-  "type": "service_account",
-  "project_id": "redacted",
-  "private_key_id": "redacted",
-  "private_key": "redacted",
-  "client_email": "redacted",
-  "client_id": "redacted",
-  "auth_uri": "redacted",
-  "token_uri": "redacted",
-  "auth_provider_x509_cert_url": "redacted",
-  "client_x509_cert_url": "redacted"
-}
-EOT
+        "name": "enable_metrics",
+        "value": true
       },
       {
-        "name": "credentials_file",
-        "value": ""
+        "name": "enable_logs",
+        "value": true
       },
       {
-        "name": "default_location",
-        "value": "us-central1"
+        "name": "enable_traces",
+        "value": true
       },
       {
         "name": "retry_on_failure_enabled",
@@ -73,7 +61,6 @@ EOT
         "name": "persistent_queue_directory",
         "value": "$OIQ_OTEL_COLLECTOR_HOME/storage"
       }
-
     ]
   )
 }

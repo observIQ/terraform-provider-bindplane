@@ -1,41 +1,55 @@
-resource "bindplane_destination" "google_managed_prometheus" {
+resource "bindplane_destination" "otlp" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-otlp"
+  type = "otlp_grpc"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "my-gmp-project"
+        "name": "hostname",
+        "value": "otlp.corp.net"
       },
       {
-        "name": "auth_type",
-        "value": "json"
+        "name": "grpc_port",
+        "value": 4317
       },
       {
-        "name": "credentials",
-        "value": <<EOT
-{
-  "type": "service_account",
-  "project_id": "redacted",
-  "private_key_id": "redacted",
-  "private_key": "redacted",
-  "client_email": "redacted",
-  "client_id": "redacted",
-  "auth_uri": "redacted",
-  "token_uri": "redacted",
-  "auth_provider_x509_cert_url": "redacted",
-  "client_x509_cert_url": "redacted"
-}
-EOT
+        "name": "http_port",
+        "value": 4318
       },
       {
-        "name": "credentials_file",
-        "value": ""
+        "name": "protocol",
+        "value": "grpc"
       },
       {
-        "name": "default_location",
-        "value": "us-central1"
+        "name": "headers",
+        "value": {
+          "env": "dev",
+          "token": "xxx-xxx-xxx"
+        }
+      },
+      {
+        "name": "enable_tls",
+        "value": true
+      },
+      {
+        "name": "insecure_skip_verify",
+        "value": false
+      },
+      {
+        "name": "ca_file",
+        "value": "/opt/tls/ca.crt"
+      },
+      {
+        "name": "mutual_tls",
+        "value": true
+      },
+      {
+        "name": "cert_file",
+        "value": "/opt/tls/client.crt"
+      },
+      {
+        "name": "key_file",
+        "value": "/opt/tls/client.key"
       },
       {
         "name": "retry_on_failure_enabled",
@@ -73,7 +87,6 @@ EOT
         "name": "persistent_queue_directory",
         "value": "$OIQ_OTEL_COLLECTOR_HOME/storage"
       }
-
     ]
   )
 }

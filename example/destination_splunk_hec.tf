@@ -1,41 +1,52 @@
-resource "bindplane_destination" "google_managed_prometheus" {
+resource "bindplane_destination" "splunk-hec" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-splunk-hec"
+  type = "splunkhec"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "my-gmp-project"
+        "name": "token",
+        "value": "xxx-xxx-xxx"
       },
       {
-        "name": "auth_type",
-        "value": "json"
+        "name": "index",
+        "value": "otel"
       },
       {
-        "name": "credentials",
-        "value": <<EOT
-{
-  "type": "service_account",
-  "project_id": "redacted",
-  "private_key_id": "redacted",
-  "private_key": "redacted",
-  "client_email": "redacted",
-  "client_id": "redacted",
-  "auth_uri": "redacted",
-  "token_uri": "redacted",
-  "auth_provider_x509_cert_url": "redacted",
-  "client_x509_cert_url": "redacted"
-}
-EOT
+        "name": "hostname",
+        "value": "splunk.corp.net"
       },
       {
-        "name": "credentials_file",
+        "name": "port",
+        "value": 8088
+      },
+      {
+        "name": "path",
+        "value": "/services/collector/event"
+      },
+      {
+        "name": "max_request_size",
+        "value": 2097152
+      },
+      {
+        "name": "max_event_size",
+        "value": 2097152
+      },
+      {
+        "name": "enable_compression",
+        "value": true
+      },
+      {
+        "name": "enable_tls",
+        "value": true
+      },
+      {
+        "name": "insecure_skip_verify",
+        "value": true
+      },
+      {
+        "name": "ca_file",
         "value": ""
-      },
-      {
-        "name": "default_location",
-        "value": "us-central1"
       },
       {
         "name": "retry_on_failure_enabled",
@@ -73,7 +84,6 @@ EOT
         "name": "persistent_queue_directory",
         "value": "$OIQ_OTEL_COLLECTOR_HOME/storage"
       }
-
     ]
   )
 }

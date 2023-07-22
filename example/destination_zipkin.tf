@@ -1,41 +1,44 @@
-resource "bindplane_destination" "google_managed_prometheus" {
+resource "bindplane_destination" "zipkin" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-zipkin"
+  type = "zipkin"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "my-gmp-project"
+        "name": "hostname",
+        "value": "spans.corp.net"
       },
       {
-        "name": "auth_type",
-        "value": "json"
+        "name": "port",
+        "value": 9411
       },
       {
-        "name": "credentials",
-        "value": <<EOT
-{
-  "type": "service_account",
-  "project_id": "redacted",
-  "private_key_id": "redacted",
-  "private_key": "redacted",
-  "client_email": "redacted",
-  "client_id": "redacted",
-  "auth_uri": "redacted",
-  "token_uri": "redacted",
-  "auth_provider_x509_cert_url": "redacted",
-  "client_x509_cert_url": "redacted"
-}
-EOT
+        "name": "path",
+        "value": "/api/v2/spans"
       },
       {
-        "name": "credentials_file",
+        "name": "enable_tls",
+        "value": true
+      },
+      {
+        "name": "insecure_skip_verify",
+        "value": true
+      },
+      {
+        "name": "ca_file",
         "value": ""
       },
       {
-        "name": "default_location",
-        "value": "us-central1"
+        "name": "mutual_tls",
+        "value": false
+      },
+      {
+        "name": "cert_file",
+        "value": ""
+      },
+      {
+        "name": "key_file",
+        "value": ""
       },
       {
         "name": "retry_on_failure_enabled",
@@ -73,7 +76,6 @@ EOT
         "name": "persistent_queue_directory",
         "value": "$OIQ_OTEL_COLLECTOR_HOME/storage"
       }
-
     ]
   )
 }

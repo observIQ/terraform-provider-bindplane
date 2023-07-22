@@ -1,41 +1,40 @@
-resource "bindplane_destination" "google_managed_prometheus" {
+resource "bindplane_destination" "jaeger" {
   rollout = true
-  name = "example-google"
-  type = "googlecloud"
+  name = "example-jaeger"
+  type = "jaeger"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "my-gmp-project"
+        "name": "hostname",
+        "value": "192.168.10.3"
       },
       {
-        "name": "auth_type",
-        "value": "json"
+        "name": "port",
+        "value": 14250
       },
       {
-        "name": "credentials",
-        "value": <<EOT
-{
-  "type": "service_account",
-  "project_id": "redacted",
-  "private_key_id": "redacted",
-  "private_key": "redacted",
-  "client_email": "redacted",
-  "client_id": "redacted",
-  "auth_uri": "redacted",
-  "token_uri": "redacted",
-  "auth_provider_x509_cert_url": "redacted",
-  "client_x509_cert_url": "redacted"
-}
-EOT
+        "name": "enable_tls",
+        "value": true
       },
       {
-        "name": "credentials_file",
-        "value": ""
+        "name": "insecure_skip_verify",
+        "value": false
       },
       {
-        "name": "default_location",
-        "value": "us-central1"
+        "name": "ca_file",
+        "value": "/opt/tls/ca.crt"
+      },
+      {
+        "name": "mutual_tls",
+        "value": true
+      },
+      {
+        "name": "cert_file",
+        "value": "/opt/tls/client.crt"
+      },
+      {
+        "name": "key_file",
+        "value": "/opt/tls/client.key"
       },
       {
         "name": "retry_on_failure_enabled",
@@ -73,7 +72,6 @@ EOT
         "name": "persistent_queue_directory",
         "value": "$OIQ_OTEL_COLLECTOR_HOME/storage"
       }
-
     ]
   )
 }
