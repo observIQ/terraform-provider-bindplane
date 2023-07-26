@@ -59,15 +59,6 @@ func WithLabels(labels map[string]string) Option {
 	}
 }
 
-// WithRawOTELConfig is a Option that configures a configuration's
-// raw otel configuration.
-func WithRawOTELConfig(raw string) Option {
-	return func(c *model.Configuration) error {
-		c.Spec.Raw = raw
-		return nil
-	}
-}
-
 // WithSourcesByName is a Option that configures a configuration's
 // sources.
 func WithSourcesByName(s []ResourceConfig) Option {

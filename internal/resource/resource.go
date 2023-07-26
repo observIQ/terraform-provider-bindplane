@@ -63,13 +63,6 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 	return a
 }
 
-// AnyResourceFromRawConfigurationV1 takes a BindPlane raw configuration and returns a BindPlane AnyResource
-func AnyResourceFromRawConfigurationV1(c *model.Configuration) model.AnyResource {
-	a := anyResourceFromConfiguration(c)
-	a.Spec["raw"] = c.Spec.Raw
-	return a
-}
-
 func anyResourceFromConfiguration(c *model.Configuration) model.AnyResource {
 	return model.AnyResource{
 		ResourceMeta: model.ResourceMeta{

@@ -84,65 +84,6 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 	return container
 }
 
-func TestIntegration_http_raw_config(t *testing.T) {
-	env := map[string]string{
-		"BINDPLANE_USERNAME":       username,
-		"BINDPLANE_PASSWORD":       password,
-		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
-		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-	}
-
-	container := bindplaneContainer(t, env)
-	defer func() {
-		require.NoError(t, container.Terminate(context.Background()))
-		time.Sleep(time.Second * 1)
-	}()
-
-	time.Sleep(time.Second * 20)
-
-	hostname, err := container.Host(context.Background())
-	require.NoError(t, err)
-
-	endpoint := url.URL{
-		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
-		Scheme: "http",
-	}
-
-	i, err := newTestConfig(
-		endpoint.String(),
-		username,
-		password,
-		"", "", "",
-	)
-	require.NoError(t, err)
-
-	_, err = i.Client.Version(context.Background())
-	require.NoError(t, err)
-
-	_, err = i.Client.Agents(context.Background(), client.QueryOptions{})
-	require.NoError(t, err)
-
-	config, err := configuration.NewV1(
-		configuration.WithName("test"),
-	)
-	require.NoError(t, err)
-	r := resource.AnyResourceFromRawConfigurationV1(config)
-	require.NoError(t, i.Apply(&r, true))
-
-	outputConfig, err := i.Configuration("test")
-	require.NoError(t, err)
-	require.NotNil(t, outputConfig)
-	require.Equal(t, "test", outputConfig.Metadata.Name)
-
-	err = i.DeleteConfiguration("test")
-	require.NoError(t, err)
-
-	outputConfig, err = i.Configuration("test")
-	require.Nil(t, err, "reading a configuration that does not exist should return a nil error")
-	require.Nil(t, outputConfig, "reading a configuration that does not exist should return a nil configuration")
-}
-
 func TestIntegration_http_config(t *testing.T) {
 	env := map[string]string{
 		"BINDPLANE_USERNAME":       username,
