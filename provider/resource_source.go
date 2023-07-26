@@ -16,6 +16,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,9 +68,24 @@ func resourceSource() *schema.Resource {
 }
 
 func resourceSourceCreate(d *schema.ResourceData, meta any) error {
+	bindplane := meta.(*client.BindPlane)
+
 	sourceType := d.Get("type").(string)
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
+
+	// If id is unset, it means Terraform has not previously created
+	// this resource. Check to ensure a resource with this name does
+	// not already exist.
+	if d.Id() == "" {
+		c, err := bindplane.Configuration(name)
+		if err != nil {
+			return err
+		}
+		if c != nil {
+			return fmt.Errorf("source with name '%s' already exists with id '%s'", name, c.ID())
+		}
+	}
 
 	parameters := []model.Parameter{}
 	if s := d.Get("parameters_json").(string); s != "" {
@@ -85,7 +101,6 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	bindplane := meta.(*client.BindPlane)
 	ctx := context.Background()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
 	if err := bindplane.ApplyWithRetry(ctx, timeout, &r, rollout); err != nil {
