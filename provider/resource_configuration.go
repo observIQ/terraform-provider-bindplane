@@ -136,8 +136,23 @@ func resourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
+	bindplane := meta.(*client.BindPlane)
+
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
+
+	// If id is unset, it means Terraform has not previously created
+	// this resource. Check to ensure a resource with this name does
+	// not already exist.
+	if d.Id() == "" {
+		c, err := bindplane.Configuration(name)
+		if err != nil {
+			return err
+		}
+		if c != nil {
+			return fmt.Errorf("configuration with name '%s' already exists with id '%s'", name, c.ID())
+		}
+	}
 
 	labels, err := maputil.StringMapFromTFMap(d.Get("labels").(map[string]any))
 	if err != nil {
@@ -208,7 +223,6 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	}
 
 	resource := resource.AnyResourceFromConfigurationV1(config)
-	bindplane := meta.(*client.BindPlane)
 	ctx := context.Background()
 	timeout := d.Timeout(schema.TimeoutCreate) - time.Minute
 	if err := bindplane.ApplyWithRetry(ctx, timeout, &resource, rollout); err != nil {
@@ -229,6 +243,19 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	if config == nil {
 		d.SetId("")
 		return nil
+	}
+
+	// If the state ID is set but differs from the ID returned by,
+	// bindplane, mark the resource to be re-created by unsetting
+	// the ID. This will cause Terraform to attempt to create the resource
+	// instead of updating it. The creation step will fail because
+	// the resource already exists. This behavior is desirable, it will
+	// prevent Terraform from modifying resources created by other means.
+	if id := d.Id(); id != "" {
+		if config.ID() != d.Id() {
+			d.SetId("")
+			return nil
+		}
 	}
 
 	if err := d.Set("name", config.Name()); err != nil {
