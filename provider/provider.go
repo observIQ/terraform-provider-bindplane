@@ -105,11 +105,10 @@ func Configure() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"bindplane_configuration":     resourceConfiguration(),
-			"bindplane_raw_configuration": resourceRawConfiguration(),
-			"bindplane_destination":       resourceDestination(),
-			"bindplane_source":            resourceSource(), // TODO(jsirianni): Determine if sources should be supported.
-			"bindplane_processor":         resourceProcessor(),
+			"bindplane_configuration": resourceConfiguration(),
+			"bindplane_destination":   resourceDestination(),
+			"bindplane_source":        resourceSource(), // TODO(jsirianni): Determine if sources should be supported.
+			"bindplane_processor":     resourceProcessor(),
 		},
 	}
 }

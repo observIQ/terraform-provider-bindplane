@@ -57,20 +57,6 @@ func TestNewV1(t *testing.T) {
 			},
 		},
 		{
-			"raw-config",
-			WithRawOTELConfig("some raw config"),
-			&model.Configuration{
-				ResourceMeta: model.ResourceMeta{
-					APIVersion: "bindplane.observiq.com/v1",
-					Kind:       model.KindConfiguration,
-				},
-				Spec: model.ConfigurationSpec{
-					ContentType: "text/yaml",
-					Raw:         "some raw config",
-				},
-			},
-		},
-		{
 			"sources",
 			func() Option {
 				r := []ResourceConfig{
