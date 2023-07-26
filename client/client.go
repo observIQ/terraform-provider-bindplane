@@ -63,9 +63,10 @@ func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
 			}
 		default:
 			err := fmt.Errorf(
-				"unexpected status when applying resource: %s, status: %s",
+				"unexpected status when applying resource: %s, status: %s: reason: %s",
 				resource.Name(),
-				status.Status)
+				status.Status,
+				status.Reason)
 			errs = errors.Join(errs, err)
 		}
 	}
