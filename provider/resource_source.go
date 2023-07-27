@@ -78,7 +78,7 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 	// this resource. Check to ensure a resource with this name does
 	// not already exist.
 	if d.Id() == "" {
-		c, err := bindplane.Configuration(name)
+		c, err := bindplane.Source(name)
 		if err != nil {
 			return err
 		}
