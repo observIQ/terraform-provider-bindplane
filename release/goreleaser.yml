@@ -37,8 +37,6 @@ signs:
 
 release:
   draft: false
-  extra_files:
-    - glob: ./release/gpg/observiq.pub.asc
 
 changelog:
   skip: false
