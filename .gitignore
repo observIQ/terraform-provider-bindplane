@@ -34,3 +34,5 @@ dist/
 cover.out
 
 client/tls
+
+.terraform.lock.hcl
