@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/observiq/terraform-provider-bindplane/client"
@@ -283,6 +284,36 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		matchLabels[k] = v
 	}
 	if err := d.Set("match_labels", matchLabels); err != nil {
+		return err
+	}
+
+	sourceBlocks := []map[string]any{}
+	for _, s := range config.Spec.Sources {
+		source := map[string]any{}
+		source["name"] = strings.Split(s.Name, ":")[0]
+		processors := []string{}
+		for _, p := range s.Processors {
+			processors = append(processors, strings.Split(p.Name, ":")[0])
+		}
+		source["processors"] = processors
+		sourceBlocks = append(sourceBlocks, source)
+	}
+	if err := d.Set("source", sourceBlocks); err != nil {
+		return err
+	}
+
+	destinationBlocks := []map[string]any{}
+	for _, d := range config.Spec.Destinations {
+		destination := map[string]any{}
+		destination["name"] = strings.Split(d.Name, ":")[0]
+		processors := []string{}
+		for _, p := range d.Processors {
+			processors = append(processors, strings.Split(p.Name, ":")[0])
+		}
+		destination["processors"] = processors
+		destinationBlocks = append(destinationBlocks, destination)
+	}
+	if err := d.Set("destination", destinationBlocks); err != nil {
 		return err
 	}
 
