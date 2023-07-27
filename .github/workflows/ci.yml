@@ -226,7 +226,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: release --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
+          args: release --snapshot --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
