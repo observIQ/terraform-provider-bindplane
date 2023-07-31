@@ -20,6 +20,11 @@ destination-type. The destination can be used by multiple [configurations](./bin
 | `parameters_json`   | string | optional | The serialized JSON representation of the destination type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the destination should trigger an automatic rollout of any configuration that uses it. |
 
+## Sensitive Values
+
+See the [sensitive values](./sensitive_values.md) doc for details related to Terraform's handling
+of sensitive parameters, such as passwords and API keys.
+
 ## Examples
 
 ### Google Cloud w/ Default Options
