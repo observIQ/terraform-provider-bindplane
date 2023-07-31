@@ -15,6 +15,8 @@
 package provider
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -78,20 +80,35 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	// backend if they wish to keep sensitive parameters out of plain
 	// text.
 
-	// Update param value's to "(sensitive)" if the parameter is sensitive
-	paramsApplied := g.Spec.Parameters
-	for i, p := range paramsApplied {
-		if p.Sensitive {
-			paramsApplied[i].Value = "(sensitive)"
+	// Parameters defined by the user, previously saved to state
+	stateParams := []model.Parameter{}
+	if s := d.Get("parameters_json").(string); s != "" {
+		if err := json.Unmarshal([]byte(s), &stateParams); err != nil {
+			return fmt.Errorf("failed to unmarshal state paramters: %w", err)
 		}
 	}
 
-	// Write paramsApplied to parameters_applied in the state
-	paramStr, err := parameter.ParametersToString(paramsApplied)
+	// Parameters returned by BindPlane API
+	for _, incomingParam := range g.Spec.Parameters {
+		// Find the parameter in the state
+		for i, stateParam := range stateParams {
+			if stateParam.Name == incomingParam.Name {
+				// If the parameter is not sensitive, update the state value.
+				// Otherwise, ignore the value returned by the API to avoid having
+				// Terraform update the resource every time the plan is applied.
+				if !incomingParam.Sensitive {
+					stateParams[i].Value = incomingParam.Value
+				}
+			}
+		}
+	}
+
+	paramStr, err := parameter.ParametersToString(stateParams)
 	if err != nil {
 		return err
 	}
-	return d.Set("parameters_applied", paramStr)
+
+	return d.Set("parameters_json", paramStr)
 }
 
 // genericResourceDelete can delete configurations, sources,
