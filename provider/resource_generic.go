@@ -71,15 +71,6 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	// Prevent Terraform from attempting to update resources
-	// with sensitive parameters. This is done by calculating
-	// the parameters_applied option by writing (sensative)
-	// to the state instead of the raw value. NOTE: parameters_json
-	// will still contain the orional value provided by the user's
-	// terraform configuration. Users should use an encrypted
-	// backend if they wish to keep sensitive parameters out of plain
-	// text.
-
 	// Parameters defined by the user, previously saved to state
 	stateParams := []model.Parameter{}
 	if s := d.Get("parameters_json").(string); s != "" {
@@ -90,7 +81,6 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 
 	// Parameters returned by BindPlane API
 	for _, incomingParam := range g.Spec.Parameters {
-		// Find the parameter in the state
 		for i, stateParam := range stateParams {
 			if stateParam.Name == incomingParam.Name {
 				// If the parameter is not sensitive, update the state value.
