@@ -80,20 +80,29 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	}
 
 	// Parameters returned by BindPlane API
-	for _, incomingParam := range g.Spec.Parameters {
-		for i, stateParam := range stateParams {
-			if stateParam.Name == incomingParam.Name {
-				// If the parameter is not sensitive, update the state value.
-				// Otherwise, ignore the value returned by the API to avoid having
-				// Terraform update the resource every time the plan is applied.
-				if !incomingParam.Sensitive {
-					stateParams[i].Value = incomingParam.Value
+	incomingParams := g.Spec.Parameters
+
+	// Update all sensitive parameters with the values from state
+	// instead of saving "(sensitive value)" to state.
+	for i, incomingParam := range incomingParams {
+		if incomingParam.Sensitive {
+			for _, stateParam := range stateParams {
+				if stateParam.Name == incomingParams[i].Name {
+					// Set the value to the value provided by the user in order to
+					// prevent terraform from attempting to update the value.
+					incomingParams[i].Value = stateParam.Value
+
+					// Preserve the sensitive value to whatever the user configured, which
+					// could be true, false, or nothing.
+					incomingParams[i].Sensitive = stateParam.Sensitive
+
+					break
 				}
 			}
 		}
 	}
 
-	paramStr, err := parameter.ParametersToString(stateParams)
+	paramStr, err := parameter.ParametersToString(incomingParams)
 	if err != nil {
 		return err
 	}
