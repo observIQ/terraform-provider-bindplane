@@ -52,6 +52,10 @@ func resourceSource() *schema.Resource {
 				ForceNew:    false,
 				Description: "A JSON object with options used to configure the source.",
 			},
+			"parameters_applied": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"rollout": {
 				Type:        schema.TypeBool,
 				Required:    true,

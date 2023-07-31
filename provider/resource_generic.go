@@ -69,11 +69,29 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	paramStr, err := parameter.ParametersToString(g.Spec.Parameters)
+	// Prevent Terraform from attempting to update resources
+	// with sensitive parameters. This is done by calculating
+	// the parameters_applied option by writing (sensative)
+	// to the state instead of the raw value. NOTE: parameters_json
+	// will still contain the orional value provided by the user's
+	// terraform configuration. Users should use an encrypted
+	// backend if they wish to keep sensitive parameters out of plain
+	// text.
+
+	// Update param value's to "(sensitive)" if the parameter is sensitive
+	paramsApplied := g.Spec.Parameters
+	for i, p := range paramsApplied {
+		if p.Sensitive {
+			paramsApplied[i].Value = "(sensitive)"
+		}
+	}
+
+	// Write paramsApplied to parameters_applied in the state
+	paramStr, err := parameter.ParametersToString(paramsApplied)
 	if err != nil {
 		return err
 	}
-	return d.Set("parameters_json", paramStr)
+	return d.Set("parameters_applied", paramStr)
 }
 
 // genericResourceDelete can delete configurations, sources,
