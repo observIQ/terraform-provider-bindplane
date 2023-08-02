@@ -1,5 +1,5 @@
 ---
-subcategory: "Source"
+subcategory: "BindPlane Resources"
 description: |-
   A Source creates a BindPlane OP source that can be attached
   to a Configuration. Sources are used by agents to receive or

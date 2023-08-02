@@ -1,5 +1,5 @@
 ---
-subcategory: "Processor"
+subcategory: "BindPlane Resources"
 description: |-
   A Processor creates a BindPlane OP processor that can be attached
   to a Configuration's sources or destinations.
