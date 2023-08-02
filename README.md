@@ -55,4 +55,4 @@ provider "bindplane" {
 
 ## Resource Documentation
 
-See the [resource docs](./doc/resources/) for individual resource documentation.
+See the [resource docs](./docs/resources/) for individual resource documentation.
