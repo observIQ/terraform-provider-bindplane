@@ -1,3 +1,11 @@
+---
+subcategory: "Destination"
+description: |-
+  A Destination creates a BindPlane OP destination that can be attached
+  to a Configuration. Destinations are used by agents to send telemetry
+  to a backend, such as Google, Grafana, or New Relic.
+---
+
 # bindplane_destination
 
 The `bindplane_destination` resource creates a BindPlane destination from a BindPlane
