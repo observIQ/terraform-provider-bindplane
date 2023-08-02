@@ -1,3 +1,10 @@
+---
+subcategory: "Configuration"
+description: |-
+  A Configuration is a combination of sources, processors, and destinations
+  used by BindPlane OP to generate an agent configuration.
+---
+
 # bindplane_configuration
 
 The `bindplane_configuration` resource creates a BindPlane configuration that can be applied

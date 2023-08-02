@@ -1,3 +1,10 @@
+---
+subcategory: "Processor"
+description: |-
+  A Processor creates a BindPlane OP processor that can be attached
+  to a Configuration's sources or destinations.
+---
+
 # bindplane_processor
 
 The `bindplane_processor` resource creates a BindPlane processor from a BindPlane
