@@ -1,5 +1,5 @@
 ---
-subcategory: "BindPlane Resources"
+subcategory: "Pipeline"
 description: |-
   A Destination creates a BindPlane OP destination that can be attached
   to a Configuration. Destinations are used by agents to send telemetry

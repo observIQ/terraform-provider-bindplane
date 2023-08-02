@@ -1,5 +1,5 @@
 ---
-subcategory: "BindPlane Resources"
+subcategory: "Pipeline"
 description: |-
   A Configuration is a combination of sources, processors, and destinations
   used by BindPlane OP to generate an agent configuration.
