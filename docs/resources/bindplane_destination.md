@@ -27,7 +27,7 @@ destination-type. The destination can be used by multiple [configurations](./bin
 This example shows the [Google Cloud](https://docs.bindplane.observiq.com/docs/google-cloud) destination type
 with default parameters.
 
-```tf
+```hcl
 resource "bindplane_destination" "googlecloud" {
   rollout = true
   name = "my-google"
@@ -40,7 +40,7 @@ resource "bindplane_destination" "googlecloud" {
 This example shows the [Prometheus](https://docs.bindplane.observiq.com/docs/prometheus-1) destination type
 with custom parameters using the `parameters_json` option.
 
-```tf
+```hcl
 resource "bindplane_destination" "prometheus" {
   rollout = true
   name = "my-prometheus"
@@ -145,7 +145,7 @@ For example, `bindplane get destination-type prometheus -o json | jq .spec.param
 Use the JSON output as a reference when writing the `bindplane_destination` resource configuration. This example sets
 the `listen_address`, `listen_port` and `namespace` for a `prometheus` destination.
 
-```tf
+```hcl
 resource "bindplane_destination" "prometheus" {
   rollout = true
   name = "my-prometheus"

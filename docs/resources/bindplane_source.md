@@ -28,7 +28,7 @@ source-type. The source can be used by multiple [configurations](./bindplane_con
 This example shows the [Open Telemetry](https://docs.bindplane.observiq.com/docs/opentelemetry) source type
 with default parameters.
 
-```tf
+```hcl
 resource "bindplane_source" "otlp" {
   rollout = true
   name = "my-otlp"
@@ -41,7 +41,7 @@ resource "bindplane_source" "otlp" {
 This example shows the [Open Telemetry](https://docs.bindplane.observiq.com/docs/opentelemetry) source type
 with custom parameters using the `parameters_json` option.
 
-```tf
+```hcl
 resource "bindplane_source" "otlp" {
   rollout = true
   name = "my-otlp"
@@ -129,7 +129,7 @@ For example, `bindplane get source-type otlp -o json | jq .spec.parameters` prod
 Use the JSON output as a reference when writing the `bindplane_source` resource configuration. This example sets
 the `http_port` and `grpc_port` for an `otlp` source.
 
-```tf
+```hcl
 resource "bindplane_source" "otlp" {
   rollout = true
   name = "my-otlp"

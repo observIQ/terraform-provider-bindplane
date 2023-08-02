@@ -57,7 +57,7 @@ This example shows the creation of a `bindplane_configuration` which uses the fo
 - one [bindplane_destination](./bindplane_destination.md) resource
 - two [bindplane_processor](./bindplane_processor.md) resources
 
-```tf
+```hcl
 resource "bindplane_source" "host" {
   rollout = true
   name = "my-host"

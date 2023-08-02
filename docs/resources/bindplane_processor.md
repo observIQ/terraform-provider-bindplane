@@ -26,7 +26,7 @@ processor-type. The processor can be used by multiple [configurations](./bindpla
 This example shows the [Batch](https://docs.bindplane.observiq.com/docs/batch) processor type
 with default parameters.
 
-```tf
+```hcl
 resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
@@ -39,7 +39,7 @@ resource "bindplane_processor" "batch" {
 This example shows the [Add Fields](https://docs.bindplane.observiq.com/docs/add-fields) processor type
 with custom parameters using the `parameters_json` option.
 
-```tf
+```hcl
 resource "bindplane_processor" "fields" {
   rollout = true
   name = "my-fields"
@@ -136,7 +136,7 @@ For example, `bindplane get processor-type batch -o json | jq .spec.parameters` 
 Use the JSON output as a reference when writing the `bindplane_processor` resource configuration. This example sets
 the `send_batch_size`, `send_batch_max_size` and `timeout` for a `batch` processor.
 
-```tf
+```hcl
 resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
