@@ -1,3 +1,10 @@
+---
+page_title: "Sensitive Values"
+description: |-
+  BindPlane OP does not return sensitive values. Terraform practitioners should understand how the provider
+  handles changes to sensitive values.
+---
+
 # Sensitive Values
 
 Some BindPlane resources are configured with sensitive data, such as
