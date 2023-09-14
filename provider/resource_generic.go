@@ -15,6 +15,8 @@
 package provider
 
 import (
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -69,10 +71,42 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	paramStr, err := parameter.ParametersToString(g.Spec.Parameters)
+	// Parameters defined by the user, previously saved to state
+	stateParams := []model.Parameter{}
+	if s := d.Get("parameters_json").(string); s != "" {
+		if err := json.Unmarshal([]byte(s), &stateParams); err != nil {
+			return fmt.Errorf("failed to unmarshal state paramters: %w", err)
+		}
+	}
+
+	// Parameters returned by BindPlane API
+	incomingParams := g.Spec.Parameters
+
+	// Update all sensitive parameters with the values from state
+	// instead of saving "(sensitive value)" to state.
+	for i, incomingParam := range incomingParams {
+		if incomingParam.Sensitive {
+			for _, stateParam := range stateParams {
+				if stateParam.Name == incomingParams[i].Name {
+					// Set the value to the value provided by the user in order to
+					// prevent terraform from attempting to update the value.
+					incomingParams[i].Value = stateParam.Value
+
+					// Preserve the sensitive value to whatever the user configured, which
+					// could be true, false, or nothing.
+					incomingParams[i].Sensitive = stateParam.Sensitive
+
+					break
+				}
+			}
+		}
+	}
+
+	paramStr, err := parameter.ParametersToString(incomingParams)
 	if err != nil {
 		return err
 	}
+
 	return d.Set("parameters_json", paramStr)
 }
 

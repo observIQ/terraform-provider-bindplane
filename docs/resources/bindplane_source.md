@@ -20,6 +20,10 @@ source-type. The source can be used by multiple [configurations](./bindplane_con
 | `parameters_json`   | string | optional | The serialized JSON representation of the source type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the source should trigger an automatic rollout of any configuration that uses it. |
 
+## Sensitive Values
+
+See the [sensitive values](./sensitive_values.md) doc for details related to Terraform's handling
+of sensitive parameters, such as passwords and API keys.
 
 ## Examples
 
