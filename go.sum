@@ -319,8 +319,8 @@ github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjY
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
 github.com/mrunalp/fileutils v0.5.0/go.mod h1:M1WthSahJixYnrXQl/DFQuteStB1weuxD2QJNHXfbSQ=
-github.com/observiq/bindplane-op v1.29.0 h1:1OxNnW+chd1O85kNRM12qb+5wl8uPPcC9uR8eXkFxRU=
-github.com/observiq/bindplane-op v1.29.0/go.mod h1:Mtz/RDpDUm9r1zV+Sv79nF8rR/88EOqJM3HSDfYu3ZY=
+github.com/observiq/bindplane-op v1.30.0 h1:XbJ37SKDxLgaVmrMhWTrRJoAsdjJrox/MUlm7xwwcsA=
+github.com/observiq/bindplane-op v1.30.0/go.mod h1:Mtz/RDpDUm9r1zV+Sv79nF8rR/88EOqJM3HSDfYu3ZY=
 github.com/observiq/stanza v1.6.1 h1:VfnZ/JYz4zwZKznGWWyMShUCOMK4AeEax/aOTcXmpJI=
 github.com/observiq/stanza v1.6.1/go.mod h1:NAULITrz4PyrqwWPJJ/MOe11TVoA67RqlWTdFrXFNXA=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
