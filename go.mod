@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/observiq/bindplane-op v1.29.0
+	github.com/observiq/bindplane-op v1.30.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.25.0
 	go.uber.org/zap v1.26.0
