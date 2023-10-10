@@ -249,6 +249,8 @@ jobs:
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - run: make test-end-to-end
+        env:
+          BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG
