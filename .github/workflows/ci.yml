@@ -48,6 +48,11 @@ jobs:
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
 
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -66,6 +71,11 @@ jobs:
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -93,6 +103,11 @@ jobs:
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
 
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -118,6 +133,11 @@ jobs:
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -145,6 +165,11 @@ jobs:
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
 
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -171,6 +196,11 @@ jobs:
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
 
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -196,6 +226,11 @@ jobs:
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - uses: KengoTODA/actions-setup-docker-compose@main
         with:
@@ -228,6 +263,11 @@ jobs:
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
         uses: actions/setup-go@v4
