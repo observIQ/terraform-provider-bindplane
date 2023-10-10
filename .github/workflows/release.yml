@@ -3,6 +3,10 @@ on:
   push:
     tags:
       - 'v*'
+
+env:
+  GOPRIVATE: github.com/observiq
+
 jobs:
   goreleaser:
     runs-on: ubuntu-22.04
