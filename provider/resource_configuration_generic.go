@@ -16,7 +16,7 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 // genericConfigurationDelete deletes configurations and raw configurations.

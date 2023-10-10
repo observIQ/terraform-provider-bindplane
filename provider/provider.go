@@ -22,8 +22,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	ossClient "github.com/observiq/bindplane-op/client"
-	"github.com/observiq/bindplane-op/config"
+	ossClient "github.com/observiq/bindplane-op-enterprise/client"
+	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"go.uber.org/zap"
 )

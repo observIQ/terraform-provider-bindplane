@@ -19,7 +19,7 @@ package configuration
 import (
 	"fmt"
 
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 // ResourceConfig represents the configuration of a destination

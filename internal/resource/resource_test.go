@@ -17,7 +17,7 @@ package resource
 import (
 	"testing"
 
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 )
 

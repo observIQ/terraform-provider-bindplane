@@ -26,11 +26,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/observiq/bindplane-op/client"
+	"github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
