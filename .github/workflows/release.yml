@@ -10,6 +10,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure GIT SSH
+        run: git config --global url.git@github.com:.insteadOf https://github.com/
+
       - name: Unshallow
         run: git fetch --prune --unshallow
 
