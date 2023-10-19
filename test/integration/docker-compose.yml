@@ -3,7 +3,7 @@ version: "3.9"
 services:
   bindplane:
     hostname: bindplane.bindplane-dev.svc.cluster.local
-    image: observiq/bindplane:1.21.0
+    image: observiq/bindplane-ee:1.32.0
     restart: always
     ports:
       - "3100:3001"
@@ -17,13 +17,15 @@ services:
       - BINDPLANE_TLS_KEY=/bindplane.key
       - BINDPLANE_TLS_CA=/bindplane-ca.crt
       - BINDPLANE_REMOTE_URL=https://bindplane.bindplane-dev.svc.cluster.local:3001
+      - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
+      - BINDPLANE_ACCEPT_EULA=true
     volumes:
       - "../../client/tls/bindplane.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
       - "../../client/tls/bindplane.key:/bindplane.key:ro"
 
   agent:
-    image: observiq/observiq-otel-collector:1.29.1
+    image: observiq/bindplane-agent:1.36.0
     environment:
       - OPAMP_AGENT_NAME=agent
       - OPAMP_ENDPOINT=wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp

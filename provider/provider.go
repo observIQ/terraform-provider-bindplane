@@ -22,13 +22,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	ossClient "github.com/observiq/bindplane-op/client"
-	"github.com/observiq/bindplane-op/config"
+	ossClient "github.com/observiq/bindplane-op-enterprise/client"
+	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"go.uber.org/zap"
 )
 
 const (
+	envAPIKey    = "BINDPLANE_TF_API_KEY" // #nosec G101 this is not a credential
 	envRemoteURL = "BINDPLANE_TF_REMOTE_URL"
 	envUsername  = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
 	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
@@ -62,6 +63,14 @@ func Configure() *schema.Provider {
 					envRemoteURL,
 				}, nil),
 				Description: "The endpoint used to connect to the BindPlane OP instance.",
+			},
+			"api_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					envAPIKey,
+				}, nil),
+				Description: "The API used to connect to the BindPlane OP instance.",
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -129,6 +138,10 @@ func NewLogger() (*zap.Logger, error) {
 // functions with with 'bindplane := meta.(client.BindPlane)'
 func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
 	config := &config.Config{}
+
+	if v, ok := d.Get("api_key").(string); ok && v != "" {
+		config.Auth.APIKey = v
+	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
 		config.Auth.Username = v

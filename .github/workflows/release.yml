@@ -3,6 +3,10 @@ on:
   push:
     tags:
       - 'v*'
+
+env:
+  GOPRIVATE: github.com/observiq
+
 jobs:
   goreleaser:
     runs-on: ubuntu-22.04
@@ -12,6 +16,14 @@ jobs:
 
       - name: Unshallow
         run: git fetch --prune --unshallow
+
+      - name: Configure GIT SSH
+        run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
         uses: actions/setup-go@v4

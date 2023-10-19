@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/observiq/bindplane-op/client"
-	"github.com/observiq/bindplane-op/config"
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/client"
+	"github.com/observiq/bindplane-op-enterprise/config"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )

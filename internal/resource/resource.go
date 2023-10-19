@@ -19,7 +19,7 @@ package resource
 import (
 	"fmt"
 
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 // AnyResourceV1 takes a BindPlane resource name, kind, type, parameters

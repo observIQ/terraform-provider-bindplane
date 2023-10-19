@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/observiq/bindplane-op/client"
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/client"
+	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 // BindPlane is a shim layer between Terraform and the

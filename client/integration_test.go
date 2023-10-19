@@ -26,18 +26,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/observiq/bindplane-op/client"
+	"github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
-	"github.com/observiq/bindplane-op/model"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 const (
-	bindplaneImage   = "observiq/bindplane:1.21.0"
+	bindplaneImage   = "observiq/bindplane:1.32.0"
 	bindplaneExtPort = 3100
 
 	username = "int-test-user"
