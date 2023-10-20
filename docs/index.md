@@ -34,6 +34,14 @@ by setting the `BINDPLANE_TF_USERNAME` and `BINDPLANE_TF_PASSWORD` environment
 variables.
 
 ```hcl
+terraform {
+  required_providers {
+    bindplane = {
+      source = "observiq/bindplane"
+    }
+  }
+}
+
 provider "bindplane" {
   remote_url = "http://192.168.1.10:3001"
   username = "admin"
@@ -42,6 +50,14 @@ provider "bindplane" {
 ```
 
 ```hcl
+terraform {
+  required_providers {
+    bindplane = {
+      source = "observiq/bindplane"
+    }
+  }
+}
+
 // Assumes the BINDPLANE_TF_USERNAME and BINDPLANE_TF_PASSWORD
 // environment variables are set.
 provider "bindplane" {
@@ -52,6 +68,14 @@ provider "bindplane" {
 ### TLS
 
 ```hcl
+terraform {
+  required_providers {
+    bindplane = {
+      source = "observiq/bindplane"
+    }
+  }
+}
+
 provider "bindplane" {
   remote_url = "https://192.168.1.10"
   tls_certificate_authority = "/opt/tls/bindplane-east1.crt"
@@ -63,6 +87,14 @@ provider "bindplane" {
 API key can be used to authenticate as an alternative to username and password.
 
 ```hcl
+terraform {
+  required_providers {
+    bindplane = {
+      source = "observiq/bindplane"
+    }
+  }
+}
+
 provider "bindplane" {
   remote_url = "http://192.168.1.10:3001"
   api_key    = "xxx-xxx-xxx-xxx"
