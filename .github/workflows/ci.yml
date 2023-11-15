@@ -227,6 +227,7 @@ jobs:
           - "module" # Use the current Go module version
           - "v1.34.0"
           - "v1.32.0"
+          - "v1.31.1"
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -258,6 +259,9 @@ jobs:
       - run: make test-end-to-end
         env:
           BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
+
+      - name: list images (debug)
+        run: docker images
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG
