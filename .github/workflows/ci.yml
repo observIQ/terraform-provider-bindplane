@@ -220,6 +220,13 @@ jobs:
     runs-on: "ubuntu-22.04"
     needs:
       - setup-environment
+    strategy:
+      matrix:
+        bindplane_version:
+          - "latest"
+          - "module" # Use the current Go module version
+          - "v1.34.0"
+          - "v1.32.0"
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -250,7 +257,7 @@ jobs:
 
       - run: make test-end-to-end
         env:
-          BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
+          BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG

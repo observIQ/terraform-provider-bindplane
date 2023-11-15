@@ -3,7 +3,7 @@ version: "3.9"
 services:
   bindplane:
     hostname: bindplane.bindplane-dev.svc.cluster.local
-    image: observiq/bindplane-ee:1.32.0
+    image: observiq/bindplane-ee:${BINDPLANE_VERSION}
     restart: always
     ports:
       - "3100:3001"
@@ -17,7 +17,6 @@ services:
       - BINDPLANE_TLS_KEY=/bindplane.key
       - BINDPLANE_TLS_CA=/bindplane-ca.crt
       - BINDPLANE_REMOTE_URL=https://bindplane.bindplane-dev.svc.cluster.local:3001
-      - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
       - BINDPLANE_ACCEPT_EULA=true
     volumes:
       - "../../client/tls/bindplane.crt:/bindplane-ca.crt:ro"

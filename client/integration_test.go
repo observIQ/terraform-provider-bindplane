@@ -37,7 +37,6 @@ import (
 )
 
 const (
-	bindplaneImage   = "observiq/bindplane:1.32.0"
 	bindplaneExtPort = 3100
 
 	username = "int-test-user"
@@ -45,6 +44,19 @@ const (
 )
 
 func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Container {
+	// Get the bindplane version to determine the image and tag
+	version := os.Getenv("BINDPLANE_VERSION")
+	if version == "" {
+		t.Fatal("BINDPLANE_VERSION must be set: e.g. BINDPLANE_VERSION=v1.32.0")
+	}
+
+	// Trim the v prefix if not latest
+	if version != "latest" {
+		version = version[1:]
+	}
+
+	image := fmt.Sprintf("observiq/bindplane-ee:%s", version)
+
 	dir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -64,7 +76,7 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 
 	ctx := context.Background()
 	req := testcontainers.ContainerRequest{
-		Image:  bindplaneImage,
+		Image:  image,
 		Env:    env,
 		Mounts: mounts,
 		// TODO(jsirianni): dynamic port?
@@ -91,6 +103,7 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
@@ -253,6 +266,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
@@ -289,6 +303,7 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
@@ -329,6 +344,7 @@ func TestIntegration_https(t *testing.T) {
 // 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 // 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 // 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+//      "BINDPLANE_ACCEPT_EULA":    "true",
 // 	}
 
 // 	container := bindplaneContainer(t, env)
@@ -367,6 +383,7 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)

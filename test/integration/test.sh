@@ -57,10 +57,19 @@ destroy () {
 
 export TF_CLI_CONFIG_FILE=./dev.tfrc
 
-if [[ -z "$BINDPLANE_LICENSE" ]]; then
-    echo "Must provide BINDPLANE_LICENSE in environment" 1>&2
+# fail if BINDPLANE_VERSION is not set
+if [[ -z $BINDPLANE_VERSION ]]; then
+    echo "BINDPLANE_VERSION is not set"
     exit 1
 fi
+
+# trim the v prefix if not latest
+if [[ $BINDPLANE_VERSION != "latest" ]]; then
+    BINDPLANE_VERSION=$(echo $BINDPLANE_VERSION | sed 's/^v//')
+fi
+export BINDPLANE_VERSION
+
+echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
 start_containers
 sleep 10
