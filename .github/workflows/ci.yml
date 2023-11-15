@@ -227,6 +227,7 @@ jobs:
           - "module" # Use the current Go module version
           - "v1.34.0"
           - "v1.32.0"
+          - "v1.31.1"
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
