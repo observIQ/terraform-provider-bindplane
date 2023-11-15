@@ -4,6 +4,7 @@ ALL_SRC := $(shell find . -name '*.go' -o -name '*.sh' -type f | sort)
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
+BINDPLANE_VERSION := $(shell go list -m all | grep github.com/observiq/bindplane-op-enterprise | awk '{print $$2}')
 
 ifeq ($(GOOS), windows)
 EXT?=.exe
@@ -97,18 +98,18 @@ test-cover: vet
 
 .PHONY: test-integration
 test-integration: dev-tls
-	go test ./... --tags=integration -cover
+	BINDPLANE_VERSION=$(BINDPLANE_VERSION) go test ./... --tags=integration -cover
 
 .PHONY: test-integration-cover
 test-integration-cover: dev-tls
-	go test ./... --tags=integration -cover -coverprofile cover.out
+	BINDPLANE_VERSION=$(BINDPLANE_VERSION) go test ./... --tags=integration -cover -coverprofile cover.out
 	go tool cover -html=cover.out
 
 .PHONY: test-end-to-end
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
 	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
-	BINDPLANE_LICENSE=${BINDPLANE_LICENSE} bash test/integration/test.sh
+	BINDPLANE_VERSION=$(BINDPLANE_VERSION) BINDPLANE_LICENSE=${BINDPLANE_LICENSE} bash test/integration/test.sh
 
 # Test local configures test/local directory
 # with the provider.
