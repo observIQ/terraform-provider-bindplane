@@ -57,6 +57,9 @@ destroy () {
 
 export TF_CLI_CONFIG_FILE=./dev.tfrc
 
+# trim the v prefix
+export BINDPLANE_VERSION=$(echo $BINDPLANE_VERSION | sed 's/^v//')
+
 start_containers
 sleep 10
 apply
