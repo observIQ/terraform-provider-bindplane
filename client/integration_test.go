@@ -49,8 +49,13 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 	if version == "" {
 		t.Fatal("BINDPLANE_VERSION must be set: e.g. BINDPLANE_VERSION=v1.32.0")
 	}
-	tag := version[1:]
-	image := fmt.Sprintf("observiq/bindplane-ee:%s", tag)
+
+	// Trim the v prefix if not latest
+	if version != "latest" {
+		version = version[1:]
+	}
+
+	image := fmt.Sprintf("observiq/bindplane-ee:%s", version)
 
 	dir, err := os.Getwd()
 	if err != nil {
