@@ -4,7 +4,9 @@ ALL_SRC := $(shell find . -name '*.go' -o -name '*.sh' -type f | sort)
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
+ifeq ($(BINDPLANE_VERSION), module)
 BINDPLANE_VERSION := $(shell go list -m all | grep github.com/observiq/bindplane-op-enterprise | awk '{print $$2}')
+endif
 
 ifeq ($(GOOS), windows)
 EXT?=.exe
