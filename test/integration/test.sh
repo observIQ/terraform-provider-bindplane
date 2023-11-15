@@ -57,11 +57,6 @@ destroy () {
 
 export TF_CLI_CONFIG_FILE=./dev.tfrc
 
-if [[ -z "$BINDPLANE_LICENSE" ]]; then
-    echo "Must provide BINDPLANE_LICENSE in environment" 1>&2
-    exit 1
-fi
-
 start_containers
 sleep 10
 apply

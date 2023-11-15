@@ -261,6 +261,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
@@ -297,6 +298,7 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
@@ -337,6 +339,7 @@ func TestIntegration_https(t *testing.T) {
 // 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 // 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 // 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+//      "BINDPLANE_ACCEPT_EULA":    "true",
 // 	}
 
 // 	container := bindplaneContainer(t, env)
@@ -375,6 +378,7 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
+		"BINDPLANE_ACCEPT_EULA":    "true",
 	}
 
 	container := bindplaneContainer(t, env)
