@@ -24,5 +24,5 @@ provider "bindplane" {
 }
 
 module "test" {
-  source = "modules/test"
+  source = "./modules/test"
 }
