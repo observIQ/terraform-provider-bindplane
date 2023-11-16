@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    bindplane = {
+      source = "observiq/bindplane"
+    }
+  }
+}
+
 resource "bindplane_configuration" "config" {
   rollout = true
   name = "testtf"
