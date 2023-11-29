@@ -88,7 +88,7 @@ func resourceConfiguration() *schema.Resource {
 							Description: "Name of the source to attach.",
 						},
 						"processors": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
@@ -111,7 +111,7 @@ func resourceConfiguration() *schema.Resource {
 							Description: "Name of the destination to attach.",
 						},
 						"processors": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
