@@ -88,7 +88,7 @@ func resourceConfiguration() *schema.Resource {
 							Description: "Name of the source to attach.",
 						},
 						"processors": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
@@ -111,7 +111,7 @@ func resourceConfiguration() *schema.Resource {
 							Description: "Name of the destination to attach.",
 						},
 						"processors": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
@@ -174,9 +174,9 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			sourcesRaw := v.(map[string]any)
 
 			processors := []string{}
-			if v := sourcesRaw["processors"].(*schema.Set); v != nil {
-				for _, processorName := range v.List() {
-					processors = append(processors, processorName.(string))
+			if v := sourcesRaw["processors"].([]any); v != nil {
+				for _, v := range v {
+					processors = append(processors, v.(string))
 				}
 			}
 
@@ -196,9 +196,9 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			destinationRaw := v.(map[string]any)
 
 			processors := []string{}
-			if v := destinationRaw["processors"].(*schema.Set); v != nil {
-				for _, processorName := range v.List() {
-					processors = append(processors, processorName.(string))
+			if v := destinationRaw["processors"].([]any); v != nil {
+				for _, v := range v {
+					processors = append(processors, v.(string))
 				}
 			}
 
