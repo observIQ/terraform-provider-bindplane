@@ -174,10 +174,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			sourcesRaw := v.(map[string]any)
 
 			processors := []string{}
-			if v := sourcesRaw["processors"].(*schema.Set); v != nil {
-				for _, processorName := range v.List() {
-					processors = append(processors, processorName.(string))
-				}
+			if v := sourcesRaw["processors"].([]string); v != nil {
+				processors = append(processors, v...)
 			}
 
 			sourceConf := configuration.ResourceConfig{
@@ -196,10 +194,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			destinationRaw := v.(map[string]any)
 
 			processors := []string{}
-			if v := destinationRaw["processors"].(*schema.Set); v != nil {
-				for _, processorName := range v.List() {
-					processors = append(processors, processorName.(string))
-				}
+			if v := destinationRaw["processors"].([]string); v != nil {
+				processors = append(processors, v...)
 			}
 
 			destConfig := configuration.ResourceConfig{
