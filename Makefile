@@ -122,7 +122,7 @@ test-end-to-end: test-integration provider
 test-local: provider
 	rm -rf test/local/providers
 	mkdir -p test/local/providers
-	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane_v1.0.5-SNAPSHOT-f12dfdf test/local/providers/terraform-provider-bindplane_v0.0.0
+	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane_v1.0.5-SNAPSHOT-* test/local/providers/terraform-provider-bindplane_v0.0.0
 
 
 .PHONY: check-license
