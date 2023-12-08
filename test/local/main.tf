@@ -90,6 +90,10 @@ resource "bindplane_processor" "batch" {
 }
 
 resource "bindplane_configuration" "configuration" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
   rollout = true
   name = "my-config"
   platform = "linux"

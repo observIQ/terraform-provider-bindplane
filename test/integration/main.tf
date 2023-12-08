@@ -24,6 +24,10 @@ provider "bindplane" {
 }
 
 resource "bindplane_configuration" "config" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
   rollout = true
   name = "testtf"
   platform = "linux"
