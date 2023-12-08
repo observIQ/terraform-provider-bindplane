@@ -119,5 +119,5 @@ func genericResourceDelete(rKind model.Kind, d *schema.ResourceData, meta any) e
 	if err := bindplane.Delete(rKind, name); err != nil {
 		return err
 	}
-	return resourceProcessorRead(d, meta)
+	return nil
 }
