@@ -229,7 +229,14 @@ jobs:
         env:
           BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
 
+      - run: goreleaser --version
+        if: always()
+
+      - run: tree dist/
+        if: always()
+
       - name: list images (debug)
+        if: always()
         run: docker images
 
   build:
