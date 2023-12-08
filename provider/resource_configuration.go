@@ -94,6 +94,17 @@ func resourceConfiguration() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the source.",
 						},
+						// The provider does not support configuring embeded sources, however, it does
+						// handle detecting their type in order to make the diff output more clear.
+						// The provider will delete embeded sources if they are added to the configuration
+						// by the user, outside of Terraform.
+						"type": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							ForceNew:    false,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "The source type. This value is populated if an embeded source is detected within the configuration.",
+						},
 					},
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
@@ -291,6 +302,9 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	for _, s := range config.Spec.Sources {
 		source := map[string]any{}
 		source["name"] = strings.Split(s.Name, ":")[0]
+		if s.Type != "" {
+			source["type"] = s.Type
+		}
 		processors := []string{}
 		for _, p := range s.Processors {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
