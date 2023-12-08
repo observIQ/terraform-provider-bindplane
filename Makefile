@@ -25,15 +25,16 @@ PWD=$(shell pwd)
 # All source code and documents, used when checking for misspellings
 ALLDOC := $(shell find . \( -name "*.md" -o -name "*.yaml" \) -type f | sort)
 
+TOOLS_MOD_DIR := ./internal/tools
+
 .PHONY: install-tools
 install-tools:
-	go install github.com/securego/gosec/v2/cmd/gosec@v2.16.0
-	go install github.com/google/addlicense@v1.1.0
-	go install github.com/mgechev/revive@v1.3.1
-	go install github.com/uw-labs/lichen@v0.1.7
-	go install github.com/goreleaser/goreleaser@v1.21.2
-	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	cd $(TOOLS_MOD_DIR) && go install github.com/securego/gosec/v2/cmd/gosec@v2.16.0
+	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense@v1.1.0
+	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive@v1.3.1
+	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen@v0.1.7
+	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser@v1.21.2
+	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell@v0.3.4
 
 .PHONY: tidy
 tidy:
@@ -72,14 +73,6 @@ misspell:
 .PHONY: misspell-fix
 misspell-fix:
 	misspell -w $(ALLDOC)
-
-.PHONY: check-fmt
-check-fmt:
-	goimports -d ./ | diff -u /dev/null -
-
-.PHONY: fmt
-fmt:
-	goimports -w .
 
 .PHONY: gosec
 gosec:
