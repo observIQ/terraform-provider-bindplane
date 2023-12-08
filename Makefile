@@ -31,7 +31,7 @@ install-tools:
 	go install github.com/google/addlicense@v1.1.0
 	go install github.com/mgechev/revive@v1.3.1
 	go install github.com/uw-labs/lichen@v0.1.7
-	go install github.com/goreleaser/goreleaser@v1.18.2
+	go install github.com/goreleaser/goreleaser@v1.21.2
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install github.com/client9/misspell/cmd/misspell@v0.3.4
 
@@ -110,7 +110,7 @@ test-integration-cover: dev-tls
 .PHONY: test-end-to-end
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
-	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
+	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
 	@BINDPLANE_VERSION=$(BINDPLANE_VERSION) bash test/integration/test.sh
 
 # Test local configures test/local directory
