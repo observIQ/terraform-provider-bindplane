@@ -40,13 +40,16 @@ install-tools:
 tidy:
 	go mod tidy
 
+# rm the dist/ directory because the `--rm-dist` flag will not
+# if the dist/ directory already exists with directories and files
+# that do not conflict with the output from the build command.
 .PHONY: provider
 provider:
+	rm -rf dist/
 	goreleaser build \
 		--skip-validate \
 		--single-target \
 		--snapshot \
-		--rm-dist \
 		--config release/goreleaser.yml
 
 .PHONY: release-test
@@ -103,7 +106,7 @@ test-integration-cover: dev-tls
 .PHONY: test-end-to-end
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
-	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
+	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/integration/providers/terraform-provider-bindplane_v0.0.0 \;
 	@BINDPLANE_VERSION=$(BINDPLANE_VERSION) bash test/integration/test.sh
 
 # Test local configures test/local directory
@@ -115,8 +118,7 @@ test-end-to-end: test-integration provider
 test-local: provider
 	rm -rf test/local/providers
 	mkdir -p test/local/providers
-	cp dist/$(GOOS)_$(GOARCH)/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/local/providers/terraform-provider-bindplane_v0.0.0
-
+	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/local/providers/terraform-provider-bindplane_v0.0.0 \;
 
 .PHONY: check-license
 check-license:
