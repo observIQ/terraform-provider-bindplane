@@ -115,9 +115,5 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 func genericResourceDelete(rKind model.Kind, d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 	name := d.Get("name").(string)
-
-	if err := bindplane.Delete(rKind, name); err != nil {
-		return err
-	}
-	return nil
+	return bindplane.Delete(rKind, name)
 }
