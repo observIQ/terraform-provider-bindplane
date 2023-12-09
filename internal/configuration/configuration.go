@@ -31,6 +31,12 @@ type ResourceConfig struct {
 
 	// A list of processor names to attach to the resource
 	Processors []string
+
+	EmbeddedProcessors []EmbeddedProcessor
+}
+
+type EmbeddedProcessor struct {
+	Type string
 }
 
 // Option is a function that configures a
@@ -124,9 +130,19 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 	for _, r := range r {
 		// build list of processor resource objects by name
 		processorResources := []model.ResourceConfiguration{}
+
 		for _, name := range r.Processors {
 			processor := model.ResourceConfiguration{
 				Name: name,
+			}
+			processorResources = append(processorResources, processor)
+		}
+
+		for _, embeddedProcessor := range r.EmbeddedProcessors {
+			processor := model.ResourceConfiguration{
+				ParameterizedSpec: model.ParameterizedSpec{
+					Type: embeddedProcessor.Type,
+				},
 			}
 			processorResources = append(processorResources, processor)
 		}

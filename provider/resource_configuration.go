@@ -205,9 +205,21 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				}
 			}
 
+			embeddedProcessors := []configuration.EmbeddedProcessor{}
+			if v := sourcesRaw["processor"].([]any); v != nil {
+				for _, v := range v {
+					processorRaw := v.(map[string]any)
+					p := configuration.EmbeddedProcessor{
+						Type: processorRaw["type"].(string),
+					}
+					embeddedProcessors = append(embeddedProcessors, p)
+				}
+			}
+
 			sourceConf := configuration.ResourceConfig{
-				Name:       sourcesRaw["name"].(string),
-				Processors: processors,
+				Name:               sourcesRaw["name"].(string),
+				Processors:         processors,
+				EmbeddedProcessors: embeddedProcessors,
 			}
 			sources = append(sources, sourceConf)
 		}
