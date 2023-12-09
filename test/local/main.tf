@@ -100,9 +100,41 @@ resource "bindplane_configuration" "configuration" {
 
   source {
     name = bindplane_source.journald.name
+
+    // Processors by name
     processors = [
       bindplane_processor.add_fields.name
     ]
+
+    // Embedded processor
+    processor {
+      type = "batch"
+    }
+
+    // Embedded processor
+    processor {
+      type = "batch"
+      parameters_json = jsonencode(
+        [
+          {
+            "name": "enable_logs",
+            "value": true
+          },
+          {
+            "name": "log_condition",
+            "value": "true"
+          },
+          {
+            "name": "log_batch_size",
+            "value": 100
+          },
+          {
+            "name": "log_batch_timeout",
+            "value": 1000
+          }
+        ]
+      )
+    }
   }
 
   source {

@@ -94,6 +94,31 @@ func resourceConfiguration() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the source.",
 						},
+						"processor": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								// TODO(jsirianni): These params were copied from the
+								// processor resource. They should be moved to a shared
+								// location.
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:        schema.TypeString,
+										Required:    true,
+										ForceNew:    false,
+										Description: "The destination type to use for processor creation.",
+									},
+									"parameters_json": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										ForceNew:    false,
+										Description: "A JSON object with options used to configure the processor.",
+									},
+								},
+							},
+							Description: "Processor type and parameters to embed into the source. This option can be configured one or many times.",
+						},
 					},
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
