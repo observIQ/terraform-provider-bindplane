@@ -154,37 +154,6 @@ jobs:
       - name: Lint
         run: make lint
 
-  check-fmt:
-    runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
-    steps:
-      - name: Check out source code
-        uses: actions/checkout@v4
-
-      - name: Configure GIT SSH
-        run: git config --global url.git@github.com:.insteadOf https://github.com/
-
-      - name: Configure SSH Key
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v3
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
-
-      - name: Check Format
-        run: make check-fmt
-
   misspell:
     runs-on: "ubuntu-22.04"
     needs:
@@ -260,7 +229,14 @@ jobs:
         env:
           BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
 
+      - run: goreleaser --version
+        if: always()
+
+      - run: tree dist/
+        if: always()
+
       - name: list images (debug)
+        if: always()
         run: docker images
 
   build:

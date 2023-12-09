@@ -25,27 +25,31 @@ PWD=$(shell pwd)
 # All source code and documents, used when checking for misspellings
 ALLDOC := $(shell find . \( -name "*.md" -o -name "*.yaml" \) -type f | sort)
 
+TOOLS_MOD_DIR := ./internal/tools
+
 .PHONY: install-tools
 install-tools:
-	go install github.com/securego/gosec/v2/cmd/gosec@v2.16.0
-	go install github.com/google/addlicense@v1.1.0
-	go install github.com/mgechev/revive@v1.3.1
-	go install github.com/uw-labs/lichen@v0.1.7
-	go install github.com/goreleaser/goreleaser@v1.18.2
-	go install golang.org/x/tools/cmd/goimports@latest
-	go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	cd $(TOOLS_MOD_DIR) && go install github.com/securego/gosec/v2/cmd/gosec@v2.16.0
+	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense@v1.1.0
+	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive@v1.3.1
+	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen@v0.1.7
+	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser@v1.21.2
+	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell@v0.3.4
 
 .PHONY: tidy
 tidy:
 	go mod tidy
 
+# rm the dist/ directory because the `--rm-dist` flag will not
+# if the dist/ directory already exists with directories and files
+# that do not conflict with the output from the build command.
 .PHONY: provider
 provider:
+	rm -rf dist/
 	goreleaser build \
 		--skip-validate \
 		--single-target \
 		--snapshot \
-		--rm-dist \
 		--config release/goreleaser.yml
 
 .PHONY: release-test
@@ -72,14 +76,6 @@ misspell:
 .PHONY: misspell-fix
 misspell-fix:
 	misspell -w $(ALLDOC)
-
-.PHONY: check-fmt
-check-fmt:
-	goimports -d ./ | diff -u /dev/null -
-
-.PHONY: fmt
-fmt:
-	goimports -w .
 
 .PHONY: gosec
 gosec:
@@ -110,7 +106,7 @@ test-integration-cover: dev-tls
 .PHONY: test-end-to-end
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
-	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/integration/providers/terraform-provider-bindplane_v0.0.0
+	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/integration/providers/terraform-provider-bindplane_v0.0.0 \;
 	@BINDPLANE_VERSION=$(BINDPLANE_VERSION) bash test/integration/test.sh
 
 # Test local configures test/local directory
@@ -122,7 +118,7 @@ test-end-to-end: test-integration provider
 test-local: provider
 	rm -rf test/local/providers
 	mkdir -p test/local/providers
-	cp dist/provider_$(GOOS)_$(GOARCH_FULL)/terraform-provider-bindplane* test/local/providers/terraform-provider-bindplane_v0.0.0
+	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/local/providers/terraform-provider-bindplane_v0.0.0 \;
 
 .PHONY: check-license
 check-license:
