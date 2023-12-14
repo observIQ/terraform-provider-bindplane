@@ -3,14 +3,14 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
       day: "monday"
     labels:
       - "dependencies"
     commit-message:
       prefix: "deps"
       include: "scope"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
 
   - package-ecosystem: "github-actions"
     directory: "/"
