@@ -1,4 +1,11 @@
 resource "bindplane_configuration" "configuration-full" {
+  // When removing a component from a configuration and deleting that
+  // component during the same apply, we want to update the configuration
+  // before the component is deleted.
+  lifecycle {
+    create_before_destroy = true
+  }
+
   // Automatically rollout new versions of the configuration
   // to managed agents. This includes changes to the underlying
   // sources, processors, and destinations.
