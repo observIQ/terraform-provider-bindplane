@@ -6,7 +6,7 @@ toolchain go1.21.1
 
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/observiq/bindplane-op-enterprise v1.43.0
+	github.com/observiq/bindplane-op-enterprise v1.44.0
 	github.com/stretchr/testify v1.8.4
 	github.com/testcontainers/testcontainers-go v0.26.0
 	go.uber.org/zap v1.26.0
@@ -179,7 +179,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
-	google.golang.org/api v0.159.0 // indirect
+	google.golang.org/api v0.161.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240116215550-a9fa1716bcac // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240122161410-6c6643bf1457 // indirect

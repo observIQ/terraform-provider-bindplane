@@ -315,8 +315,8 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
-github.com/observiq/bindplane-op-enterprise v1.43.0 h1:EUYALcPvf6hlaPtA8Cpb/flf76UjFwvhFiUY9nrkUvQ=
-github.com/observiq/bindplane-op-enterprise v1.43.0/go.mod h1:D/VGGJoSHDODUKHww1UkrFfCpezl0wooG7MBTxIivrw=
+github.com/observiq/bindplane-op-enterprise v1.44.0 h1:EHQA8uIBsZO7vIt90N3rqzJJYTR3qh1DoH/ch6dxiIk=
+github.com/observiq/bindplane-op-enterprise v1.44.0/go.mod h1:U8QONvZnbii1HgElVmAmJwlZXBIJw59tV3OCBv9igGY=
 github.com/observiq/stanza v1.6.1 h1:VfnZ/JYz4zwZKznGWWyMShUCOMK4AeEax/aOTcXmpJI=
 github.com/observiq/stanza v1.6.1/go.mod h1:NAULITrz4PyrqwWPJJ/MOe11TVoA67RqlWTdFrXFNXA=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
@@ -568,8 +568,8 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-google.golang.org/api v0.159.0 h1:fVTj+7HHiUYz4JEZCHHoRIeQX7h5FMzrA2RF/DzDdbs=
-google.golang.org/api v0.159.0/go.mod h1:0mu0TpK33qnydLvWqbImq2b1eQ5FHRSDCBzAxX9ZHyw=
+google.golang.org/api v0.161.0 h1:oYzk/bs26WN10AV7iU7MVJVXBH8oCPS2hHyBiEeFoSU=
+google.golang.org/api v0.161.0/go.mod h1:0mu0TpK33qnydLvWqbImq2b1eQ5FHRSDCBzAxX9ZHyw=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.4.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAsM=
