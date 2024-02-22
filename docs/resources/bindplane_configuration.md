@@ -115,6 +115,13 @@ resource "bindplane_processor" "batch" {
 }
 
 resource "bindplane_configuration" "configuration" {
+  // When removing a component from a configuration and deleting that
+  // component during the same apply, we want to update the configuration
+  // before the component is deleted.
+  lifecycle {
+    create_before_destroy = true
+  }
+
   rollout = true
   name = "my-config"
   platform = "linux"
