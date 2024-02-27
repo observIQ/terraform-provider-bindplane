@@ -69,7 +69,7 @@ func resourceExtension() *schema.Resource {
 func resourceExtensionCreate(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
-	destType := d.Get("type").(string)
+	extensionType := d.Get("type").(string)
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
 
@@ -95,7 +95,7 @@ func resourceExtensionCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(name, destType, model.KindExtension, parameters)
+	r, err := resource.AnyResourceV1(name, extensionType, model.KindExtension, parameters)
 	if err != nil {
 		return err
 	}
