@@ -267,7 +267,7 @@ func TestIntegration_http_config(t *testing.T) {
 			},
 		},
 		Spec: map[string]any{
-			"type": "pprof",
+			"type": "custom",
 		},
 	}
 
