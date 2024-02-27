@@ -77,6 +77,15 @@ func WithDestinationsByName(d []ResourceConfig) Option {
 	}
 }
 
+// WithExtensionsByName is a Option that configures a configuration's
+// extensions.
+func WithExtensionsByName(d []ResourceConfig) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Extensions = append(c.Spec.Extensions, withResourcesByName(d)...)
+		return nil
+	}
+}
+
 // WithMatchLabels is a Option that configures a configuration's
 // agent match labels.
 func WithMatchLabels(match map[string]string) Option {

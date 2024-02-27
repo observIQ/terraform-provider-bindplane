@@ -121,6 +121,13 @@ func resourceConfiguration() *schema.Resource {
 				},
 				Description: "Destination name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
+			"extensions": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				ForceNew:    false,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of extensions names to attach to the configuration.",
+			},
 			"rollout": {
 				Type:        schema.TypeBool,
 				Required:    true,
@@ -210,12 +217,25 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
+	// List of extensions represented as a list of configuration.ResourceConfig's
+	// with only the name field set.
+	extensions := []configuration.ResourceConfig{}
+	if e := d.Get("extensions").([]any); e != nil {
+		for _, extension := range e {
+			extensionConfig := configuration.ResourceConfig{
+				Name: extension.(string),
+			}
+			extensions = append(extensions, extensionConfig)
+		}
+	}
+
 	opts := []configuration.Option{
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesByName(sources),
 		configuration.WithDestinationsByName(destinations),
+		configuration.WithExtensionsByName(extensions),
 	}
 
 	config, err := configuration.NewV1(opts...)

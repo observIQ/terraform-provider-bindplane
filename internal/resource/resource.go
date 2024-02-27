@@ -60,6 +60,10 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 		a.Spec["destinations"] = c.Spec.Destinations
 	}
 
+	if len(c.Spec.Extensions) > 0 {
+		a.Spec["extensions"] = c.Spec.Extensions
+	}
+
 	return a
 }
 
