@@ -1,20 +1,32 @@
 resource "bindplane_destination" "grafana" {
   rollout = true
   name = "example-grafana"
-  type = "grafana_cloud"
+  type = "grafana_cloud_otlphttp"
   parameters_json = jsonencode(
     [
       {
-        "name": "metric_instance_id",
-        "value": "id-xx-xxx-xx"
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+          "Metrics",
+          "Traces"
+        ]
       },
       {
-        "name": "api_key",
-        "value": "xxx-xxx-xxx"
+        "name": "endpoint",
+        "value": "http://otlp.grafana.com"
       },
       {
-        "name": "gcp_zone",
-        "value": "prod-us-central-0"
+        "name": "instance_id",
+        "value": "otel"
+      },
+      {
+        "name": "token",
+        "value": "my-token",
+      },
+      {
+        "name": "compression",
+        "value": "gzip"
       },
       {
         "name": "retry_on_failure_enabled",

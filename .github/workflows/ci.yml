@@ -238,6 +238,132 @@ jobs:
         if: always()
         run: docker images
 
+  test-local:
+    runs-on: "ubuntu-22.04"
+    needs:
+      - setup-environment
+    strategy:
+      matrix:
+        bindplane_version:
+          - "latest"
+          - "module" # Use the current Go module version
+          - "v1.44.0"
+          - "v1.37.0" # Extension support added in v1.37.0
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v4
+
+      - name: Configure GIT SSH
+        run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        with:
+          version: '2.7.0'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+
+      - name: Cache Tools
+        id: tool-cache
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/go/bin
+          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
+      # https://observiq.com/download
+      - name: Start BindPlane
+        run: |
+          cat <<EOF > docker-compose.yml
+          version: "3"
+          volumes:
+            bindplane:
+            prometheus:
+          services:
+            prometheus:
+              container_name: bindplane-prometheus
+              restart: always
+              image: ghcr.io/observiq/bindplane-prometheus:1.45.0
+              ports:
+                - "9090:9090"
+              volumes:
+                - prometheus:/prometheus
+            transform:
+              container_name: bindplane-transform-agent
+              restart: always
+              image: ghcr.io/observiq/bindplane-transform-agent:latest
+              ports:
+                - "4568:4568"
+            bindplane:
+              container_name: bindplane-server
+              restart: always
+              image: ghcr.io/observiq/bindplane-ee:1.45.0
+              ports:
+                - "3001:3001"
+              environment:
+                - BINDPLANE_USERNAME=admin
+                - BINDPLANE_PASSWORD=admin
+                - BINDPLANE_REMOTE_URL=http://localhost:3001
+                - BINDPLANE_SESSION_SECRET=2c23c9d3-850f-4062-a5c8-3f9b814ae144
+                - BINDPLANE_SECRET_KEY=8a5353f7-bbf4-4eea-846d-a6d54296b781
+                - BINDPLANE_LOG_OUTPUT=stdout
+                - BINDPLANE_ACCEPT_EULA=true
+                - BINDPLANE_PROMETHEUS_ENABLE=true
+                - BINDPLANE_PROMETHEUS_ENABLE_REMOTE=true
+                - BINDPLANE_PROMETHEUS_HOST=prometheus
+                - BINDPLANE_PROMETHEUS_PORT=9090
+                - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
+                - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
+              volumes:
+                - bindplane:/data
+              depends_on:
+                - prometheus
+                - transform
+          EOF
+          docker-compose up -d
+
+      - name: Build provider for local testing
+        run: make test-local
+        env:
+          BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
+
+      - name: run local tests
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply
+        working-directory: test/local
+
+      - name: cleanup local tests
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy
+        working-directory: test/local
+
+      - name: prep example/
+        run: |
+          cp test/local/dev.tfrc ../../example
+          cp -r test/local/providers ../../example
+
+      - name: apply example resources
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply
+        working-directory: test/local
+
+      - name: cleanup example resources
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy
+        working-directory: test/local
+
+      - run: goreleaser --version
+        if: always()
+
+      - run: tree dist/
+        if: always()
+
+      - name: list images (debug)
+        if: always()
+        run: docker images
+
   build:
     # Skip build for dependabot. It takes long and requires our GPG
     # key. The `test-end-to-end` job will test building the binary.
