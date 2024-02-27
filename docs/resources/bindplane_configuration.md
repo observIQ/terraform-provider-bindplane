@@ -115,6 +115,24 @@ resource "bindplane_processor" "batch" {
   type = "batch"
 }
 
+resource "bindplane_extension" "pprof" {
+  rollout = true
+  name = "my-pprof"
+  type = "pprof"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "listen_address",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "tcp_port",
+        "value": 5000,
+      },
+    ]
+  )
+}
+
 resource "bindplane_configuration" "configuration" {
   // When removing a component from a configuration and deleting that
   // component during the same apply, we want to update the configuration
@@ -151,5 +169,9 @@ resource "bindplane_configuration" "configuration" {
       bindplane_processor.batch.name
     ]
   }
+
+  extensions = [
+    bindplane_extension.pprof.name
+  ]
 }
 ```

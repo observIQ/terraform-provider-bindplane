@@ -68,4 +68,10 @@ resource "bindplane_configuration" "configuration-full" {
   destination {
     name = bindplane_destination.custom.name
   }
+
+  extensions = [
+    bindplane_extension.health_check.name,
+    bindplane_extension.pprof.name,
+    bindplane_extension.custom.name
+  ]
 }
