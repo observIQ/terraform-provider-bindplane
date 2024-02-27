@@ -1,20 +1,42 @@
 resource "bindplane_destination" "jaeger" {
   rollout = true
   name = "example-jaeger"
-  type = "jaeger"
+  type = "jaeger_otlp"
   parameters_json = jsonencode(
     [
       {
         "name": "hostname",
-        "value": "192.168.10.3"
+        "value": "jaeger"
       },
       {
-        "name": "port",
-        "value": 14250
+        "name": "http_port",
+        "value": 4318
+      },
+      {
+        "name": "grpc_port",
+        "value": 4317
+      },
+      {
+        "name": "protocol",
+        "value": "grpc"
+      },
+      {
+        "name": "http_compression",
+        "value": "gzip"
+      },
+      {
+        "name": "grpc_compression",
+        "value": "gzip"
+      },
+      {
+        "name": "headers",
+        "value": {
+          "x-api-key": "xxxx"
+        }
       },
       {
         "name": "enable_tls",
-        "value": true
+        "value": false
       },
       {
         "name": "insecure_skip_verify",
@@ -22,19 +44,19 @@ resource "bindplane_destination" "jaeger" {
       },
       {
         "name": "ca_file",
-        "value": "/opt/tls/ca.crt"
+        "value": ""
       },
       {
         "name": "mutual_tls",
-        "value": true
+        "value": false
       },
       {
         "name": "cert_file",
-        "value": "/opt/tls/client.crt"
+        "value": ""
       },
       {
         "name": "key_file",
-        "value": "/opt/tls/client.key"
+        "value": ""
       },
       {
         "name": "retry_on_failure_enabled",

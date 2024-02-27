@@ -1,28 +1,36 @@
 resource "bindplane_destination" "dynatrace" {
   rollout = true
   name = "example-dynatrace"
-  type = "dynatrace"
+  type = "dynatrace_otlp"
   parameters_json = jsonencode(
     [
       {
-        "name": "metric_ingest_endpoint",
-        "value": "https://my-corp/e/dev/api/v2/metrics/ingest"
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+          "Metrics",
+          "Traces"
+        ]
       },
       {
-        "name": "api_token",
-        "value": "xxx-xxx-xxx",
+        "name": "deployment_type",
+        "value": "SaaS"
       },
       {
-        "name": "resource_to_telemetry_conversion",
-        "value": true
+        "name": "activegate_hostname",
+        "value": ""
       },
       {
-        "name": "prefix",
-        "value": "otel"
+        "name": "port",
+        "value": 9999
       },
       {
-        "name": "enable_tls",
-        "value": false
+        "name": "your_environment_id",
+        "value": "abcd"
+      },
+      {
+        "name": "dynatrace_api_token",
+        "value": "my-api-token",
       },
       {
         "name": "insecure_skip_verify",
@@ -33,12 +41,10 @@ resource "bindplane_destination" "dynatrace" {
         "value": ""
       },
       {
-        "name": "cert_file",
-        "value": ""
-      },
-      {
-        "name": "key_file",
-        "value": ""
+        "name": "headers",
+        "value": {
+          "no-cache": "true"
+        }
       },
       {
         "name": "retry_on_failure_enabled",

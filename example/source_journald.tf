@@ -24,7 +24,7 @@ resource "bindplane_source" "journald-custom" {
       },
       {
         "name": "priority",
-        "value": "warn"
+        "value": "warning"
       },
       {
         "name": "start_at",
