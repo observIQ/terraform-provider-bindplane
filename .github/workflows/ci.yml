@@ -343,8 +343,8 @@ jobs:
 
       - name: prep example/
         run: |
-          cp test/local/dev.tfrc ../../example
-          cp -r test/local/providers ../../example
+          cp test/local/dev.tfrc example/
+          cp -r test/local/providers example/
 
       - name: apply example resources
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
