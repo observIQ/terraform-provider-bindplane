@@ -135,6 +135,35 @@ func TestNewV1(t *testing.T) {
 			},
 		},
 		{
+			"extensions",
+			func() Option {
+				r := []ResourceConfig{
+					{
+						Name:       "test",
+						Processors: []string{},
+					},
+				}
+				return WithExtensionsByName(r)
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Extensions: []model.ResourceConfiguration{
+						{
+							Name: "test",
+							ParameterizedSpec: model.ParameterizedSpec{
+								Processors: []model.ResourceConfiguration{},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			"labels",
 			func() Option {
 				labels := map[string]string{

@@ -20,6 +20,7 @@ to one or more managed agents. Configurations are a combination of [sources](./b
 | `labels`       | map     | optional | Key value pairs representing labels to set on the configuration. |
 | `source`       | block   | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
 | `destination`  | block   | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section.
+| `extensions`   | list(string) | optional | One or more extension names to attach to the configuration. |
 | `rollout`      | bool    | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
 
 ### Source Block
@@ -114,6 +115,24 @@ resource "bindplane_processor" "batch" {
   type = "batch"
 }
 
+resource "bindplane_extension" "pprof" {
+  rollout = true
+  name = "my-pprof"
+  type = "pprof"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "listen_address",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "tcp_port",
+        "value": 5000,
+      },
+    ]
+  )
+}
+
 resource "bindplane_configuration" "configuration" {
   // When removing a component from a configuration and deleting that
   // component during the same apply, we want to update the configuration
@@ -150,5 +169,9 @@ resource "bindplane_configuration" "configuration" {
       bindplane_processor.batch.name
     ]
   }
+
+  extensions = [
+    bindplane_extension.pprof.name
+  ]
 }
 ```

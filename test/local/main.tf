@@ -128,6 +128,10 @@ resource "bindplane_configuration" "configuration" {
       bindplane_processor.promoted-cleanup.name
     ]
   }
+
+  extensions = [
+    bindplane_extension.pprof.name
+  ]
 }
 
 resource "bindplane_processor" "json-parse-body" {

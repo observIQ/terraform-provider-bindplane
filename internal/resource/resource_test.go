@@ -170,6 +170,11 @@ func TestAnyResourceFromConfigurationV1(t *testing.T) {
 							},
 						},
 					},
+					Extensions: []model.ResourceConfiguration{
+						{
+							Name: "pprof",
+						},
+					},
 				},
 			},
 			model.AnyResource{
@@ -212,6 +217,11 @@ func TestAnyResourceFromConfigurationV1(t *testing.T) {
 									},
 								},
 							},
+						},
+					},
+					"extensions": []model.ResourceConfiguration{
+						{
+							Name: "pprof",
 						},
 					},
 				},
