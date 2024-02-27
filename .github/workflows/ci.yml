@@ -308,7 +308,7 @@ jobs:
                 - "3001:3001"
               environment:
                 - BINDPLANE_USERNAME=admin
-                - BINDPLANE_PASSWORD=admin
+                - BINDPLANE_PASSWORD=password
                 - BINDPLANE_REMOTE_URL=http://localhost:3001
                 - BINDPLANE_SESSION_SECRET=2c23c9d3-850f-4062-a5c8-3f9b814ae144
                 - BINDPLANE_SECRET_KEY=8a5353f7-bbf4-4eea-846d-a6d54296b781
