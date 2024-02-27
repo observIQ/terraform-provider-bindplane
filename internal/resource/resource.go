@@ -28,7 +28,7 @@ import (
 // AnyResourceFromConfigurationV1.
 func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Parameter) (model.AnyResource, error) {
 	switch rKind {
-	case model.KindSource, model.KindDestination, model.KindProcessor:
+	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension:
 		return model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",

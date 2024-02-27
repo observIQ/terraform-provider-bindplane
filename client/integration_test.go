@@ -257,6 +257,22 @@ func TestIntegration_http_config(t *testing.T) {
 
 	_, err = i.GenericResource(model.KindAgent, "agent")
 	require.Error(t, err, "Generic get does not support agent")
+
+	extensionsResource := model.AnyResource{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v1",
+			Kind:       "Extension",
+			Metadata: model.Metadata{
+				Name: "my-extension",
+			},
+		},
+		Spec: map[string]any{
+			"type": "custom",
+		},
+	}
+
+	require.NoError(t, i.Apply(&extensionsResource, false), "did not expect error when creating extension")
+	require.NoError(t, i.Delete(model.KindExtension, "my-extension"), "did not expect error when deleting extension")
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {

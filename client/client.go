@@ -194,7 +194,31 @@ func (i *BindPlane) DeleteProcessor(name string) error {
 	return nil
 }
 
-// Delete will delete a BindPlane configuration, source, destination or processor
+// Extension takes a name and returns the matching extension
+func (i *BindPlane) Extension(name string) (*model.Extension, error) {
+	r, err := i.Client.Extension(context.Background(), name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get extension with name %s: %w", name, err)
+	}
+	return r, nil
+}
+
+// DeleteExtension will delete a BindPlane extension
+func (i *BindPlane) DeleteExtension(name string) error {
+	err := i.Client.DeleteExtension(context.Background(), name)
+	if err != nil {
+		return fmt.Errorf("error while deleting extension with name %s: %w", name, err)
+	}
+	return nil
+}
+
+// Delete will delete a BindPlane resource
 func (i *BindPlane) Delete(k model.Kind, name string) error {
 	switch k {
 	case model.KindConfiguration:
@@ -205,6 +229,8 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 		return i.DeleteSource(name)
 	case model.KindProcessor:
 		return i.DeleteProcessor(name)
+	case model.KindExtension:
+		return i.DeleteExtension(name)
 	default:
 		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
 	}
@@ -219,9 +245,9 @@ type GenericResource struct {
 	Spec    model.ParameterizedSpec
 }
 
-// GenericResource looks up a BindPlane destination, source, or process
-// and returns a GenericResource. The returned GenericResource will be nil
-// if it does not exist. It is up to the caller to check.
+// GenericResource looks up a BindPlane resource and returns a GenericResource.
+// The returned GenericResource will be nil if it does not exist. It is up to
+// the caller to check.
 func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource, error) {
 	g := &GenericResource{}
 
@@ -256,6 +282,20 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 		g.Spec = r.Spec
 	case model.KindProcessor:
 		r, err := i.Processor(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if r == nil {
+			return nil, nil
+		}
+
+		g.ID = r.ID()
+		g.Name = r.Name()
+		g.Version = r.Version()
+		g.Spec = r.Spec
+	case model.KindExtension:
+		r, err := i.Extension(name)
 		if err != nil {
 			return nil, err
 		}

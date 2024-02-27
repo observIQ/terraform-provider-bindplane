@@ -69,6 +69,14 @@ func TestAnyResourceV1(t *testing.T) {
 			"",
 		},
 		{
+			"extension",
+			"my-extension",
+			"pprof",
+			model.KindExtension,
+			nil,
+			"",
+		},
+		{
 			"invalid-kind",
 			"my-resource",
 			"resource",

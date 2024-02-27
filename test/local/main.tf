@@ -9,7 +9,7 @@ terraform {
 provider "bindplane" {
   remote_url = "http://localhost:3001"
   username = "admin"
-  password = "admin"
+  password = "password"
 }
 
 resource "bindplane_source" "host" {
@@ -246,6 +246,24 @@ resource "bindplane_processor" "time-parse-http-datatime" {
         "name": "log_manual_timestamp_layout",
         "value": "%d/%b/%Y:%H:%M:%S %z"
       }
+    ]
+  )
+}
+
+resource "bindplane_extension" "pprof" {
+  rollout = true
+  name = "my-pprof"
+  type = "pprof"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "listen_address",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "tcp_port",
+        "value": 5000,
+      },
     ]
   )
 }
