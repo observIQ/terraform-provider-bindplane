@@ -60,6 +60,10 @@ resource "bindplane_configuration" "config" {
   source {
     name = bindplane_source.host.name
   }
+
+  extensions = [
+    bindplane_extension.custom.name
+  ]
 }
 
 // Do not attach to test config. Will fail to startup
@@ -212,6 +216,24 @@ resource "bindplane_processor" "add_fields" {
         "value": {
           "key": "value2"
         }
+      }
+    ]
+  )
+}
+
+resource "bindplane_extension" "custom" {
+  rollout = true
+  name = "my-custom"
+  type = "custom"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": ["Metrics", "Logs", "Traces"]
+      },
+      {
+        "name": "configuration",
+        "value": "health_check:"
       }
     ]
   )
