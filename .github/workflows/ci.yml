@@ -334,11 +334,11 @@ jobs:
           BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
 
       - name: run local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
         working-directory: test/local
 
       - name: cleanup local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: test/local
 
       - name: prep example/
@@ -347,11 +347,11 @@ jobs:
           cp -r test/local/providers ../../example
 
       - name: apply example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
         working-directory: test/local
 
       - name: cleanup example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: test/local
 
       - run: goreleaser --version
