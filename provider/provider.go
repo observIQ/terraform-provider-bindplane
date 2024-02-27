@@ -118,6 +118,7 @@ func Configure() *schema.Provider {
 			"bindplane_destination":   resourceDestination(),
 			"bindplane_source":        resourceSource(), // TODO(jsirianni): Determine if sources should be supported.
 			"bindplane_processor":     resourceProcessor(),
+			"bindplane_extension":     resourceExtension(),
 		},
 	}
 }
