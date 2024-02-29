@@ -139,7 +139,9 @@ func resourceDestinationImportState(_ context.Context, d *schema.ResourceData, m
 	}
 
 	// Add the name to state, which will cause the import to succeed.
-	d.Set("name", g.Name)
+	if err := d.Set("name", g.Name); err != nil {
+		return nil, fmt.Errorf("failed to set resource name in state for imported destination '%s': %v", destName, err)
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
