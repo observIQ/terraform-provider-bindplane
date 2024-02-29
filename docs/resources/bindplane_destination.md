@@ -203,3 +203,12 @@ spec:
 status:
     latest: true
 ```
+
+## Import
+
+When using the [terraform import command](https://developer.hashicorp.com/terraform/cli/commands/import),
+destinations can be imported. For example:
+
+```bash
+terraform import bindplane_destination.destination {{name}}
+```
