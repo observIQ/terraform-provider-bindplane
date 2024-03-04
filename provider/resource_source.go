@@ -117,3 +117,7 @@ func resourceSourceRead(d *schema.ResourceData, meta any) error {
 func resourceSourceDelete(d *schema.ResourceData, meta any) error {
 	return genericResourceDelete(model.KindSource, d, meta)
 }
+
+func resourceSourceImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	return genericResourceImport(model.KindSource, d, meta)
+}
