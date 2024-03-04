@@ -33,6 +33,9 @@ func resourceSource() *schema.Resource {
 		Update: resourceSourceCreate,
 		Read:   resourceSourceRead,
 		Delete: resourceSourceDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceSourceImportState,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
