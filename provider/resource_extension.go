@@ -32,6 +32,9 @@ func resourceExtension() *schema.Resource {
 		Update: resourceExtensionCreate,
 		Read:   resourceExtensionRead,
 		Delete: resourceExtensionDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceExtensionImportState,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -115,4 +118,8 @@ func resourceExtensionRead(d *schema.ResourceData, meta any) error {
 
 func resourceExtensionDelete(d *schema.ResourceData, meta any) error {
 	return genericResourceDelete(model.KindExtension, d, meta)
+}
+
+func resourceExtensionImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	return genericResourceImport(model.KindExtension, d, meta)
 }
