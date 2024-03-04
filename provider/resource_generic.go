@@ -135,12 +135,12 @@ func genericResourceImport(rKind model.Kind, d *schema.ResourceData, meta any) (
 	// bindplane.GenericResource will return a nil error if the resource
 	// does not exist. It is up to the caller to check.
 	if g == nil {
-		return nil, fmt.Errorf("processor with name '%s' does not exist", name)
+		return nil, fmt.Errorf("%s with name '%s' does not exist", rKind, name)
 	}
 
 	// Add the name to state, which will cause the import to succeed.
 	if err := d.Set("name", g.Name); err != nil {
-		return nil, fmt.Errorf("failed to set resource name in state for imported processor '%s': %v", name, err)
+		return nil, fmt.Errorf("failed to set resource name in state for imported %s '%s': %v", rKind, name, err)
 	}
 
 	return []*schema.ResourceData{d}, nil
