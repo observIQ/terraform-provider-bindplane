@@ -121,27 +121,5 @@ func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
 }
 
 func resourceDestinationImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	bindplane := meta.(*client.BindPlane)
-
-	// When importing, name is not set in the state so we need to grab
-	// the ID instead, which is the same as "name".
-	destName := d.Id()
-
-	g, err := bindplane.GenericResource(model.KindDestination, destName)
-	if err != nil {
-		return nil, err
-	}
-
-	// bindplane.GenericResource will return a nil error if the resource
-	// does not exist. It is up to the caller to check.
-	if g == nil {
-		return nil, fmt.Errorf("destination with name '%s' does not exist", destName)
-	}
-
-	// Add the name to state, which will cause the import to succeed.
-	if err := d.Set("name", g.Name); err != nil {
-		return nil, fmt.Errorf("failed to set resource name in state for imported destination '%s': %v", destName, err)
-	}
-
-	return []*schema.ResourceData{d}, nil
+	return genericResourceImport(model.KindProcessor, d, meta)
 }

@@ -32,6 +32,9 @@ func resourceProcessor() *schema.Resource {
 		Update: resourceProcessorCreate,
 		Read:   resourceProcessorRead,
 		Delete: resourceProcessorDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceProcessorImportState,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -115,4 +118,8 @@ func resourceProcessorRead(d *schema.ResourceData, meta any) error {
 
 func resourceProcessorDelete(d *schema.ResourceData, meta any) error {
 	return genericResourceDelete(model.KindProcessor, d, meta)
+}
+
+func resourceProcessorImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	return genericResourceImport(model.KindProcessor, d, meta)
 }
