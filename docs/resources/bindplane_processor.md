@@ -195,3 +195,12 @@ status:
     latest: true
 
 ```
+
+## Import
+
+When using the [terraform import command](https://developer.hashicorp.com/terraform/cli/commands/import),
+processor can be imported. For example:
+
+```bash
+terraform import bindplane_processor.processor {{name}}
+```
