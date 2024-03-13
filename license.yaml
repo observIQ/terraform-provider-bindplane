@@ -1,5 +1,10 @@
 # minimum confidence percentage used during license classification
 threshold: .90
+ 
+override:
+  - path: "github.com/segmentio/backo-go"
+    versions: "v1.0.0"
+    licenses: ["MIT"] # https://github.com/segmentio/backo-go/blob/master/LICENSE
 
 # all permitted licenses - if no list is specified, all licenses are assumed to be allowed
 allow:
@@ -16,3 +21,4 @@ allow:
 exceptions:
   unresolvableLicense:
     - path: "github.com/observiq/bindplane-op-enterprise"
+    
