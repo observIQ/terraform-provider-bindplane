@@ -409,6 +409,7 @@ jobs:
           args: release --snapshot --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
 
       - name: Scan Binaries
         run: lichen --config=./license.yaml $(find dist/provider_* -type f | grep terraform-provider-bindplane | xargs)

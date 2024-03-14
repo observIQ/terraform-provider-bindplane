@@ -104,6 +104,7 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
+		"BINDPLANE_LICENSE":        os.Getenv("BINDPLANE_LICENSE"),
 	}
 
 	container := bindplaneContainer(t, env)
