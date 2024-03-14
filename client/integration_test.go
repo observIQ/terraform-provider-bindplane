@@ -97,6 +97,11 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 }
 
 func TestIntegration_http_config(t *testing.T) {
+	license := os.Getenv("BINDPLANE_LICENSE")
+	if license == "" {
+		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
+	}
+
 	env := map[string]string{
 		"BINDPLANE_USERNAME":       username,
 		"BINDPLANE_PASSWORD":       password,
@@ -104,7 +109,7 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
-		"BINDPLANE_LICENSE":        os.Getenv("BINDPLANE_LICENSE"),
+		"BINDPLANE_LICENSE":        license,
 	}
 
 	container := bindplaneContainer(t, env)
