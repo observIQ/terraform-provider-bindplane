@@ -247,8 +247,7 @@ jobs:
         bindplane_version:
           - "latest"
           - "1.48.0"
-          - "1.44.0"
-          - "1.37.0" # Extension support added in v1.37.0
+
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
