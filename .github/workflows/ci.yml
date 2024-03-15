@@ -246,9 +246,9 @@ jobs:
       matrix:
         bindplane_version:
           - "latest"
-          - "v1.48.0"
-          - "v1.44.0"
-          - "v1.37.0" # Extension support added in v1.37.0
+          - "1.48.0"
+          - "1.44.0"
+          - "1.37.0" # Extension support added in v1.37.0
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -324,8 +324,6 @@ jobs:
 
       - name: Build provider for local testing
         run: make test-local
-        env:
-          BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
 
       - name: run local tests
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
