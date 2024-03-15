@@ -107,7 +107,7 @@ test-integration-cover: dev-tls
 test-end-to-end: test-integration provider
 	mkdir -p test/integration/providers
 	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/integration/providers/terraform-provider-bindplane_v0.0.0 \;
-	@BINDPLANE_VERSION=$(BINDPLANE_VERSION) bash test/integration/test.sh
+	@BINDPLANE_VERSION=$(BINDPLANE_VERSION) BINDPLANE_LICENSE=$(BINDPLANE_LICENSE) bash test/integration/test.sh
 
 # Test local configures test/local directory
 # with the provider.
