@@ -18,6 +18,7 @@ services:
       - BINDPLANE_TLS_CA=/bindplane-ca.crt
       - BINDPLANE_REMOTE_URL=https://bindplane.bindplane-dev.svc.cluster.local:3001
       - BINDPLANE_ACCEPT_EULA=true
+      - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
     volumes:
       - "../../client/tls/bindplane.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
