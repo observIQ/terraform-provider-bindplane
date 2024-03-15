@@ -63,6 +63,13 @@ if [[ -z $BINDPLANE_VERSION ]]; then
     exit 1
 fi
 
+# fail if BINDPLANE_LICENSE is not set
+if [[ -z $BINDPLANE_LICENSE ]]; then
+    echo "BINDPLANE_LICENSE is not set"
+    exit 1
+fi
+export BINDPLANE_LICENSE
+
 # trim the v prefix if not latest
 if [[ $BINDPLANE_VERSION != "latest" ]]; then
     BINDPLANE_VERSION=$(echo $BINDPLANE_VERSION | sed 's/^v//')
