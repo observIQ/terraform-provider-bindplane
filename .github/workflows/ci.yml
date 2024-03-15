@@ -237,6 +237,10 @@ jobs:
         if: always()
         run: docker images
 
+      - name: bindplane logs (debug)
+        if: always()
+        run: docker logs integration-bindplane-1
+
   test-local:
     runs-on: "ubuntu-22.04"
     needs:
