@@ -302,7 +302,7 @@ jobs:
             bindplane:
               container_name: bindplane-server
               restart: always
-              image: ghcr.io/observiq/bindplane-ee:{$VERSION}
+              image: ghcr.io/observiq/bindplane-ee:${VERSION}
               ports:
                 - "3001:3001"
               environment:
