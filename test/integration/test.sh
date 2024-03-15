@@ -18,6 +18,8 @@ set -eE
 cd "$(dirname "$0")"
 
 clean () {
+    echo "cleaning up"
+
     rm -rf terraform.tfstate*
     rm -rf providers
 
@@ -32,10 +34,16 @@ start_containers() {
     docker-compose up -d --remove-orphans --build --force-recreate
 }
 
+debug_logs() {
+    echo "getting container logs"
+
+    docker logs integration-bindplane-1
+}
+
 apply () {
     terraform validate
 
-    terraform apply -auto-approve
+    terraform apply -auto-approve || debug_logs
 }
 
 configure () {
@@ -62,6 +70,13 @@ if [[ -z $BINDPLANE_VERSION ]]; then
     echo "BINDPLANE_VERSION is not set"
     exit 1
 fi
+
+# fail if BINDPLANE_LICENSE is not set
+if [[ -z $BINDPLANE_LICENSE ]]; then
+    echo "BINDPLANE_LICENSE is not set"
+    exit 1
+fi
+export BINDPLANE_LICENSE
 
 # trim the v prefix if not latest
 if [[ $BINDPLANE_VERSION != "latest" ]]; then
