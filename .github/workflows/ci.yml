@@ -333,6 +333,7 @@ jobs:
           VERSION: ${{ matrix.bindplane_version }}
 
       - name: Get docker compose config (debug)
+        if: always()
         run: cat docker-compose.yml | grep -v BINDPLANE_LICENSE
 
       - name: Build provider for local testing
