@@ -18,6 +18,8 @@ set -eE
 cd "$(dirname "$0")"
 
 clean () {
+    echo "cleaning up"
+
     rm -rf terraform.tfstate*
     rm -rf providers
 
@@ -32,10 +34,16 @@ start_containers() {
     docker-compose up -d --remove-orphans --build --force-recreate
 }
 
+debug_logs() {
+    echo "getting container logs"
+
+    docker logs integration-bindplane-1
+}
+
 apply () {
     terraform validate
 
-    terraform apply -auto-approve
+    terraform apply -auto-approve || debug_logs
 }
 
 configure () {
