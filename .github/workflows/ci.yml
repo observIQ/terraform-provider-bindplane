@@ -288,7 +288,7 @@ jobs:
             prometheus:
               container_name: bindplane-prometheus
               restart: always
-              image: ghcr.io/observiq/bindplane-prometheus:${{ matrix.bindplane_version }}
+              image: ghcr.io/observiq/bindplane-prometheus:${VERSION}
               ports:
                 - "9090:9090"
               volumes:
@@ -302,7 +302,7 @@ jobs:
             bindplane:
               container_name: bindplane-server
               restart: always
-              image: ghcr.io/observiq/bindplane-ee:${{ matrix.bindplane_version }}
+              image: ghcr.io/observiq/bindplane-ee:{$VERSION}
               ports:
                 - "3001:3001"
               environment:
@@ -329,6 +329,7 @@ jobs:
           docker-compose up -d
         env:
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
+          VERSION: ${{ matrix.bindplane_version }}
 
       - name: Build provider for local testing
         run: make test-local
