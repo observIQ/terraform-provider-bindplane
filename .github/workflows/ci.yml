@@ -192,6 +192,7 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.48.0"
           - "v1.44.0"
           - "v1.37.0" # Extension support added in v1.37.0
     steps:
@@ -245,7 +246,7 @@ jobs:
       matrix:
         bindplane_version:
           - "latest"
-          - "module" # Use the current Go module version
+          - "v1.48.0"
           - "v1.44.0"
           - "v1.37.0" # Extension support added in v1.37.0
     steps:
@@ -330,6 +331,9 @@ jobs:
         env:
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
           VERSION: ${{ matrix.bindplane_version }}
+
+      - name: Get docker compose config (debug)
+        run: cat docker-compose.yml | grep -v BINDPLANE_LICENSE
 
       - name: Build provider for local testing
         run: make test-local
