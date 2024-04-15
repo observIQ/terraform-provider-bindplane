@@ -359,6 +359,10 @@ jobs:
         if: always()
         run: docker ps
 
+      - name: bindplane logs (debug)
+        if: always()
+        run: docker logs bindplane-server
+
   build:
     # Skip build for dependabot. It takes long and requires our GPG
     # key. The `test-end-to-end` job will test building the binary.
