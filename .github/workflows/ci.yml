@@ -252,7 +252,7 @@ jobs:
       matrix:
         bindplane_version:
           - "latest"
-          - "1.48.0"
+          - "module"
 
     steps:
       - name: Check out source code
