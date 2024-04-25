@@ -244,14 +244,6 @@ jobs:
         if: always()
         run: docker images
 
-      - name: list containers (debug)
-        if: always()
-        run: docker ps
-
-      - name: bindplane logs (debug)
-        if: always()
-        run: docker logs bindplane-server
-
   test-local:
     runs-on: "ubuntu-22.04"
     needs:
