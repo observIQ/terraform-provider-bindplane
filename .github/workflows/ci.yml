@@ -250,7 +250,7 @@ jobs:
 
       - name: bindplane logs (debug)
         if: always()
-        run: docker logs bindplane-server
+        run: docker logs integration-bindplane-1
 
   test-local:
     runs-on: "ubuntu-22.04"
