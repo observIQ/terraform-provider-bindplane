@@ -1,78 +1,85 @@
 resource "bindplane_source" "nginx-default" {
   rollout = true
-  name = "example-nginx-default"
-  type = "nginx"
+  name    = "example-nginx-default"
+  type    = "nginx"
 }
 
 resource "bindplane_source" "nginx-custom" {
   rollout = true
-  name = "example-nginx-custom"
-  type = "nginx"
+  name    = "example-nginx-custom"
+  type    = "nginx"
   parameters_json = jsonencode(
     [
       {
-        "name": "enable_metrics",
-        "value": true
+        "name" : "telemetry_types"
+        "value" : [
+          "Logs",
+          "Metrics",
+        ],
       },
       {
-        "name": "endpoint",
-        "value": "http://localhost:80/status"
+        "name" : "enable_metrics",
+        "value" : true
       },
       {
-        "name": "disable_metrics",
-        "value": []
+        "name" : "endpoint",
+        "value" : "http://localhost:80/status"
       },
       {
-        "name": "enable_tls",
-        "value": true
+        "name" : "disable_metrics",
+        "value" : []
       },
       {
-        "name": "insecure_skip_verify",
-        "value": false
+        "name" : "enable_tls",
+        "value" : true
       },
       {
-        "name": "ca_file",
-        "value": "/opt/tls/server-ca.crt"
+        "name" : "insecure_skip_verify",
+        "value" : false
       },
       {
-        "name": "cert_file",
-        "value": "/opt/tls/client.crt"
+        "name" : "ca_file",
+        "value" : "/opt/tls/server-ca.crt"
       },
       {
-        "name": "key_file",
-        "value": "/opt/tls/client.key"
+        "name" : "cert_file",
+        "value" : "/opt/tls/client.crt"
       },
       {
-        "name": "collection_interval",
-        "value": 30
+        "name" : "key_file",
+        "value" : "/opt/tls/client.key"
       },
       {
-        "name": "enable_logs",
-        "value": true
+        "name" : "collection_interval",
+        "value" : 30
       },
       {
-        "name": "data_flow",
-        "value": "high"
+        "name" : "enable_logs",
+        "value" : true
       },
       {
-        "name": "log_format",
-        "value": "observiq"
+        "name" : "data_flow",
+        "value" : "high"
       },
       {
-        "name": "access_log_paths",
-        "value": [
+        "name" : "log_format",
+        "value" : "observiq"
+      },
+      {
+        "name" : "access_log_paths",
+        "value" : [
           "/var/log/nginx/access.log*"
         ]
       },
       {
-        "name": "error_log_paths",
-        "value": [
+        "name" : "error_log_paths",
+        "value" : [
           "/var/log/nginx/error.log*"
         ]
       },
       {
-        "name": "start_at",
-        "value": "end"
+        "name" : "start_at",
+        "value" : "end"
       }
     ]
   )

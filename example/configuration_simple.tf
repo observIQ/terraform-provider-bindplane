@@ -6,8 +6,8 @@ resource "bindplane_configuration" "configuration-simple" {
     create_before_destroy = true
   }
 
-  rollout = false
-  name = "example-configuration-simple"
+  rollout  = false
+  name     = "example-configuration-simple"
   platform = "linux"
 
   source {

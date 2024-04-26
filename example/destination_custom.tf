@@ -1,20 +1,20 @@
 resource "bindplane_destination" "custom" {
   rollout = true
-  name = "example-custom"
-  type = "custom"
+  name    = "example-custom"
+  type    = "custom"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Metrics",
           "Logs",
           "Traces"
         ]
       },
       {
-        "name": "configuration",
-        "value": <<EOT
+        "name" : "configuration",
+        "value" : <<EOT
 logging:
   verbosity: detailed
   sampling_initial: 5
