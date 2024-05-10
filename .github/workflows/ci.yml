@@ -193,6 +193,7 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.55.0"
           - "v1.53.0"
           - "v1.52.0"
           - "v1.51.0"
@@ -200,7 +201,6 @@ jobs:
           - "v1.49.0"
           - "v1.48.0"
           - "v1.44.0"
-          - "v1.37.0" # Extension support added in v1.37.0
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
