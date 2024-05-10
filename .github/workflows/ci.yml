@@ -330,7 +330,7 @@ jobs:
           shell: bash
           command: |
             curl \
-              -u admin:admin http://localhost:3001/v1/accounts \
+              -u admin:password http://localhost:3001/v1/accounts \
               -X POST -d '{"displayName": "init"}' -v
 
       - name: Get docker compose config (debug)
