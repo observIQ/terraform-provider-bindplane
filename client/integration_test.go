@@ -19,10 +19,16 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -96,6 +102,77 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 	return container
 }
 
+func bindplaneInit(endpoint url.URL, username, password string) error {
+	client := &http.Client{}
+
+	switch endpoint.Scheme {
+	case "http":
+	case "https":
+		clientCert, err := tls.LoadX509KeyPair("tls/test-client.crt", "tls/test-client.key")
+		if err != nil {
+			return fmt.Errorf("failed to load client cert: %w", err)
+		}
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates:       []tls.Certificate{clientCert},
+				InsecureSkipVerify: true,
+			},
+		}
+	default:
+		return fmt.Errorf("unsupported scheme: %s", endpoint.Scheme)
+	}
+
+	endpoint.Path = "/v1/accounts"
+
+	data := strings.NewReader(`{"displayName": "init"}`)
+
+	req, err := http.NewRequest("POST", endpoint.String(), data)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth(username, password)
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	type AccountResp struct {
+		Account struct {
+			APIVersion string `json:"apiVersion"`
+			Kind       string `json:"kind"`
+			Metadata   struct {
+				ID          string `json:"id"`
+				Name        string `json:"name"`
+				DisplayName string `json:"displayName"`
+				Labels      struct {
+				} `json:"labels"`
+				Hash         string    `json:"hash"`
+				Version      int       `json:"version"`
+				DateModified time.Time `json:"dateModified"`
+			} `json:"metadata"`
+			Spec struct {
+				SecretKey           string      `json:"secretKey"`
+				AlternateSecretKeys interface{} `json:"alternateSecretKeys"`
+			} `json:"spec"`
+			Status struct {
+			} `json:"status"`
+		} `json:"account"`
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	var account AccountResp
+	return json.Unmarshal(body, &account)
+}
+
 func TestIntegration_http_config(t *testing.T) {
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
@@ -106,7 +183,6 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_USERNAME":       username,
 		"BINDPLANE_PASSWORD":       password,
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
 		"BINDPLANE_LICENSE":        license,
@@ -124,9 +200,11 @@ func TestIntegration_http_config(t *testing.T) {
 	require.NoError(t, err)
 
 	endpoint := url.URL{
-		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Host:   net.JoinHostPort(hostname, fmt.Sprintf("%d", bindplaneExtPort)),
 		Scheme: "http",
 	}
+
+	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
@@ -291,7 +369,6 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_USERNAME":       username,
 		"BINDPLANE_PASSWORD":       password,
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
 		"BINDPLANE_LICENSE":        license,
@@ -309,6 +386,11 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
 		Scheme: "https",
 	}
+
+	// Fix up the Scheme because this test purposefully uses the wrong scheme
+	u := endpoint
+	u.Scheme = "http"
+	require.NoError(t, bindplaneInit(u, username, password), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
@@ -334,7 +416,6 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
 		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
 		"BINDPLANE_LICENSE":        license,
@@ -353,6 +434,8 @@ func TestIntegration_https(t *testing.T) {
 		Scheme: "https",
 	}
 
+	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
+
 	i, err := newTestConfig(
 		endpoint.String(),
 		username,
@@ -368,46 +451,12 @@ func TestIntegration_https(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// func TestIntegration_mtls_fail(t *testing.T) {
-// 	env := map[string]string{
-// 		"BINDPLANE_USERNAME":       username,
-// 		"BINDPLANE_PASSWORD":       password,
-// 		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
-// 		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
-// 		"BINDPLANE_TLS_CA":         "/tmp/bindplane-ca.crt",
-// 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-// 		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
-// 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-//      "BINDPLANE_ACCEPT_EULA":    "true",
-// 	}
-
-// 	container := bindplaneContainer(t, env)
-// 	defer func() {
-// 		require.NoError(t, container.Terminate(context.Background()))
-// 		time.Sleep(time.Second * 1)
-// 	}()
-// 	hostname, err := container.Host(context.Background())
-// 	require.NoError(t, err)
-
-// 	endpoint := url.URL{
-// 		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
-// 		Scheme: "https",
-// 	}
-
-// 	i, err := New(
-// 		WithEndpoint(endpoint.String()),
-// 		WithUsername(username),
-// 		WithPassword(password),
-// 		WithTLSTrustedCA("tls/bindplane-ca.crt"),
-// 	)
-// 	require.NoError(t, err)
-
-// 	_, err = i.Client.Version(context.Background())
-// 	require.Error(t, err, "expect an error when client not in mtls mode")
-// 	require.Contains(t, err.Error(), "remote error: tls: bad certificate")
-// }
-
 func TestIntegration_mtls(t *testing.T) {
+	license := os.Getenv("BINDPLANE_LICENSE")
+	if license == "" {
+		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
+	}
+
 	env := map[string]string{
 		"BINDPLANE_USERNAME":       username,
 		"BINDPLANE_PASSWORD":       password,
@@ -415,9 +464,9 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
 		"BINDPLANE_TLS_CA":         "/tmp/bindplane-ca.crt",
 		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_SECRET_KEY":     "ED9B4232-C127-4580-9B86-62CEC420E7BB",
 		"BINDPLANE_LOGGING_OUTPUT": "stdout",
 		"BINDPLANE_ACCEPT_EULA":    "true",
+		"BINDPLANE_LICENSE":        license,
 	}
 
 	container := bindplaneContainer(t, env)
@@ -432,6 +481,8 @@ func TestIntegration_mtls(t *testing.T) {
 		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
 		Scheme: "https",
 	}
+
+	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),

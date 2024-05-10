@@ -40,13 +40,29 @@ debug_logs() {
     docker logs integration-bindplane-1
 }
 
-apply () {
+configure() {
+    curl -v -k \
+        -u tfu:tfp \
+        https://localhost:3100/v1/accounts \
+        -X POST \
+        -d '{"displayName": "init"}' | jq .
+
+
+    args="--remote-url https://localhost:3001"
+    args="${args} --tls-ca /bindplane-ca.crt"
+    args="${args} --tls-cert /bindplane.crt"
+    args="${args} --tls-key /bindplane.key"
+
+    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml "$args"
+}
+
+apply() {
     terraform validate
 
     terraform apply -auto-approve || debug_logs
 }
 
-configure () {
+test_resources() {
     args="--remote-url https://localhost:3001"
     args="${args} --tls-ca /bindplane-ca.crt"
     args="${args} --tls-cert /bindplane.crt"
@@ -88,7 +104,8 @@ echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
 start_containers
 sleep 10
-apply
 configure
+apply
+test_resources
 destroy
 clean

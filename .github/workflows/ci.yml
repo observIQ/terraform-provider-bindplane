@@ -193,6 +193,7 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.55.0"
           - "v1.53.0"
           - "v1.52.0"
           - "v1.51.0"
@@ -200,7 +201,6 @@ jobs:
           - "v1.49.0"
           - "v1.48.0"
           - "v1.44.0"
-          - "v1.37.0" # Extension support added in v1.37.0
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
@@ -306,7 +306,6 @@ jobs:
                 - BINDPLANE_PASSWORD=password
                 - BINDPLANE_REMOTE_URL=http://localhost:3001
                 - BINDPLANE_SESSION_SECRET=2c23c9d3-850f-4062-a5c8-3f9b814ae144
-                - BINDPLANE_SECRET_KEY=8a5353f7-bbf4-4eea-846d-a6d54296b781
                 - BINDPLANE_LOG_OUTPUT=stdout
                 - BINDPLANE_ACCEPT_EULA=true
                 - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
@@ -321,6 +320,18 @@ jobs:
         env:
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
           VERSION: ${{ matrix.bindplane_version }}
+
+      - name: Init BindPlane Account
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 1
+          polling_interval_seconds: 2
+          max_attempts: 3
+          shell: bash
+          command: |
+            curl \
+              -u admin:password http://localhost:3001/v1/accounts \
+              -X POST -d '{"displayName": "init"}' -v
 
       - name: Get docker compose config (debug)
         if: always()

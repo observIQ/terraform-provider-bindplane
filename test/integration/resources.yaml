@@ -1,0 +1,22 @@
+---
+apiVersion: bindplane.observiq.com/v1
+kind: Account
+metadata:
+    id: 01HXHMG390VQJB4CTQ77YHNRNF
+    displayName: test-end-to-end
+spec:
+    secretKey: 01HXHMGEXRVXEWKQCRY9RDEW2G
+---
+kind: UserAccountBinding
+metadata:
+spec:
+    userID: S0000000000000000000000000
+    accountID: 01HXHMG390VQJB4CTQ77YHNRNF
+---
+apiVersion: bindplane.observiq.com/v1
+kind: User
+metadata:
+    id: S0000000000000000000000000
+    displayName: admin
+spec:
+    activeAccount: 01HXHMG390VQJB4CTQ77YHNRNF
