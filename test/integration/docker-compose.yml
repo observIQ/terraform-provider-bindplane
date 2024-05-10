@@ -10,7 +10,6 @@ services:
     environment:
       - BINDPLANE_USERNAME=tfu
       - BINDPLANE_PASSWORD=tfp
-      - BINDPLANE_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
       - BINDPLANE_SESSION_SECRET=524abde2-d9f8-485c-b426-bac229686d13
       - BINDPLANE_LOGGING_OUTPUT=stdout
       - BINDPLANE_TLS_CERT=/bindplane.crt
@@ -23,13 +22,14 @@ services:
       - "../../client/tls/bindplane.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
       - "../../client/tls/bindplane.key:/bindplane.key:ro"
+      - "./resources.yaml:/resources.yaml:ro"
 
   agent:
     image: observiq/bindplane-agent:1.49.0
     environment:
       - OPAMP_AGENT_NAME=agent
       - OPAMP_ENDPOINT=wss://bindplane.bindplane-dev.svc.cluster.local:3001/v1/opamp
-      - OPAMP_SECRET_KEY=524abde2-d9f8-485c-b426-bac229686d13
+      - OPAMP_SECRET_KEY=01HXHMGEXRVXEWKQCRY9RDEW2G
       - OPAMP_LABELS=configuration=testtf
       - OPAMP_TLS_CA=/etc/otel/bindplane-ca.crt
       - OPAMP_TLS_CERT=/etc/otel/bindplane-client.crt

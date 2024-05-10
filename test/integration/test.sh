@@ -40,18 +40,41 @@ debug_logs() {
     docker logs integration-bindplane-1
 }
 
-apply () {
-    terraform validate
+configure() {
+    curl -v -k \
+        -u tfu:tfp \
+        https://localhost:3100/v1/accounts \
+        -X POST \
+        -d '{"displayName": "init"}' | jq .
 
-    terraform apply -auto-approve || debug_logs
-}
 
-configure () {
     args="--remote-url https://localhost:3001"
     args="${args} --tls-ca /bindplane-ca.crt"
     args="${args} --tls-cert /bindplane.crt"
     args="${args} --tls-key /bindplane.key"
 
+    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml "$args"
+}
+
+apply() {
+    terraform validate
+
+    terraform apply -auto-approve || debug_logs
+}
+
+test_resources() {
+    curl -v -k \
+        -u tfu:tfp \
+        https://localhost:3100/v1/accounts \
+        -X POST \
+        -d '{"displayName": "init"}' | jq .
+
+    args="--remote-url https://localhost:3001"
+    args="${args} --tls-ca /bindplane-ca.crt"
+    args="${args} --tls-cert /bindplane.crt"
+    args="${args} --tls-key /bindplane.key"
+
+    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml "$args"
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
     sleep 5
@@ -88,7 +111,8 @@ echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
 start_containers
 sleep 10
-apply
 configure
+apply
+test_resources
 destroy
 clean
