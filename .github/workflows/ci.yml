@@ -329,8 +329,8 @@ jobs:
           shell: bash
           command: |
             curl \
-              -u admin:password http://localhost:3001/v1/accounts \
-              -X POST -d '{"displayName": "init"}' -v
+              -u admin:password http://localhost:3001/v1/organizations \
+              -X POST -d '{"organizationName": "init", "accountName": "project", "eulaAccepted":true}' -v
 
       - name: Get docker compose config (debug)
         if: always()
