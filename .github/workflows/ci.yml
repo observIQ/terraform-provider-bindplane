@@ -320,7 +320,7 @@ jobs:
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
           VERSION: ${{ matrix.bindplane_version }}
 
-      - name: Init BindPlane Account
+      - name: Init BindPlane Organization
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1
