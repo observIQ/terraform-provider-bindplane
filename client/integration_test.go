@@ -100,10 +100,18 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 	require.NoError(t, err)
 	time.Sleep(time.Second * 3)
 
-	v, err := hashiversion.NewVersion(version)
-	require.NoError(t, err, "failed to parse version")
+	// Nil version implies latest
+	var ver *hashiversion.Version
+	if version != "latest" {
+		v, err := hashiversion.NewVersion(version)
+		if err != nil {
+			container.Terminate(ctx)
+			require.NoError(t, err, "failed to parse version")
+		}
+		ver = v
+	}
 
-	return container, v
+	return container, ver
 }
 
 func bindplaneInit(endpoint url.URL, username, password string, version *hashiversion.Version) error {
@@ -133,7 +141,7 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 	}
 
 	var data *strings.Reader
-	if version.String() == "latest" || version.Compare(v158) == 1 {
+	if version == nil || version.Compare(v158) == 1 {
 		endpoint.Path = "/v1/organizations"
 		data = strings.NewReader(`{"organizationName": "init", "accountName": "project", "eulaAccepted":true}`)
 	} else {
