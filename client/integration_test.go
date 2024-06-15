@@ -36,6 +36,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
+	hashiversion "github.com/hashicorp/go-version"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -49,7 +50,7 @@ const (
 	password = "int-test-password"
 )
 
-func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Container {
+func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Container, *hashiversion.Version) {
 	// Get the bindplane version to determine the image and tag
 	version := os.Getenv("BINDPLANE_VERSION")
 	if version == "" {
@@ -99,10 +100,13 @@ func bindplaneContainer(t *testing.T, env map[string]string) testcontainers.Cont
 	require.NoError(t, err)
 	time.Sleep(time.Second * 3)
 
-	return container
+	v, err := hashiversion.NewVersion(version)
+	require.NoError(t, err, "failed to parse version")
+
+	return container, v
 }
 
-func bindplaneInit(endpoint url.URL, username, password string) error {
+func bindplaneInit(endpoint url.URL, username, password string, version *hashiversion.Version) error {
 	client := &http.Client{}
 
 	switch endpoint.Scheme {
@@ -122,9 +126,20 @@ func bindplaneInit(endpoint url.URL, username, password string) error {
 		return fmt.Errorf("unsupported scheme: %s", endpoint.Scheme)
 	}
 
-	endpoint.Path = "/v1/accounts"
+	// 1.58.0 and older do not use organizations
+	v158, err := hashiversion.NewVersion("1.58.0")
+	if err != nil {
+		return fmt.Errorf("failed to parse version 1.58.0: %w", err)
+	}
 
-	data := strings.NewReader(`{"displayName": "init"}`)
+	var data *strings.Reader
+	if version.String() == "latest" || version.Compare(v158) == 1 {
+		endpoint.Path = "/v1/organizations"
+		data = strings.NewReader(`{"organizationName": "init", "accountName": "project", "eulaAccepted":true}`)
+	} else {
+		endpoint.Path = "/v1/accounts"
+		data = strings.NewReader(`{"displayName": "init"}`)
+	}
 
 	req, err := http.NewRequest("POST", endpoint.String(), data)
 	if err != nil {
@@ -141,36 +156,13 @@ func bindplaneInit(endpoint url.URL, username, password string) error {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	type AccountResp struct {
-		Account struct {
-			APIVersion string `json:"apiVersion"`
-			Kind       string `json:"kind"`
-			Metadata   struct {
-				ID          string `json:"id"`
-				Name        string `json:"name"`
-				DisplayName string `json:"displayName"`
-				Labels      struct {
-				} `json:"labels"`
-				Hash         string    `json:"hash"`
-				Version      int       `json:"version"`
-				DateModified time.Time `json:"dateModified"`
-			} `json:"metadata"`
-			Spec struct {
-				SecretKey           string      `json:"secretKey"`
-				AlternateSecretKeys interface{} `json:"alternateSecretKeys"`
-			} `json:"spec"`
-			Status struct {
-			} `json:"status"`
-		} `json:"account"`
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	var account AccountResp
-	return json.Unmarshal(body, &account)
+	var respBody map[string]interface{}
+	return json.Unmarshal(body, &respBody)
 }
 
 func TestIntegration_http_config(t *testing.T) {
@@ -188,13 +180,13 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_LICENSE":        license,
 	}
 
-	container := bindplaneContainer(t, env)
+	container, version := bindplaneContainer(t, env)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
 	}()
 
-	time.Sleep(time.Second * 20)
+	time.Sleep(time.Second * 3)
 
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
@@ -204,7 +196,7 @@ func TestIntegration_http_config(t *testing.T) {
 		Scheme: "http",
 	}
 
-	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
+	require.NoError(t, bindplaneInit(endpoint, username, password, version), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
@@ -374,7 +366,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_LICENSE":        license,
 	}
 
-	container := bindplaneContainer(t, env)
+	container, version := bindplaneContainer(t, env)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
@@ -390,7 +382,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 	// Fix up the Scheme because this test purposefully uses the wrong scheme
 	u := endpoint
 	u.Scheme = "http"
-	require.NoError(t, bindplaneInit(u, username, password), "failed to initialize bindplane")
+	require.NoError(t, bindplaneInit(u, username, password, version), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
@@ -421,7 +413,7 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_LICENSE":        license,
 	}
 
-	container := bindplaneContainer(t, env)
+	container, version := bindplaneContainer(t, env)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
@@ -434,7 +426,7 @@ func TestIntegration_https(t *testing.T) {
 		Scheme: "https",
 	}
 
-	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
+	require.NoError(t, bindplaneInit(endpoint, username, password, version), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
@@ -469,7 +461,7 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_LICENSE":        license,
 	}
 
-	container := bindplaneContainer(t, env)
+	container, version := bindplaneContainer(t, env)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
@@ -482,7 +474,7 @@ func TestIntegration_mtls(t *testing.T) {
 		Scheme: "https",
 	}
 
-	require.NoError(t, bindplaneInit(endpoint, username, password), "failed to initialize bindplane")
+	require.NoError(t, bindplaneInit(endpoint, username, password, version), "failed to initialize bindplane")
 
 	i, err := newTestConfig(
 		endpoint.String(),
