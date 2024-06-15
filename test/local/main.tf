@@ -123,7 +123,6 @@ resource "bindplane_configuration" "configuration" {
       bindplane_processor.batch.name,
 
       // order matters here
-      bindplane_processor.include-flog.name,
       bindplane_processor.time-parse-http-datatime.name,
       bindplane_processor.promoted-cleanup.name
     ]
@@ -179,38 +178,6 @@ resource "bindplane_processor" "promoted-cleanup" {
         "value": [
           "datetime"
         ]
-      }
-    ]
-  )
-}
-
-resource "bindplane_processor" "include-flog" {
-  rollout = false
-  name = "include-flog"
-  type = "filter_field"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Metrics",
-          "Logs",
-          "Traces"
-        ]
-      },
-      {
-        "name": "action",
-        "value": "include"
-      },
-      {
-        "name": "match_type",
-        "value": "regexp"
-      },
-      {
-        "name": "bodies",
-        "value": {
-          "status": ".*"
-        }
       }
     ]
   )

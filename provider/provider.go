@@ -152,6 +152,10 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		config.Auth.Password = v
 	}
 
+	if config.Auth.Username != "" && config.Auth.Password != "" {
+		config.Auth.Type = "system"
+	}
+
 	if v, ok := d.Get("remote_url").(string); ok && v != "" {
 		config.Network.RemoteURL = v
 	}
