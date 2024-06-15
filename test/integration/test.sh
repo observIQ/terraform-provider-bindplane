@@ -41,12 +41,19 @@ debug_logs() {
 }
 
 configure() {
-    curl -v -k \
-        -u tfu:tfp \
-        https://localhost:3100/v1/accounts \
-        -X POST \
-        -d '{"displayName": "init"}' | jq .
-
+    if [[ $ORGS == "true" ]]; then
+        curl -v -k \
+            -u tfu:tfp \
+            https://localhost:3100/v1/organizations \
+            -X POST \
+            -d '{"organizationName": "init", "accountName": "project", "eulaAccepted":true}'| jq .
+    else
+        curl -v -k \
+            -u tfu:tfp \
+            https://localhost:3100/v1/accounts \
+            -X POST \
+            -d '{"displayName": "init"}' | jq .
+    fi
 
     args="--remote-url https://localhost:3001"
     args="${args} --tls-ca /bindplane-ca.crt"
@@ -99,6 +106,13 @@ if [[ $BINDPLANE_VERSION != "latest" ]]; then
     BINDPLANE_VERSION=$(echo $BINDPLANE_VERSION | sed 's/^v//')
 fi
 export BINDPLANE_VERSION
+export ORGS=false
+
+if [[ $(printf '%s\n' "$BINDPLANE_VERSION" "1.58.0" | sort -V | head -n1) == "1.58.0" && "$BINDPLANE_VERSION" != "1.58.0" ]]; then
+    export ORGS=true
+elif [[ "$BINDPLANE_VERSION" == "latest" ]]; then
+    export ORGS=true
+fi
 
 echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
