@@ -30,9 +30,6 @@ resource "bindplane_configuration" "configuration-full" {
   source {
     name = bindplane_source.otlp-custom.name
     processors = [
-      // Use filter processor to filter out unwanted data.
-      bindplane_processor.filter-field.name,
-
       // Use add fields processor to add additional metadata.
       bindplane_processor.add-fields.name
     ]
