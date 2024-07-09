@@ -39,7 +39,7 @@ func isValidPlatform(platform string) bool {
 	)
 	switch platform {
 	case platformWindows, platformLinux, platformMacOS,
-		platformK8sDaemonset, platformK8sDeployment,
+		platformK8sDaemonset, platformK8sDeployment, platformGateway,
 		platformOpenshiftDaemonset, platformOpenshiftDeployment:
 		return true
 	default:
