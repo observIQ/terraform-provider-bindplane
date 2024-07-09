@@ -33,6 +33,7 @@ func isValidPlatform(platform string) bool {
 		platformMacOS               = "macos"
 		platformK8sDaemonset        = "kubernetes-daemonset"
 		platformK8sDeployment       = "kubernetes-deployment"
+		platformGateway             = "kubernetes-gateway"
 		platformOpenshiftDaemonset  = "openshift-daemonset"
 		platformOpenshiftDeployment = "openshift-deployment"
 	)
