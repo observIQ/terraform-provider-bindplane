@@ -419,7 +419,7 @@ jobs:
           PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
   
       - name: Test GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --snapshot --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
