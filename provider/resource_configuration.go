@@ -134,6 +134,55 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
 			},
+			"rollout_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The type of rollout to perform. Valid values are 'standard' and 'progressive'.",
+						},
+						"parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Name of the parameter.",
+									},
+									"value": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"labels": {
+													Type:        schema.TypeMap,
+													Required:    true,
+													Description: "Labels for the parameter.",
+												},
+												"name": {
+													Type:        schema.TypeString,
+													Required:    true,
+													Description: "Name of the stage.",
+												},
+											},
+										},
+										Description: "Value of the parameter, which is a list of stages.",
+									},
+								},
+							},
+							Description: "List of parameters for the rollout options.",
+						},
+					},
+				},
+				Description: "Options for configuring the rollout behavior of the configuration.",
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),

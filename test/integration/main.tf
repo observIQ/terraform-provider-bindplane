@@ -29,6 +29,26 @@ resource "bindplane_configuration" "config" {
   }
 
   rollout = true
+
+  rollout_options {
+    type = "progressive"
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
+      }
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
+  }
+
   name = "testtf"
   platform = "linux"
   labels = {
