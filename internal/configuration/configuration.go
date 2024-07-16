@@ -95,6 +95,16 @@ func WithMatchLabels(match map[string]string) Option {
 	}
 }
 
+// WithRolloutOptions takes a model.ResourceConfiguration and returns
+// an Option that configures a configuration's rollout options. It is safe
+// to pass model.ResourceConfiguration's zero value to this function.
+func WithRolloutOptions(rolloutOptions model.ResourceConfiguration) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Rollout = rolloutOptions
+		return nil
+	}
+}
+
 // NewV1 takes configuration options and returns a BindPlane configuration
 func NewV1(options ...Option) (*model.Configuration, error) {
 	const (
