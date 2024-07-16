@@ -33,6 +33,13 @@ func newTestConfig(endpoint, user, pass, ca, crt, key string) (*BindPlane, error
 	config.Network.RemoteURL = endpoint
 	config.Auth.Username = user
 	config.Auth.Password = pass
+
+	// System auth type must be set when using user / pass. When using API
+	// key, auth type does not need to be set client side.
+	if config.Auth.Username != "" && config.Auth.Password != "" {
+		config.Auth.Type = "system"
+	}
+
 	if ca != "" {
 		config.Network.TLS.CertificateAuthority = []string{ca}
 	}
