@@ -13,29 +13,44 @@ to one or more managed agents. Configurations are a combination of [sources](./b
 
 ## Options
 
-| Option         | Type    | Default  | Description                  |
-| -------------- | ------- | -------- | ---------------------------- |
-| `name`         | string  | required | The source name.             |
-| `platform`     | string  | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
-| `labels`       | map     | optional | Key value pairs representing labels to set on the configuration. |
-| `source`       | block   | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
-| `destination`  | block   | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section.
-| `extensions`   | list(string) | optional | One or more extension names to attach to the configuration. |
-| `rollout`      | bool    | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
+| Option             | Type            | Default  | Description                                                                 |
+| ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
+| `name`             | string          | required | The source name.                                                            |
+| `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
+| `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
+| `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
+| `destination`      | block           | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section. |
+| `extensions`       | list(string)    | optional | One or more extension names to attach to the configuration.                 |
+| `rollout`          | bool            | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
+| `rollout_options`  | block (single)  | optional | Options for configuring the rollout behavior of the configuration. See the [rollout options block](./bindplane_configuration.md#rollout-options-block) section. |
 
 ### Source Block
 
 | Option              | Type         | Default  | Description                  |
-| ------------------- | -----------  | -------- | ---------------------------- |
+| ------------------- | ------------ | -------- | ---------------------------- |
 | `name`              | string       | required | The source name.             |
 | `processors`        | list(string) | optional | One or more processor names to attach to the source. |
 
 ### Destination Block
 
 | Option              | Type         | Default  | Description                  |
-| ------------------- | -----------  | -------- | ---------------------------- |
+| ------------------- | ------------ | -------- | ---------------------------- |
 | `name`              | string       | required | The source name.             |
 | `processors`        | list(string) | optional | One or more processor names to attach to the destination. |
+
+### Rollout Options Block
+
+| Option              | Type         | Default  | Description                  |
+| ------------------- | ------------ | -------- | ---------------------------- |
+| `type`              | string       | required | The type of rollout to perform. Valid values are 'standard' and 'progressive'. |
+| `parameters`        | list(block)  | optional | One or more parameters for the rollout. See the [parameters block](./bindplane_configuration.md#parameters-block) section. |
+
+### Parameters Block
+
+| Option              | Type         | Default  | Description                  |
+| ------------------- | ------------ | -------- | ---------------------------- |
+| `name`              | string       | required | The name of the parameter.   |
+| `value`             | any          | required | The value of the parameter.  |
 
 ### Supported Platforms
 
@@ -49,7 +64,7 @@ This table should be used as a reference for supported `platform` values.
 | Kubernetes DaemonSet   | `kubernetes-daemonset`  |
 | Kubernetes Deployment  | `kubernetes-deployment` |
 | OpenShift DaemonSet    | `openshift-daemonset`   |
-| OpenShift DaemonSet    | `openshift-deployment`  |
+| OpenShift Deployment   | `openshift-deployment`  |
 
 ## Examples
 
@@ -96,7 +111,7 @@ resource "bindplane_processor" "add_fields" {
   parameters_json = jsonencode(
     [
       {
-        "name": "enable_logs"
+        "name": "enable_logs",
         "value": true
       },
       {
@@ -128,7 +143,7 @@ resource "bindplane_extension" "pprof" {
       {
         "name": "tcp_port",
         "value": 5000,
-      },
+      }
     ]
   )
 }
@@ -173,5 +188,27 @@ resource "bindplane_configuration" "configuration" {
   extensions = [
     bindplane_extension.pprof.name
   ]
+
+  rollout_options {
+    type = "progressive"
+    parameters = [
+      {
+        name = "stages"
+        value = [
+          {
+            labels = {
+              env = "stage"
+            }
+            name = "stage"
+          },
+          {
+            labels = {
+              env = "production"
+            }
+            name = "production"
+          }
+        ]
+      }
+    ]
+  }
 }
-```
