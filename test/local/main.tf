@@ -45,9 +45,7 @@ resource "bindplane_destination" "custom" {
       {
         "name": "telemetry_types",
         "value": [
-          "Metrics",
           "Logs",
-          "Traces"
         ]
       },
       {
@@ -69,6 +67,12 @@ resource "bindplane_processor" "add_fields" {
   type = "add_fields"
   parameters_json = jsonencode(
     [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
+      },
       {
         "name": "enable_logs"
         "value": true
@@ -140,12 +144,10 @@ resource "bindplane_processor" "json-parse-body" {
   parameters_json = jsonencode(
     [
       {
-        "name": "enable_logs",
-        "value": true
-      },
-      {
-        "name": "log_condition",
-        "value": "true"
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
       },
       {
         "name": "log_source_field_type",
@@ -170,8 +172,10 @@ resource "bindplane_processor" "promoted-cleanup" {
   parameters_json = jsonencode(
     [
       {
-        "name": "enable_logs",
-        "value": true
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
       },
       {
         "name": "log_body_keys",
@@ -190,12 +194,10 @@ resource "bindplane_processor" "time-parse-http-datatime" {
   parameters_json = jsonencode(
     [
       {
-        "name": "enable_logs",
-        "value": true
-      },
-      {
-        "name": "log_condition",
-        "value": "body[\"datetime\"] != nil"
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
       },
       {
         "name": "log_field_type",
