@@ -193,14 +193,13 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
-          - "v1.63.1"
+          - "v1.64.0"
           - "v1.62.0"
           - "v1.59.0"
           - "v1.57.0"
           - "v1.55.0"
           - "v1.52.0"
           - "v1.50.0"
-          - "v1.48.0"
           - "v1.44.0"
     steps:
       - name: Check out source code
