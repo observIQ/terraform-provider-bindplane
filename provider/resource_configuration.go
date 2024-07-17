@@ -143,8 +143,15 @@ func resourceConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:        schema.TypeString,
-							Required:    true,
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+								t := val.(string)
+								if t != "standard" && t != "progressive" {
+									errs = append(errs, fmt.Errorf("invalid rollout type: %s", t))
+								}
+								return
+							},
 							ForceNew:    false,
 							Description: "The type of rollout to perform. Valid values are 'standard' and 'progressive'.",
 						},
