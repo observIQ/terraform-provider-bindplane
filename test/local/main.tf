@@ -7,9 +7,8 @@ terraform {
 }
 
 provider "bindplane" {
-  remote_url = "http://localhost:3001"
-  username = "admin"
-  password = "password"
+  remote_url = "https://saas.dev.bindplane.com"
+  api_key = "542b97b9-c4ac-42fc-b50a-6a1d3512d79e"
 }
 
 resource "bindplane_source" "host" {
