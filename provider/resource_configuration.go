@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
@@ -134,6 +135,63 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
 			},
+			"rollout_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+								t := val.(string)
+								if t != "standard" && t != "progressive" {
+									errs = append(errs, fmt.Errorf("invalid rollout type: %s", t))
+								}
+								return
+							},
+							ForceNew:    false,
+							Description: "The type of rollout to perform. Valid values are 'standard' and 'progressive'.",
+						},
+						"parameters": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Name of the parameter.",
+									},
+									"value": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"labels": {
+													Type:        schema.TypeMap,
+													Required:    true,
+													Description: "Labels for the parameter.",
+												},
+												"name": {
+													Type:        schema.TypeString,
+													Required:    true,
+													Description: "Name of the stage.",
+												},
+											},
+										},
+										Description: "Value of the parameter, which is a list of stages.",
+									},
+								},
+							},
+							Description: "List of parameters for the rollout options.",
+						},
+					},
+				},
+				Description: "Options for configuring the rollout behavior of the configuration.",
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -217,6 +275,11 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
+	rolloutOptions, err := readRolloutOptions(d)
+	if err != nil {
+		return fmt.Errorf("read rollout_options: %w", err)
+	}
+
 	// List of extensions represented as a list of configuration.ResourceConfig's
 	// with only the name field set.
 	extensions := []configuration.ResourceConfig{}
@@ -236,6 +299,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithSourcesByName(sources),
 		configuration.WithDestinationsByName(destinations),
 		configuration.WithExtensionsByName(extensions),
+		configuration.WithRolloutOptions(rolloutOptions),
 	}
 
 	config, err := configuration.NewV1(opts...)
@@ -251,6 +315,49 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	}
 
 	return resourceConfigurationRead(d, meta)
+}
+
+// readRolloutOptions safely reads "rollout_options" from the resource data.
+func readRolloutOptions(d *schema.ResourceData) (model.ResourceConfiguration, error) {
+	rolloutOptionsRaw, ok := d.GetOk("rollout_options")
+	if !ok || len(rolloutOptionsRaw.([]interface{})) == 0 {
+		return model.ResourceConfiguration{}, nil
+	}
+
+	// Because d.GetOk returned a non nil value, we can assume that the
+	// rollout_options list has at least one element due to the Terraform
+	// framework's schema validation. Type assertion is safe in this case.
+
+	rolloutOptions := rolloutOptionsRaw.([]interface{})[0].(map[string]interface{})
+	resourceConfig := model.ResourceConfiguration{}
+
+	if t, ok := rolloutOptions["type"].(string); ok {
+		resourceConfig.Type = t
+	}
+
+	if parametersRaw, ok := rolloutOptions["parameters"]; ok {
+		parametersList := parametersRaw.([]interface{})
+		parameters := make([]model.Parameter, len(parametersList))
+		for i, p := range parametersList {
+			paramMap := p.(map[string]interface{})
+			param := model.Parameter{}
+			if name, ok := paramMap["name"].(string); ok {
+				param.Name = name
+			}
+			if valueRaw, ok := paramMap["value"]; ok {
+				valueList := valueRaw.([]interface{})
+				values := make([]interface{}, len(valueList))
+				for j, v := range valueList {
+					values[j] = v.(map[string]interface{})
+				}
+				param.Value = values
+			}
+			parameters[i] = param
+		}
+		resourceConfig.Parameters = parameters
+	}
+
+	return resourceConfig, nil
 }
 
 func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
@@ -337,6 +444,35 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
+		return err
+	}
+
 	d.SetId(config.ID())
+	return nil
+}
+
+// resourceConfigurationRolloutOptionsRead takes a configuration's rollout options
+// and sets them in the Terraform state. This will trigger a terraform apply if the
+// rollout options have changed outside of Terraform.
+func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
+	rolloutOptions := make(map[string]interface{})
+
+	rolloutOptions["type"] = rollout.Type
+
+	parameters := make([]interface{}, len(rollout.Parameters))
+	for i, param := range rollout.Parameters {
+		parameters[i] = map[string]interface{}{
+			"name":  param.Name,
+			"value": param.Value,
+		}
+	}
+
+	rolloutOptions["parameters"] = parameters
+
+	if err := d.Set("rollout_options", []interface{}{rolloutOptions}); err != nil {
+		return fmt.Errorf("error setting rollout options: %s", err)
+	}
+
 	return nil
 }

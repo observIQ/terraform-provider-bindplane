@@ -17,4 +17,23 @@ resource "bindplane_configuration" "configuration-simple" {
   destination {
     name = bindplane_destination.grafana.name
   }
+
+  rollout_options {
+    type = "progressive"
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
+      }
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
+  }
 }

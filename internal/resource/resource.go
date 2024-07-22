@@ -64,6 +64,10 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 		a.Spec["extensions"] = c.Spec.Extensions
 	}
 
+	if c.Spec.Rollout.Type != "" {
+		a.Spec["rollout"] = c.Spec.Rollout
+	}
+
 	return a
 }
 

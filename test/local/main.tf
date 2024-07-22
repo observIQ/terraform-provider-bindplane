@@ -99,6 +99,26 @@ resource "bindplane_configuration" "configuration" {
   }
 
   rollout = true
+
+  rollout_options {
+    type = "progressive"
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
+      }
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
+  }
+
   name = "my-config"
   platform = "linux"
   labels = {
