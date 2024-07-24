@@ -95,7 +95,6 @@ func WithMatchLabels(match map[string]string) Option {
 	}
 }
 
-<<<<<<< HEAD
 // WithRolloutOptions takes a model.ResourceConfiguration and returns
 // an Option that configures a configuration's rollout options. It is safe
 // to pass model.ResourceConfiguration's zero value to this function.
