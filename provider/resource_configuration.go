@@ -129,6 +129,19 @@ func resourceConfiguration() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "List of extensions names to attach to the configuration.",
 			},
+			"measurement_interval": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+					interval := val.(string)
+					if interval != "10s" && interval != "1m" && interval != "15m" {
+						errs = append(errs, errors.New("measurement_interval must be one of 10s, 1m, or 15m"))
+					}
+					return
+				},
+				Description: "The interval at which the agent will push throughput measurements to BindPlane. Valid values include 10s, 1m, and 15m. Relaxing the interval will reduce BindPlane's measurement processing overhead at the expense of granularity. Generally, configurations with thousands of agents can justify using an interval of 1m or 15m.",
+			},
 			"rollout": {
 				Type:        schema.TypeBool,
 				Required:    true,
@@ -292,6 +305,8 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
+	measurementInterval := d.Get("measurement_interval").(string)
+
 	opts := []configuration.Option{
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
@@ -300,6 +315,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithDestinationsByName(destinations),
 		configuration.WithExtensionsByName(extensions),
 		configuration.WithRolloutOptions(rolloutOptions),
+		configuration.WithMeasurementInterval(measurementInterval),
 	}
 
 	config, err := configuration.NewV1(opts...)
@@ -445,6 +461,11 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	}
 
 	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
+		return err
+	}
+
+	measurementInterval := config.Spec.MeasurementInterval
+	if err := d.Set("measurement_interval", measurementInterval); err != nil {
 		return err
 	}
 

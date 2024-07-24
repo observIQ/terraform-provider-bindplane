@@ -105,6 +105,18 @@ func WithRolloutOptions(rolloutOptions model.ResourceConfiguration) Option {
 	}
 }
 
+// WithMeasurementInterval is a Option that configures a configuration's
+// measurement interval.
+func WithMeasurementInterval(interval string) Option {
+	return func(c *model.Configuration) error {
+		// Validation is not performed here because Terraform
+		// schema validation will already ensure the value is
+		// a valid duration acceptable by BindPlane.
+		c.Spec.MeasurementInterval = interval
+		return nil
+	}
+}
+
 // NewV1 takes configuration options and returns a BindPlane configuration
 func NewV1(options ...Option) (*model.Configuration, error) {
 	const (

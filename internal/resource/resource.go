@@ -68,6 +68,10 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 		a.Spec["rollout"] = c.Spec.Rollout
 	}
 
+	if len(c.Spec.MeasurementInterval) > 0 {
+		a.Spec["measurementInterval"] = c.Spec.MeasurementInterval
+	}
+
 	return a
 }
 

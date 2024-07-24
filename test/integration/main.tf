@@ -28,6 +28,8 @@ resource "bindplane_configuration" "config" {
     create_before_destroy = true
   }
 
+  measurement_interval = "1m"
+
   rollout = true
 
   rollout_options {
