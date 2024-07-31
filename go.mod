@@ -7,7 +7,7 @@ toolchain go1.22.2
 require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/observiq/bindplane-op-enterprise v1.65.0
+	github.com/observiq/bindplane-op-enterprise v1.66.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.31.0
 	go.uber.org/zap v1.27.0
@@ -15,9 +15,9 @@ require (
 
 require (
 	cloud.google.com/go v0.115.0 // indirect
-	cloud.google.com/go/auth v0.7.0 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
-	cloud.google.com/go/compute/metadata v0.4.0 // indirect
+	cloud.google.com/go/auth v0.7.2 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.3 // indirect
+	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.10 // indirect
 	cloud.google.com/go/pubsub v1.40.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
@@ -134,8 +134,8 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.104.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.104.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.105.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.105.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
@@ -177,7 +177,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	github.com/zclconf/go-cty v1.14.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/collector/pdata v1.11.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.12.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
@@ -196,11 +196,11 @@ require (
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
-	google.golang.org/api v0.188.0 // indirect
+	google.golang.org/api v0.189.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto v0.0.0-20240708141625-4ad9e859172b // indirect
+	google.golang.org/genproto v0.0.0-20240722135656-d784300faade // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240701130421-f6361c86f094 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240708141625-4ad9e859172b // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240722135656-d784300faade // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
