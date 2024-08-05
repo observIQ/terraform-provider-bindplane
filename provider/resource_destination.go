@@ -121,5 +121,5 @@ func resourceDestinationDelete(d *schema.ResourceData, meta any) error {
 }
 
 func resourceDestinationImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	return genericResourceImport(model.KindProcessor, d, meta)
+	return genericResourceImport(model.KindDestination, d, meta)
 }
