@@ -212,3 +212,4 @@ resource "bindplane_configuration" "configuration" {
     ]
   }
 }
+```
