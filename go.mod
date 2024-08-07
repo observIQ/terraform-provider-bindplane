@@ -7,7 +7,7 @@ toolchain go1.22.2
 require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/observiq/bindplane-op-enterprise v1.66.0
+	github.com/observiq/bindplane-op-enterprise v1.67.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.31.0
 	go.uber.org/zap v1.27.0
