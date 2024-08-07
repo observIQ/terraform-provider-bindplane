@@ -477,6 +477,10 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 // and sets them in the Terraform state. This will trigger a terraform apply if the
 // rollout options have changed outside of Terraform.
 func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
+	if len(rollout.Parameters) == 0 {
+		return nil
+	}
+
 	rolloutOptions := make(map[string]interface{})
 
 	rolloutOptions["type"] = rollout.Type
