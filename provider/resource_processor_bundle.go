@@ -138,7 +138,17 @@ func resourceProcessorBundleCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors)
+	displayName := ""
+	if v := d.Get("display_name").(string); v != "" {
+		displayName = v
+	}
+
+	description := ""
+	if v := d.Get("description").(string); v != "" {
+		description = v
+	}
+
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors, displayName, description)
 	if err != nil {
 		return err
 	}
