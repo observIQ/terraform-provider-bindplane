@@ -107,7 +107,17 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil)
+	displayName := ""
+	if v := d.Get("display_name").(string); v != "" {
+		displayName = v
+	}
+
+	description := ""
+	if v := d.Get("description").(string); v != "" {
+		description = v
+	}
+
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil, displayName, description)
 	if err != nil {
 		return err
 	}
