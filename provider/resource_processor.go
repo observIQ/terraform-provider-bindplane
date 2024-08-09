@@ -63,6 +63,8 @@ func resourceProcessor() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
+			"display_name": genericSchemaDisplayName(),
+			"description":  genericSchemaDescription(),
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
