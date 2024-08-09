@@ -302,11 +302,12 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 }
 
 // GenericResource represents a Bindplane resource's
-// id, name, and ParameterizedSpec.
+// id, name, metadata, and ParameterizedSpec.
 type GenericResource struct {
-	ID   string
-	Name string
-	Spec model.ParameterizedSpec
+	ID       string
+	Name     string
+	Metadata model.Metadata
+	Spec     model.ParameterizedSpec
 }
 
 // GenericResource looks up a Bindplane resource and returns a GenericResource.
@@ -328,6 +329,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 
 		g.ID = r.ID()
 		g.Name = r.Name()
+		g.Metadata = r.Metadata
 		g.Spec = r.Spec
 	case model.KindSource:
 		r, err := i.Source(name)
@@ -341,6 +343,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 
 		g.ID = r.ID()
 		g.Name = r.Name()
+		g.Metadata = r.Metadata
 		g.Spec = r.Spec
 	case model.KindProcessor:
 		r, err := i.Processor(name)
@@ -354,6 +357,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 
 		g.ID = r.ID()
 		g.Name = r.Name()
+		g.Metadata = r.Metadata
 		g.Spec = r.Spec
 	case model.KindExtension:
 		r, err := i.Extension(name)
@@ -367,6 +371,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 
 		g.ID = r.ID()
 		g.Name = r.Name()
+		g.Metadata = r.Metadata
 		g.Spec = r.Spec
 	case model.KindConnector:
 		r, err := i.Connector(name)
