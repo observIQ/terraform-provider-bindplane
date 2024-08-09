@@ -18,6 +18,8 @@ processor-type. The processor can be used by multiple [configurations](./bindpla
 | `type`              | string | required | The processor type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the processor type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the processor should trigger an automatic rollout of any configuration that uses it. |
+| `display_name`      | string | optional | The display name which will be set on the resources `metadata.displayName` field. |
+| `description`       | string | optional | The description which will be set on the resources `metadata.description` field.  |
 
 ## Sensitive Values
 
