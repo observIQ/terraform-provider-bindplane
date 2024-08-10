@@ -460,6 +460,14 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	extensions := []string{}
+	for _, e := range config.Spec.Extensions {
+		extensions = append(extensions, strings.Split(e.Name, ":")[0])
+	}
+	if err := d.Set("extensions", extensions); err != nil {
+		return err
+	}
+
 	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
 		return err
 	}
