@@ -21,6 +21,7 @@ clean () {
     echo "cleaning up"
 
     rm -rf terraform.tfstate*
+    rm -f platform.tfplan
     rm -rf providers
 
     docker ps
@@ -97,6 +98,41 @@ test_resources() {
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
 }
 
+# Changing a configuration's platform should update it in place
+# instead of replacing it.
+test_platform_update() {
+    echo "testing platform update"
+
+    terraform plan \
+        -var platform=windows \
+        -target bindplane_configuration.platform \
+        -target bindplane_configuration_v2.platform \
+        -out platform.tfplan
+
+    for addr in bindplane_configuration.platform bindplane_configuration_v2.platform; do
+        actions=$(terraform show -json platform.tfplan | jq -c --arg addr "$addr" '.resource_changes[] | select(.address == $addr) | .change.actions')
+        if [[ "$actions" != '["update"]' ]]; then
+            echo "expected $addr to be updated in place, got actions: $actions"
+            return 1
+        fi
+    done
+
+    terraform apply -auto-approve platform.tfplan
+
+    args="--remote-url https://localhost:3001"
+    args="${args} --tls-ca /bindplane-ca.crt"
+    args="${args} --tls-cert /bindplane.crt"
+    args="${args} --tls-key /bindplane.key"
+
+    for config in platform platform-v2; do
+        platform=$(eval docker exec integration-bindplane-1 /bindplane get config "$config" -o json "$args" | jq -r 'select(.kind? == "Configuration") | .metadata.labels.platform')
+        if [[ "$platform" != "windows" ]]; then
+            echo "expected configuration $config to have platform windows, got: $platform"
+            return 1
+        fi
+    done
+}
+
 destroy () {
     terraform destroy -auto-approve
 }
@@ -136,5 +172,6 @@ sleep 10
 configure
 apply
 test_resources
+test_platform_update
 destroy
 clean

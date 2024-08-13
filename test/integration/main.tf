@@ -811,3 +811,48 @@ resource "bindplane_configuration_v2" "configuration" {
     bindplane_extension.pprof.name
   ]
 }
+
+// The platform configurations only use resources supported by
+// every Bindplane version tested by CI. test.sh changes the
+// platform variable to verify the configurations are updated in place.
+variable "platform" {
+  type    = string
+  default = "linux"
+}
+
+resource "bindplane_configuration" "platform" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  rollout  = false
+  name     = "platform"
+  platform = var.platform
+
+  source {
+    name = bindplane_source.otlp.name
+  }
+
+  destination {
+    name = bindplane_destination.logging.name
+  }
+}
+
+resource "bindplane_configuration_v2" "platform" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  rollout  = false
+  name     = "platform-v2"
+  platform = var.platform
+
+  source {
+    name = bindplane_source.otlp.name
+  }
+
+  destination {
+    route_id = bindplane_destination.logging.id
+    name     = bindplane_destination.logging.name
+  }
+}

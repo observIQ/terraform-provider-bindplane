@@ -48,7 +48,7 @@ func resourceConfigurationV2() *schema.Resource {
 			"platform": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+				ForceNew: false,
 				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
 					platform := val.(string)
 					if !isValidPlatform(platform) {
