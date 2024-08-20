@@ -47,7 +47,7 @@ tidy:
 provider:
 	rm -rf dist/
 	goreleaser build \
-		--skip-validate \
+		--skip=validate \
 		--single-target \
 		--snapshot \
 		--config release/goreleaser.yml
@@ -55,11 +55,11 @@ provider:
 .PHONY: release-test
 release-test:
 	goreleaser release \
-		--skip-publish \
-		--skip-validate \
+		--skip=publish \
+		--skip=validate \
 		--snapshot \
-		--rm-dist \
-		--skip-sign \
+		--clean \
+		--skip=sign \
 		--config release/goreleaser.yml
 
 .PHONY: ci-check
