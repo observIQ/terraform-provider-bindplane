@@ -33,7 +33,7 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense
 	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive
 	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen
-	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser
+	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser/v2
 	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell
 
 .PHONY: tidy
