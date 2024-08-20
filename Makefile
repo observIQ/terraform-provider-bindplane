@@ -29,12 +29,12 @@ TOOLS_MOD_DIR := ./internal/tools
 
 .PHONY: install-tools
 install-tools:
-	cd $(TOOLS_MOD_DIR) && go install github.com/securego/gosec/v2/cmd/gosec@v2.16.0
-	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense@v1.1.0
-	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive@v1.3.1
-	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen@v0.1.7
-	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser@v2.1.0
-	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell@v0.3.4
+	cd $(TOOLS_MOD_DIR) && go install github.com/securego/gosec/v2/cmd/gosec
+	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense
+	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive
+	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen
+	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser
+	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell
 
 .PHONY: tidy
 tidy:
