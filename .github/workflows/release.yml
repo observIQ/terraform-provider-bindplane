@@ -40,8 +40,8 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          version: latest
-          args: release --rm-dist --config release/goreleaser.yml
+          version: v2.1.0
+          args: release --config release/goreleaser.yml
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

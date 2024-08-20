@@ -418,8 +418,8 @@ jobs:
       - name: Test GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          version: latest
-          args: release --snapshot --skip-publish --rm-dist --parallelism 2 --config release/goreleaser.yml
+          version: v2.1.0
+          args: release --snapshot --skip=publish --clean --parallelism 2 --config release/goreleaser.yml
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
