@@ -20,9 +20,11 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -120,14 +122,22 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 	switch endpoint.Scheme {
 	case "http":
 	case "https":
-		clientCert, err := tls.LoadX509KeyPair("tls/test-client.crt", "tls/test-client.key")
+		clientCert, err := tls.LoadX509KeyPair("tls/bindplane-client.crt", "tls/bindplane-client.key")
 		if err != nil {
 			return fmt.Errorf("failed to load client cert: %w", err)
 		}
+
+		caCert, err := ioutil.ReadFile("tls/bindplane-ca.crt")
+		if err != nil {
+			log.Fatal(err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
-				Certificates:       []tls.Certificate{clientCert},
-				InsecureSkipVerify: true,
+				Certificates: []tls.Certificate{clientCert},
+				RootCAs:      caCertPool,
 			},
 		}
 	default:
