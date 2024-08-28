@@ -25,6 +25,8 @@ clean () {
 
     docker ps
 
+    debug_logs
+
     docker-compose down --remove-orphans -t 1
     docker-compose rm --force
 }
@@ -41,26 +43,37 @@ debug_logs() {
 }
 
 configure() {
+    echo "configuring bindplane"
+
     if [[ $ORGS == "true" ]]; then
-        curl -v -k \
+        echo "creating organization"
+
+        curl -v \
+            --cacert ../../client/tls/bindplane-ca.crt \
+            --cert ../../client/tls/bindplane.crt \
+            --key ../../client/tls/bindplane.key \
             -u tfu:tfp \
             https://localhost:3100/v1/organizations \
             -X POST \
             -d '{"organizationName": "init", "accountName": "project", "eulaAccepted":true}'| jq .
     else
-        curl -v -k \
+        echo "creating account"
+
+        curl -v \
+            --cacert ../../client/tls/bindplane-ca.crt \
+            --cert ../../client/tls/bindplane.crt \
+            --key ../../client/tls/bindplane.key \
             -u tfu:tfp \
             https://localhost:3100/v1/accounts \
             -X POST \
             -d '{"displayName": "init"}' | jq .
     fi
 
-    args="--remote-url https://localhost:3001"
-    args="${args} --tls-ca /bindplane-ca.crt"
-    args="${args} --tls-cert /bindplane.crt"
-    args="${args} --tls-key /bindplane.key"
+    echo "applying account resources"
 
-    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml "$args"
+    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml
+
+    echo "finished applying account resources, configuring done"
 }
 
 apply() {

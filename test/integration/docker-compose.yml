@@ -19,7 +19,7 @@ services:
       - BINDPLANE_ACCEPT_EULA=true
       - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
     volumes:
-      - "../../client/tls/bindplane.crt:/bindplane-ca.crt:ro"
+      - "../../client/tls/bindplane-ca.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
       - "../../client/tls/bindplane.key:/bindplane.key:ro"
       - "./resources.yaml:/resources.yaml:ro"
