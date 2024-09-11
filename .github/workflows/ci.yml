@@ -193,6 +193,7 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.72.0"
           - "v1.71.0"
           - "v1.70.0" # Routes introduced. Older clients work against 1.70, but 1.70 client will not work against older bindplane
           - "v1.66.0"
