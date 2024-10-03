@@ -16,6 +16,8 @@ resource "bindplane_source" "host" {
   rollout = true
   name = "my-host"
   type = "host"
+  display_name = "my host"
+  description = "my terraform description"
   parameters_json = jsonencode(
     [
       {
