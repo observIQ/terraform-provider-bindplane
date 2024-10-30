@@ -61,32 +61,6 @@ EOT
   )
 }
 
-resource "bindplane_processor" "add_fields" {
-  rollout = true
-  name = "add-fields"
-  type = "add_fields"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Logs",
-        ]
-      },
-      {
-        "name": "enable_logs"
-        "value": true
-      },
-      {
-        "name": "log_resource_attributes",
-        "value": {
-          "key": "value2"
-        }
-      }
-    ]
-  )
-}
-
 resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
@@ -130,16 +104,10 @@ resource "bindplane_configuration" "configuration" {
 
   source {
     name = bindplane_source.journald.name
-    processors = [
-      bindplane_processor.add_fields.name
-    ]
   }
 
   source {
     name = bindplane_source.host.name
-    processors = [
-      bindplane_processor.add_fields.name
-    ]
   }
 
 
@@ -149,8 +117,7 @@ resource "bindplane_configuration" "configuration" {
       bindplane_processor.batch.name,
 
       // order matters here
-      bindplane_processor.time-parse-http-datatime.name,
-      bindplane_processor.promoted-cleanup.name
+      bindplane_processor.time-parse-http-datatime.name
     ]
   }
 
@@ -182,28 +149,6 @@ resource "bindplane_processor" "json-parse-body" {
       {
         "name": "log_target_field_type",
         "value": "Body"
-      }
-    ]
-  )
-}
-
-resource "bindplane_processor" "promoted-cleanup" {
-  rollout = true
-  name = "promoted-cleanup"
-  type = "delete_fields"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Logs",
-        ]
-      },
-      {
-        "name": "log_body_keys",
-        "value": [
-          "datetime"
-        ]
       }
     ]
   )
