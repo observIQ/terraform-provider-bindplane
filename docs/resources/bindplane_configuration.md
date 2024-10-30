@@ -104,26 +104,6 @@ resource "bindplane_destination" "google" {
   type = "googlecloud"
 }
 
-resource "bindplane_processor" "add_fields" {
-  rollout = true
-  name = "add-fields"
-  type = "add_fields"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "enable_logs",
-        "value": true
-      },
-      {
-        "name": "log_resource_attributes",
-        "value": {
-          "key": "value2"
-        }
-      }
-    ]
-  )
-}
-
 resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
@@ -166,16 +146,10 @@ resource "bindplane_configuration" "configuration" {
 
   source {
     name = bindplane_source.host.name
-    processors = [
-      bindplane_processor.add_fields.name
-    ]
   }
 
   source {
     name = bindplane_source.journald.name
-    processors = [
-      bindplane_processor.add_fields.name
-    ]
   }
 
   destination {
