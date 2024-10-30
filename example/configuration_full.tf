@@ -29,10 +29,6 @@ resource "bindplane_configuration" "configuration-full" {
 
   source {
     name = bindplane_source.otlp-custom.name
-    processors = [
-      // Use add fields processor to add additional metadata.
-      bindplane_processor.add-fields.name
-    ]
   }
 
   source {

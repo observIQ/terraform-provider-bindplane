@@ -39,40 +39,11 @@ resource "bindplane_processor" "batch" {
 }
 ```
 
-### Add Fields w/ Custom Parameters
-
-This example shows the [Add Fields](https://docs.bindplane.observiq.com/docs/add-fields) processor type
-with custom parameters using the `parameters_json` option.
-
-```hcl
-resource "bindplane_processor" "fields" {
-  rollout = true
-  name = "my-fields"
-  type = "add_fields"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "enable_logs"
-        "value": true
-      },
-      {
-        "name": "log_resource_attributes",
-        "value": {
-          "location": "east1-a",
-          "env": "dev"
-        }
-      }
-    ]
-  )
-}
-```
-
 ## Usage
 
 You can find available processor types with the `bindplane get processor-type` command:
 ```bash
 NAME               	DISPLAY              	VERSION 
-add_fields         	Add Fields           	1      	
 batch              	Batch                	1      	
 count_telemetry    	Count Telemetry      	1      	
 custom             	Custom               	1       	

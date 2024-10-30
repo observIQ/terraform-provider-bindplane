@@ -70,9 +70,6 @@ resource "bindplane_configuration" "config" {
 
   source {
     name = bindplane_source.otlp.name
-    processors = [
-      bindplane_processor.add_fields.name
-    ]
   }
 
   source {
@@ -218,26 +215,6 @@ resource "bindplane_processor" "batch-options" {
       {
         "name": "timeout",
         "value": "2s"
-      }
-    ]
-  )
-}
-
-resource "bindplane_processor" "add_fields" {
-  rollout = true
-  name = "add-fields"
-  type = "add_fields"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "enable_logs"
-        "value": true
-      },
-      {
-        "name": "log_resource_attributes",
-        "value": {
-          "key": "value2"
-        }
       }
     ]
   )
