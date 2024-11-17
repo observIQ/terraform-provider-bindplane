@@ -88,7 +88,7 @@ func TestAnyResourceV1(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := AnyResourceV1(tc.rName, tc.rType, tc.rkind, tc.rParameters)
+			_, err := AnyResourceV1(tc.rName, tc.rType, tc.rkind, tc.rParameters, "", "")
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
