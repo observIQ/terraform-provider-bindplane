@@ -22,14 +22,14 @@ import (
 	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
-// AnyResourceV1 takes a BindPlane resource name, kind, type, parameters
-// and returns a bindplane.observiq.com/v1.AnyResource. Supported resources
-// are Sources, Destinations, and Processors. For configurations, use
+// AnyResourceV1 requires a BindPlane resource name, kind, type, and parameters. Optionally
+// takes a display name and description. Returns a bindplane.observiq.com/v1.AnyResource.
+// Supported resources are Sources, Destinations, and Processors. For configurations, use
 // AnyResourceFromConfigurationV1.
-func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Parameter) (model.AnyResource, error) {
+func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Parameter, displayName, description string) (model.AnyResource, error) {
 	switch rKind {
 	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension:
-		return model.AnyResource{
+		r := model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",
 				Kind:       rKind,
@@ -41,7 +41,17 @@ func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Pa
 				"type":       rType,
 				"parameters": rParameters,
 			},
-		}, nil
+		}
+
+		if displayName != "" {
+			r.Metadata.DisplayName = displayName
+		}
+
+		if description != "" {
+			r.Metadata.Description = description
+		}
+
+		return r, nil
 	default:
 		return model.AnyResource{}, fmt.Errorf("unknown bindplane resource kind: %s", rKind)
 	}
