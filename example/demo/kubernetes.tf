@@ -92,6 +92,49 @@ resource "bindplane_source" "k8s_otlp_gateway" {
   type    = "otlp"
 }
 
+resource "bindplane_processor" "include_java_microservice" {
+  rollout = false
+  name    = "k8s-include-java-microservice-tf"
+  type    = "filter-by-condition"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Metrics",
+          "Logs",
+          "Traces"
+        ]
+      },
+      {
+        "name": "action",
+        "value": "include"
+      },
+      {
+        "name": "condition",
+        "value":   {
+          "ottl": "(resource.attributes[\"service.name\"] == \"adservice\")",
+          "ui": {
+            "operator": "",
+            "statements": [
+              {
+                "key": "service.name",
+                "match": "resource",
+                "operator": "Equals",
+                "value": "adservice"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "timezone",
+        "value": "UTC"
+      }
+    ]
+  )
+}
+
 resource "bindplane_destination" "k8s_gateway" {
   rollout = false
   name    = "kubernetes-gateway-tf"
@@ -141,6 +184,9 @@ resource "bindplane_configuration" "k8s-node" {
 
   source {
     name = bindplane_source.k8s_otlp_gateway.name
+    processors = [
+      bindplane_processor.include_java_microservice.name
+    ]
   }
 
   destination {
