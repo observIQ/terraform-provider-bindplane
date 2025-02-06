@@ -7,7 +7,7 @@ toolchain go1.23.5
 require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/observiq/bindplane-op-enterprise v1.86.0
+	github.com/observiq/bindplane-op-enterprise v1.68.0
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.35.0
 	go.uber.org/zap v1.27.0
@@ -22,6 +22,7 @@ require (
 	cloud.google.com/go/pubsub v1.45.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/99designs/gqlgen v0.17.57 // indirect
+	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20220621081337-cb9428e4ac1e // indirect
 	github.com/IBM/sarama v1.45.0 // indirect
@@ -29,12 +30,10 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/PuerkitoBio/rehttp v1.4.0 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
-	github.com/auth0/go-auth0 v1.14.0 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
 	github.com/bytedance/sonic v1.12.7 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
@@ -43,7 +42,6 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
-	github.com/coreos/go-oidc/v3 v3.12.0 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -60,7 +58,6 @@ require (
 	github.com/gin-contrib/sse v1.0.0 // indirect
 	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.4 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-ldap/ldap/v3 v3.4.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -137,7 +134,6 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.118.0 // indirect
-	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.118.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.118.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
@@ -145,7 +141,6 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/posthog/posthog-go v1.2.21 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
