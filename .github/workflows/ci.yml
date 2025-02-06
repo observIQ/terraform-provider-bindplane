@@ -312,8 +312,6 @@ jobs:
                 - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
                 - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
                 - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
-                - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
-                - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
               volumes:
                 - bindplane:/data
               depends_on:
