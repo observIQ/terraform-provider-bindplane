@@ -190,12 +190,14 @@ func TestIntegration_http_config(t *testing.T) {
 	}
 
 	env := map[string]string{
-		"BINDPLANE_USERNAME":       username,
-		"BINDPLANE_PASSWORD":       password,
-		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-		"BINDPLANE_ACCEPT_EULA":    "true",
-		"BINDPLANE_LICENSE":        license,
+		"BINDPLANE_USERNAME":                      username,
+		"BINDPLANE_PASSWORD":                      password,
+		"BINDPLANE_SESSION_SECRET":                "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_LOGGING_OUTPUT":                "stdout",
+		"BINDPLANE_ACCEPT_EULA":                   "true",
+		"BINDPLANE_LICENSE":                       license,
+		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
+		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
 	container, version := bindplaneContainer(t, env)
@@ -376,12 +378,14 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 	}
 
 	env := map[string]string{
-		"BINDPLANE_USERNAME":       username,
-		"BINDPLANE_PASSWORD":       password,
-		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-		"BINDPLANE_ACCEPT_EULA":    "true",
-		"BINDPLANE_LICENSE":        license,
+		"BINDPLANE_USERNAME":                      username,
+		"BINDPLANE_PASSWORD":                      password,
+		"BINDPLANE_SESSION_SECRET":                "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_LOGGING_OUTPUT":                "stdout",
+		"BINDPLANE_ACCEPT_EULA":                   "true",
+		"BINDPLANE_LICENSE":                       license,
+		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
+		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
 	container, version := bindplaneContainer(t, env)
@@ -421,14 +425,16 @@ func TestIntegration_https(t *testing.T) {
 	}
 
 	env := map[string]string{
-		"BINDPLANE_USERNAME":       username,
-		"BINDPLANE_PASSWORD":       password,
-		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
-		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
-		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-		"BINDPLANE_ACCEPT_EULA":    "true",
-		"BINDPLANE_LICENSE":        license,
+		"BINDPLANE_USERNAME":                      username,
+		"BINDPLANE_PASSWORD":                      password,
+		"BINDPLANE_TLS_CERT":                      "/tmp/bindplane.crt",
+		"BINDPLANE_TLS_KEY":                       "/tmp/bindplane.key",
+		"BINDPLANE_SESSION_SECRET":                "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_LOGGING_OUTPUT":                "stdout",
+		"BINDPLANE_ACCEPT_EULA":                   "true",
+		"BINDPLANE_LICENSE":                       license,
+		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
+		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
 	container, version := bindplaneContainer(t, env)
@@ -468,15 +474,17 @@ func TestIntegration_mtls(t *testing.T) {
 	}
 
 	env := map[string]string{
-		"BINDPLANE_USERNAME":       username,
-		"BINDPLANE_PASSWORD":       password,
-		"BINDPLANE_TLS_CERT":       "/tmp/bindplane.crt",
-		"BINDPLANE_TLS_KEY":        "/tmp/bindplane.key",
-		"BINDPLANE_TLS_CA":         "/tmp/bindplane-ca.crt",
-		"BINDPLANE_SESSION_SECRET": "524abde2-d9f8-485c-b426-bac229686d13",
-		"BINDPLANE_LOGGING_OUTPUT": "stdout",
-		"BINDPLANE_ACCEPT_EULA":    "true",
-		"BINDPLANE_LICENSE":        license,
+		"BINDPLANE_USERNAME":                      username,
+		"BINDPLANE_PASSWORD":                      password,
+		"BINDPLANE_TLS_CERT":                      "/tmp/bindplane.crt",
+		"BINDPLANE_TLS_KEY":                       "/tmp/bindplane.key",
+		"BINDPLANE_TLS_CA":                        "/tmp/bindplane-ca.crt",
+		"BINDPLANE_SESSION_SECRET":                "524abde2-d9f8-485c-b426-bac229686d13",
+		"BINDPLANE_LOGGING_OUTPUT":                "stdout",
+		"BINDPLANE_ACCEPT_EULA":                   "true",
+		"BINDPLANE_LICENSE":                       license,
+		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
+		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
 	container, version := bindplaneContainer(t, env)

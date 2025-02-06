@@ -17,6 +17,7 @@ package main
 
 import (
 	_ "github.com/client9/misspell/cmd/misspell"
+	_ "github.com/go-git/go-git/v5"
 	_ "github.com/google/addlicense"
 	_ "github.com/goreleaser/goreleaser/v2"
 	_ "github.com/mgechev/revive"
