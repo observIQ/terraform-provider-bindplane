@@ -18,6 +18,8 @@ services:
       - BINDPLANE_REMOTE_URL=https://bindplane.bindplane-dev.svc.cluster.local:3001
       - BINDPLANE_ACCEPT_EULA=true
       - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
+      - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
+      - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
     volumes:
       - "../../client/tls/bindplane-ca.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
