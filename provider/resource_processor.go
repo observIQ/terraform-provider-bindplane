@@ -46,7 +46,7 @@ func resourceProcessor() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    false,
-				Description: "The destination type to use for processor creation.",
+				Description: "The processor type to use for processor creation.",
 			},
 			"parameters_json": {
 				Type:        schema.TypeString,
@@ -98,7 +98,7 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(name, processorType, model.KindProcessor, parameters)
+	r, err := resource.AnyResourceV1(name, processorType, model.KindProcessor, parameters, nil)
 	if err != nil {
 		return err
 	}
