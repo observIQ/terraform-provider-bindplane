@@ -68,12 +68,6 @@ configure() {
             -X POST \
             -d '{"displayName": "init"}' | jq .
     fi
-
-    echo "applying account resources"
-
-    eval docker exec integration-bindplane-1 /bindplane apply -f /resources.yaml
-
-    echo "finished applying account resources, configuring done"
 }
 
 apply() {
@@ -90,9 +84,6 @@ test_resources() {
 
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
-    sleep 5
-    eval docker exec integration-bindplane-1 /bindplane get agent -o yaml "$args"
-    docker exec integration-agent-1 cat /etc/otel/config.yaml
 }
 
 destroy () {
