@@ -66,6 +66,10 @@ resource "bindplane_configuration" "config" {
 
   destination {
     name = bindplane_destination.logging2.name
+    processors = [
+      bindplane_processor_bundle.bundle.name,
+      bindplane_processor.batch.name
+    ]
   }
 
   source {
@@ -236,4 +240,17 @@ resource "bindplane_extension" "custom" {
       }
     ]
   )
+}
+
+resource "bindplane_processor_bundle" "bundle" {
+  rollout = true
+  name = "my-bundle"
+
+  processor {
+    name = bindplane_processor.batch-options.name
+  }
+
+  processor {
+    name = bindplane_processor.batch.name
+  }
 }

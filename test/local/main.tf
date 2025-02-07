@@ -104,6 +104,9 @@ resource "bindplane_configuration" "configuration" {
 
   source {
     name = bindplane_source.journald.name
+    processors = [
+      bindplane_processor_bundle.bundle.name,
+    ]
   }
 
   source {
@@ -206,4 +209,17 @@ resource "bindplane_extension" "pprof" {
       },
     ]
   )
+}
+
+resource "bindplane_processor_bundle" "bundle" {
+  rollout = true
+  name = "my-bundle"
+
+  processor {
+    name = bindplane_processor.batch.name
+  }
+
+  processor {
+    name = bindplane_processor.time-parse-http-datatime.name
+  }
 }
