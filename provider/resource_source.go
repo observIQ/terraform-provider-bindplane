@@ -99,7 +99,7 @@ func resourceSourceCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(name, sourceType, model.KindSource, parameters)
+	r, err := resource.AnyResourceV1(name, sourceType, model.KindSource, parameters, nil)
 	if err != nil {
 		return err
 	}

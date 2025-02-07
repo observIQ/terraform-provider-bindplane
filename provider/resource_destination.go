@@ -98,7 +98,7 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(name, destType, model.KindDestination, parameters)
+	r, err := resource.AnyResourceV1(name, destType, model.KindDestination, parameters, nil)
 	if err != nil {
 		return err
 	}
