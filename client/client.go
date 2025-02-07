@@ -121,6 +121,15 @@ func (i *BindPlane) Connector(name string) (*model.Connector, error) {
 	}
 }
 
+// DeleteConnector will delete a BindPlane connector
+func (i *BindPlane) DeleteConnector(name string) error {
+	err := i.Client.DeleteResource(context.Background(), model.KindConnector, name)
+	if err != nil {
+		return fmt.Errorf("error while deleting connector with name %s: %w", name, err)
+	}
+	return nil
+}
+
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
 	c, err := i.Client.Configuration(context.Background(), name)
@@ -254,6 +263,8 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 		return i.DeleteProcessor(name)
 	case model.KindExtension:
 		return i.DeleteExtension(name)
+	case model.KindConnector:
+		return i.DeleteConnector(name)
 	default:
 		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
 	}
