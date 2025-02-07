@@ -195,11 +195,7 @@ func resourceProcessorBundleRead(d *schema.ResourceData, meta any) error {
 		processor["name"] = strings.Split(p.Name, ":")[0]
 		processorBlocks = append(processorBlocks, processor)
 	}
-	if err := d.Set("processor", processorBlocks); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("processor", processorBlocks)
 }
 
 func resourceProcessorBundleDelete(d *schema.ResourceData, meta any) error {
