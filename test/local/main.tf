@@ -223,3 +223,60 @@ resource "bindplane_processor_bundle" "bundle" {
     name = bindplane_processor.time-parse-http-datatime.name
   }
 }
+
+resource "bindplane_connector" "routing" {
+  rollout = true
+  name = "my-routing"
+  type = "routing"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs"
+        ]
+      },
+      {
+        "name": "routes",
+        "value": [
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"prod\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "prod"
+                  }
+                ]
+              }
+            },
+            "id": "route-1"
+          },
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"dev\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "dev"
+                  }
+                ]
+              }
+            },
+            "id": "route-2"
+          }
+        ]
+      }
+    ] 
+  )
+}
