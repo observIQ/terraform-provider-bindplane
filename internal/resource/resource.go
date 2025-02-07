@@ -42,7 +42,7 @@ func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Pa
 
 	switch rKind {
 	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension:
-		r := model.AnyResource{
+		return model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",
 				Kind:       rKind,
@@ -55,8 +55,7 @@ func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Pa
 				"parameters": rParameters,
 				"processors": procs,
 			},
-		}
-		return r, nil
+		}, nil
 	default:
 		return model.AnyResource{}, fmt.Errorf("unknown bindplane resource kind: %s", rKind)
 	}

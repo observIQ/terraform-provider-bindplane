@@ -261,6 +261,12 @@ resource "bindplane_source" "splunk_tcp" {
   type    = "splunk_tcp"
 }
 
+resource "bindplane_source" "fluent" {
+  rollout = false
+  name    = "Fluent"
+  type    = "fluentforward"
+}
+
 resource "bindplane_processor" "json_parser" {
   rollout = false
   name    = "Parse-JSON-Body"
@@ -319,7 +325,7 @@ resource "bindplane_processor" "time_parser" {
 
 resource "bindplane_processor" "cleanup_promoted" {
   rollout = false
-  name    = "k8s-trace-cleanup"
+  name    = "cleanup"
   type    = "delete_fields_v2"
   parameters_json = jsonencode(
     [
@@ -367,6 +373,27 @@ resource "bindplane_configuration" "splunk" {
 
   source {
     name = bindplane_source.splunk_tcp.name
+    processors = [
+      bindplane_processor_bundle.parser.name,
+    ]
+  }
+
+  destination {
+    name = bindplane_destination.logging.name
+  }
+}
+
+resource "bindplane_configuration" "fluent" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  rollout  = true
+  name     = "fluent"
+  platform = "linux"
+
+  source {
+    name = bindplane_source.fluent.name
     processors = [
       bindplane_processor_bundle.parser.name,
     ]
