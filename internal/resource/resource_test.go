@@ -28,7 +28,7 @@ func TestAnyResourceV1(t *testing.T) {
 		rType       string
 		rkind       model.Kind
 		rParameters []model.Parameter
-		rProcessors []model.Processor
+		rProcessors []model.ResourceConfiguration
 		expectErr   string
 	}{
 		{
@@ -90,11 +90,27 @@ func TestAnyResourceV1(t *testing.T) {
 			nil,
 			"unknown bindplane resource kind: Agent",
 		},
+		{
+			"valid-processors",
+			"my-bundle",
+			"bundle",
+			model.KindProcessor,
+			nil,
+			[]model.ResourceConfiguration{
+				{
+					Name: "filter-a",
+				},
+				{
+					Name: "filter-b",
+				},
+			},
+			"",
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := AnyResourceV1(tc.rName, tc.rType, tc.rkind, tc.rParameters, nil)
+			_, err := AnyResourceV1(tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
