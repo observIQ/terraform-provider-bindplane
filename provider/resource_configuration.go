@@ -333,49 +333,6 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 	return resourceConfigurationRead(d, meta)
 }
 
-// readRolloutOptions safely reads "rollout_options" from the resource data.
-func readRolloutOptions(d *schema.ResourceData) (model.ResourceConfiguration, error) {
-	rolloutOptionsRaw, ok := d.GetOk("rollout_options")
-	if !ok || len(rolloutOptionsRaw.([]interface{})) == 0 {
-		return model.ResourceConfiguration{}, nil
-	}
-
-	// Because d.GetOk returned a non nil value, we can assume that the
-	// rollout_options list has at least one element due to the Terraform
-	// framework's schema validation. Type assertion is safe in this case.
-
-	rolloutOptions := rolloutOptionsRaw.([]interface{})[0].(map[string]interface{})
-	resourceConfig := model.ResourceConfiguration{}
-
-	if t, ok := rolloutOptions["type"].(string); ok {
-		resourceConfig.Type = t
-	}
-
-	if parametersRaw, ok := rolloutOptions["parameters"]; ok {
-		parametersList := parametersRaw.([]interface{})
-		parameters := make([]model.Parameter, len(parametersList))
-		for i, p := range parametersList {
-			paramMap := p.(map[string]interface{})
-			param := model.Parameter{}
-			if name, ok := paramMap["name"].(string); ok {
-				param.Name = name
-			}
-			if valueRaw, ok := paramMap["value"]; ok {
-				valueList := valueRaw.([]interface{})
-				values := make([]interface{}, len(valueList))
-				for j, v := range valueList {
-					values[j] = v.(map[string]interface{})
-				}
-				param.Value = values
-			}
-			parameters[i] = param
-		}
-		resourceConfig.Parameters = parameters
-	}
-
-	return resourceConfig, nil
-}
-
 func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
