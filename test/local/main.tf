@@ -286,34 +286,41 @@ resource "bindplane_configuration_v2" "configuration" {
     create_before_destroy = true
   }
 
-  measurement_interval = "1m"
-
   rollout = true
-
-  rollout_options {
-    type = "progressive"
-    parameters {
-      name = "stages"
-      value {
-        labels = {
-          env = "stage"
-        }
-        name = "stage"
-      }
-      value {
-        labels = {
-          env = "production"
-        }
-        name = "production"
-      }
-    }
-  }
 
   name = "my-config-v2"
   platform = "linux"
-  labels = {
-    environment = "production"
-    managed-by  = "terraform"
+
+  source {
+    name = bindplane_source.otlp.name
+    route {
+      id = "0"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}"
+      ]
+    }
+    route {
+      id = "1"
+      telemetry_type = "metrics"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}"
+      ]
+    }
+    route {
+      id = "2"
+      telemetry_type = "traces"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}"
+      ]
+    }
+    route {
+      id = "3"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
   }
 
   source {
@@ -321,11 +328,28 @@ resource "bindplane_configuration_v2" "configuration" {
     processors = [
       bindplane_processor_bundle.bundle.name,
     ]
+
     route {
       id = "0"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.custom.id}"
+      ]
+    }
+
+    route {
+      id = "1"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.google.id}"
+      ]
+    }
+
+    route {
+      id = "2"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.loki.id}"
       ]
     }
   }
@@ -339,6 +363,21 @@ resource "bindplane_configuration_v2" "configuration" {
       // order matters here
       bindplane_processor.time-parse-http-datatime.name
     ]
+  }
+
+  destination {
+    route_id   = bindplane_destination.google.id
+    name = bindplane_destination.google.name
+  }
+
+  destination {
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
+  }
+
+  destination {
+    route_id = bindplane_destination.datadog.id
+    name = bindplane_destination.datadog.name
   }
 
   extensions = [
