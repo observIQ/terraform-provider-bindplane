@@ -294,28 +294,24 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.otlp.name
     route {
-      id = "0"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
     }
     route {
-      id = "1"
       telemetry_type = "metrics"
       components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
     }
     route {
-      id = "2"
       telemetry_type = "traces"
       components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
     }
     route {
-      id = "3"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.loki.id}"
@@ -330,7 +326,6 @@ resource "bindplane_configuration_v2" "configuration" {
     ]
 
     route {
-      id = "0"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.custom.id}"
@@ -338,7 +333,6 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      id = "1"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.google.id}"
@@ -346,7 +340,6 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      id = "2"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.loki.id}"

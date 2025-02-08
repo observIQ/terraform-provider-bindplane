@@ -101,12 +101,6 @@ func resourceConfigurationV2() *schema.Resource {
 							ForceNew: false,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:        schema.TypeString,
-										Required:    true,
-										ForceNew:    false,
-										Description: "The ID of the route.",
-									},
 									// TODO(jsirianni): Could be plural with
 									// list or array. Provider would handle combining
 									// them into string.
@@ -307,7 +301,6 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			routes := &model.Routes{}
 			if rawRoutes := sourcesRaw["route"].([]any); v != nil {
 				for _, r := range rawRoutes {
-					id := r.(map[string]any)["id"].(string)
 					telemetryType := r.(map[string]any)["telemetry_type"].(string)
 					rawComponents := r.(map[string]any)["components"].([]any)
 					components := []model.ComponentPath{}
@@ -318,17 +311,14 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 					switch telemetryType {
 					case "logs":
 						routes.Logs = append(routes.Logs, model.Route{
-							ID:         id,
 							Components: components,
 						})
 					case "metrics":
 						routes.Metrics = append(routes.Metrics, model.Route{
-							ID:         id,
 							Components: components,
 						})
 					case "traces":
 						routes.Traces = append(routes.Traces, model.Route{
-							ID:         id,
 							Components: components,
 						})
 					}
