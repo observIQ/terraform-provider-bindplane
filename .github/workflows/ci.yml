@@ -200,16 +200,12 @@ jobs:
           - "v1.82.0"
           - "v1.81.0"
           - "v1.80.0"
-          - "v1.79.0"
-          - "v1.78.0"
-          - "v1.77.0"
-          - "v1.76.0"
-          - "v1.75.0"
+          - "v1.79.0" # v1.77.0 and v1.78.0 were never released
+
           #  v1.70.0 introduced v2 config and routes behind a feature flag
-          # There were some growing pains, e.g. v1.73.0 returns incorrect
-          # status codes. v1.74.0 is consider the minimum supported
-          # server version for the provider.
-          - "v1.74.0"
+          # There were some growing pains and bugs. v1.76.0 is consider the
+          # minimum supported server version for the provider.
+          - "v1.76.0"
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
