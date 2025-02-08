@@ -104,7 +104,7 @@ func resourceConfigurationV2() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"telemetry_type": {
 										Type:        schema.TypeString,
-										Required:    true,
+										Optional:    true,
 										ForceNew:    false,
 										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
 										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
@@ -114,6 +114,7 @@ func resourceConfigurationV2() *schema.Resource {
 											}
 											return
 										},
+										Default: component.RouteTypeLogsMetricsTraces,
 									},
 									"components": {
 										Type:        schema.TypeList,
@@ -121,18 +122,6 @@ func resourceConfigurationV2() *schema.Resource {
 										ForceNew:    false,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "List of component names to route.",
-										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
-											rawComponents := val.([]any)
-											components := []string{}
-											for _, c := range rawComponents {
-												components = append(components, c.(string))
-											}
-											validationErrors := component.ValidateRouteComponents(components)
-											if len(validationErrors) > 0 {
-												errs = append(errs, validationErrors...)
-											}
-											return
-										},
 									},
 								},
 							},
@@ -310,13 +299,16 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			routes := &model.Routes{}
 			if rawRoutes := sourcesRaw["route"].([]any); v != nil {
 				for _, r := range rawRoutes {
-					telemetryType := r.(map[string]any)["telemetry_type"].(string)
 					rawComponents := r.(map[string]any)["components"].([]any)
 					components := []model.ComponentPath{}
 					for _, c := range rawComponents {
 						components = append(components, model.ComponentPath(c.(string)))
 					}
+					if err := component.ValidateRouteComponents(components); err != nil {
+						return fmt.Errorf("validate route components: %v", err)
+					}
 
+					telemetryType := r.(map[string]any)["telemetry_type"].(string)
 					switch telemetryType {
 					case "logs":
 						routes.Logs = append(routes.Logs, model.Route{

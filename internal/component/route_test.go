@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,11 +36,11 @@ func TestValidateRouteType(t *testing.T) {
 
 func TestValidateRouteComponents(t *testing.T) {
 	cases := []struct {
-		components []string
+		components []model.ComponentPath
 		expected   []error
 	}{
-		{[]string{"destinations", "processors", "connectors"}, nil},
-		{[]string{"destinations", "processors", "invalid"}, []error{fmt.Errorf("invalid route component: invalid")}},
+		{[]model.ComponentPath{"destinations", "processors", "connectors"}, nil},
+		{[]model.ComponentPath{"destinations", "processors", "invalid"}, []error{fmt.Errorf("invalid route component: invalid")}},
 	}
 
 	for _, c := range cases {

@@ -3,6 +3,8 @@ package component
 import (
 	"fmt"
 	"strings"
+
+	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 const (
@@ -38,10 +40,10 @@ func ValidateRouteType(routeType string) error {
 }
 
 // ValidateRouteComponents returns an error if the route components are invalid
-func ValidateRouteComponents(components []string) []error {
+func ValidateRouteComponents(components []model.ComponentPath) []error {
 	var errs []error
 	for _, c := range components {
-		prefix := strings.Split(c, "/")[0]
+		prefix := strings.Split(string(c), "/")[0]
 		switch prefix {
 		case "destinations", "processors", "connectors":
 			continue
