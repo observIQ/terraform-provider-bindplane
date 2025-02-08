@@ -8,6 +8,9 @@ description: |-
   It supports advanced routing and OpenTelemetry Connectors.
 ---
 
+> [!NOTE]
+> bindplane_configuration_v2 resources are supported by BindPlane OP version 1.85.0 and later.
+
 # bindplane_configuration_v2
 
 The `bindplane_configuration_v2` resource creates a BindPlane configuration that can be applied
