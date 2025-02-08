@@ -193,15 +193,23 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.86.0"
           - "v1.85.0" # v2 config released as beta
           - "v1.84.0"
+          - "v1.83.0"
+          - "v1.82.0"
+          - "v1.81.0"
           - "v1.80.0"
-          - "v1.73.0"
-          - "v1.71.0"
-          - "v1.70.0" # Routes introduced. Older clients work against 1.70, but 1.70 client will not work against older bindplane
-          - "v1.66.0"
-          - "v1.50.0"
-          - "v1.44.0"
+          - "v1.79.0"
+          - "v1.78.0"
+          - "v1.77.0"
+          - "v1.76.0"
+          - "v1.75.0"
+          #  v1.70.0 introduced v2 config and routes behind a feature flag
+          # There were some growing pains, e.g. v1.73.0 returns incorrect
+          # status codes. v1.74.0 is consider the minimum supported
+          # server version for the provider.
+          - "v1.74.0"
     steps:
       - name: Check out source code
         uses: actions/checkout@v4
