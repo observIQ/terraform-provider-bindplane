@@ -400,6 +400,7 @@ resource "bindplane_configuration_v2" "configuration" {
 
     // Route all telemetry types to datadog
     route {
+      telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
