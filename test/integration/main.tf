@@ -461,6 +461,94 @@ resource "bindplane_connector" "routing" {
   )
 }
 
+resource "bindplane_extension" "pprof" {
+  rollout = true
+  name = "my-pprof"
+  type = "pprof"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "listen_address",
+        "value": "0.0.0.0"
+      },
+      {
+        "name": "tcp_port",
+        "value": 5000,
+      },
+    ]
+  )
+}
+
+resource "bindplane_processor" "time-parse-http-datatime" {
+  rollout = false
+  name = "time-parse-http-datatime"
+  type = "parse_timestamp"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
+      },
+      {
+        "name": "log_field_type",
+        "value": "Body"
+      },
+      {
+        "name": "log_source_field",
+        "value": "datetime"
+      },
+      {
+        "name": "log_time_format",
+        "value": "Manual"
+      },
+      {
+        "name": "log_epoch_layout",
+        "value": "s"
+      },
+      {
+        "name": "log_manual_timestamp_layout",
+        "value": "%d/%b/%Y:%H:%M:%S %z"
+      }
+    ]
+  )
+}
+
+resource "bindplane_processor" "json-parse-body" {
+  rollout = false
+  name = "json-parse-body"
+  type = "parse_json"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs",
+        ]
+      },
+      {
+        "name": "log_source_field_type",
+        "value": "Body"
+      },
+      {
+        "name": "log_body_source_field",
+        "value": ""
+      },
+      {
+        "name": "log_target_field_type",
+        "value": "Body"
+      }
+    ]
+  )
+}
+
+resource "bindplane_source" "journald" {
+  rollout = true
+  name = "my-journald"
+  type = "journald"
+}
+
 resource "bindplane_configuration_v2" "configuration" {
   lifecycle {
     create_before_destroy = true
@@ -589,104 +677,16 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   destination {
-    route_id   = bindplane_destination.loki.id
-    name = bindplane_destination.loki.name
+    route_id = bindplane_destination.datadog.id
+    name = bindplane_destination.datadog.name
   }
 
   destination {
-    route_id = bindplane_destination.datadog.id
-    name = bindplane_destination.datadog.name
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
   }
 
   extensions = [
     bindplane_extension.pprof.name
   ]
-}
-
-resource "bindplane_extension" "pprof" {
-  rollout = true
-  name = "my-pprof"
-  type = "pprof"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "listen_address",
-        "value": "0.0.0.0"
-      },
-      {
-        "name": "tcp_port",
-        "value": 5000,
-      },
-    ]
-  )
-}
-
-resource "bindplane_processor" "time-parse-http-datatime" {
-  rollout = false
-  name = "time-parse-http-datatime"
-  type = "parse_timestamp"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Logs",
-        ]
-      },
-      {
-        "name": "log_field_type",
-        "value": "Body"
-      },
-      {
-        "name": "log_source_field",
-        "value": "datetime"
-      },
-      {
-        "name": "log_time_format",
-        "value": "Manual"
-      },
-      {
-        "name": "log_epoch_layout",
-        "value": "s"
-      },
-      {
-        "name": "log_manual_timestamp_layout",
-        "value": "%d/%b/%Y:%H:%M:%S %z"
-      }
-    ]
-  )
-}
-
-resource "bindplane_processor" "json-parse-body" {
-  rollout = false
-  name = "json-parse-body"
-  type = "parse_json"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Logs",
-        ]
-      },
-      {
-        "name": "log_source_field_type",
-        "value": "Body"
-      },
-      {
-        "name": "log_body_source_field",
-        "value": ""
-      },
-      {
-        "name": "log_target_field_type",
-        "value": "Body"
-      }
-    ]
-  )
-}
-
-resource "bindplane_source" "journald" {
-  rollout = true
-  name = "my-journald"
-  type = "journald"
 }
