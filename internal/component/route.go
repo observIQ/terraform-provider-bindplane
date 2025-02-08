@@ -1,3 +1,17 @@
+// Copyright observIQ, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package component
 
 import (
@@ -8,25 +22,25 @@ import (
 )
 
 const (
-	// Logs route type
+	// RouteTypeLogs routes logs
 	RouteTypeLogs = "logs"
 
-	// Metrics route type
+	// RouteTypeMetrics routes metrics
 	RouteTypeMetrics = "metrics"
 
-	// Traces route type
+	// RouteTypeTraces routes traces
 	RouteTypeTraces = "traces"
 
-	// Logs + Metrics route type
+	// RouteTypeLogsMetrics routes logs and metrics
 	RouteTypeLogsMetrics = "logs+metrics"
 
-	// Logs + Traces route type
+	// RouteTypeLogsTraces routes logs and traces
 	RouteTypeLogsTraces = "logs+traces"
 
-	// Metrics + Traces route type
+	// RouteTypeMetricsTraces routes metrics and traces
 	RouteTypeMetricsTraces = "metrics+traces"
 
-	// Logs + Metrics + Traces route type
+	// RouteTypeLogsMetricsTraces routes logs, metrics, and traces
 	RouteTypeLogsMetricsTraces = "logs+metrics+traces"
 )
 
