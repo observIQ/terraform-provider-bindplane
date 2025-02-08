@@ -98,6 +98,38 @@ func (i *BindPlane) Rollout(name string) error {
 	return err
 }
 
+// Connector takes a name and returns the matching connector
+func (i *BindPlane) Connector(name string) (*model.Connector, error) {
+	r, err := i.Client.Resource(context.Background(), model.KindConnector, name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get connector with name %s: %w", name, err)
+	}
+
+	// Bindplane should always return a connector but we should handle it
+	// anyway considering we need to type assert it.
+	switch c := r.(type) {
+	case *model.Connector:
+		return c, nil
+	default:
+		return nil, fmt.Errorf("unexpected response from bindplane, expected connector, got %T, this is a bug that should be reported", c)
+	}
+}
+
+// DeleteConnector will delete a BindPlane connector
+func (i *BindPlane) DeleteConnector(name string) error {
+	err := i.Client.DeleteResource(context.Background(), model.KindConnector, name)
+	if err != nil {
+		return fmt.Errorf("error while deleting connector with name %s: %w", name, err)
+	}
+	return nil
+}
+
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
 	c, err := i.Client.Configuration(context.Background(), name)
@@ -231,6 +263,8 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 		return i.DeleteProcessor(name)
 	case model.KindExtension:
 		return i.DeleteExtension(name)
+	case model.KindConnector:
+		return i.DeleteConnector(name)
 	default:
 		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
 	}
@@ -296,6 +330,20 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 		g.Spec = r.Spec
 	case model.KindExtension:
 		r, err := i.Extension(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if r == nil {
+			return nil, nil
+		}
+
+		g.ID = r.ID()
+		g.Name = r.Name()
+		g.Version = r.Version()
+		g.Spec = r.Spec
+	case model.KindConnector:
+		r, err := i.Connector(name)
 		if err != nil {
 			return nil, err
 		}

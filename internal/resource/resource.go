@@ -41,7 +41,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 	}
 
 	switch rKind {
-	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension:
+	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension, model.KindConnector:
 		return model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",

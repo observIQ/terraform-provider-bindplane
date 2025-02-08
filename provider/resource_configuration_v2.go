@@ -30,11 +30,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceConfiguration() *schema.Resource {
+func resourceConfigurationV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Update: resourceConfigurationCreate, // Run create as update
-		Read:   resourceConfigurationRead,
+		Create: resourceConfigurationV2Create,
+		Update: resourceConfigurationV2Create, // Run create as update
+		Read:   resourceConfigurationV2Read,
 		Delete: genericConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -94,6 +94,46 @@ func resourceConfiguration() *schema.Resource {
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the source.",
+						},
+						"route": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:        schema.TypeString,
+										Required:    true,
+										ForceNew:    false,
+										Description: "The ID of the route.",
+									},
+									// TODO(jsirianni): Could be plural with
+									// list or array. Provider would handle combining
+									// them into string.
+									"telemetry_type": {
+										Type:        schema.TypeString,
+										Required:    true,
+										ForceNew:    false,
+										Description: "The telemetry type to route, such as 'logs', 'metrics', or 'traces'.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											// Ensure one of logs, metrics, traces
+											telemetryType := val.(string)
+											if telemetryType != "logs" && telemetryType != "metrics" && telemetryType != "traces" {
+												errs = append(errs, errors.New("telemetry_type must be one of 'logs', 'metrics', or 'traces'"))
+											}
+											return
+										},
+									},
+									"components": {
+										Type:        schema.TypeList,
+										Required:    true,
+										ForceNew:    false,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "List of component names to route.",
+									},
+								},
+							},
+							Description: "Route telemetry to specific components.",
 						},
 					},
 				},
@@ -214,7 +254,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
+func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	name := d.Get("name").(string)
@@ -258,9 +298,41 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				}
 			}
 
+			routes := &model.Routes{}
+			if rawRoutes := sourcesRaw["route"].([]any); v != nil {
+				for _, r := range rawRoutes {
+					id := r.(map[string]any)["id"].(string)
+					telemetryType := r.(map[string]any)["telemetry_type"].(string)
+					rawComponents := r.(map[string]any)["components"].([]any)
+					components := []model.ComponentPath{}
+					for _, c := range rawComponents {
+						components = append(components, model.ComponentPath(c.(string)))
+					}
+
+					switch telemetryType {
+					case "logs":
+						routes.Logs = append(routes.Logs, model.Route{
+							ID:         id,
+							Components: components,
+						})
+					case "metrics":
+						routes.Metrics = append(routes.Metrics, model.Route{
+							ID:         id,
+							Components: components,
+						})
+					case "traces":
+						routes.Traces = append(routes.Traces, model.Route{
+							ID:         id,
+							Components: components,
+						})
+					}
+				}
+			}
+
 			sourceConf := configuration.ResourceConfig{
 				Name:       sourcesRaw["name"].(string),
 				Processors: processors,
+				Routes:     routes,
 			}
 			sources = append(sources, sourceConf)
 		}
@@ -318,7 +390,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithMeasurementInterval(measurementInterval),
 	}
 
-	config, err := configuration.NewV1(opts...)
+	config, err := configuration.NewV2Beta(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new configuration: %w", err)
 	}
@@ -330,10 +402,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return resourceConfigurationV2Read(d, meta)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
+func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	config, err := bindplane.Configuration(d.Get("name").(string))
@@ -425,7 +497,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
+	if err := resourceConfigurationV2RolloutOptionsRead(d, config.Spec.Rollout); err != nil {
 		return err
 	}
 
@@ -438,10 +510,10 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	return nil
 }
 
-// resourceConfigurationRolloutOptionsRead takes a configuration's rollout options
+// resourceConfigurationV2RolloutOptionsRead takes a configuration's rollout options
 // and sets them in the Terraform state. This will trigger a terraform apply if the
 // rollout options have changed outside of Terraform.
-func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
+func resourceConfigurationV2RolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
 	if len(rollout.Parameters) == 0 {
 		return nil
 	}
