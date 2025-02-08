@@ -118,10 +118,14 @@ func TestAnyResourceV1(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
 =======
 			_, err := AnyResourceV1("", tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
 >>>>>>> 1ba78bc (Generate component ID)
+=======
+			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
+>>>>>>> c5cc224 (test id change)
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
