@@ -405,6 +405,37 @@ resource "bindplane_configuration_v2" "configuration" {
         "destinations/${bindplane_destination.datadog.id}"
       ]
     }
+
+    route {
+      id = "1"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.google.id}"
+      ]
+    }
+
+    route {
+      id = "2"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+  }
+
+  destination {
+    route_id = bindplane_destination.datadog.id
+    name = bindplane_destination.datadog.name
+  }
+
+  destination {
+    route_id   = bindplane_destination.google.id
+    name = bindplane_destination.google.name
+  }
+
+  destination {
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
   }
 
   destination {
