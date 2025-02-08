@@ -116,6 +116,7 @@ func Configure() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"bindplane_connector":        resourceConnector(),
 			"bindplane_configuration":    resourceConfiguration(),
+			"bindplane_configuration_v2": resourceConfigurationV2(),
 			"bindplane_destination":      resourceDestination(),
 			"bindplane_source":           resourceSource(),
 			"bindplane_processor":        resourceProcessor(),

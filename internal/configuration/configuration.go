@@ -31,6 +31,9 @@ type ResourceConfig struct {
 
 	// A list of processor names to attach to the resource
 	Processors []string
+
+	// Routes to attach to the resource
+	Routes *model.Routes
 }
 
 // Option is a function that configures a
@@ -147,6 +150,37 @@ func NewV1(options ...Option) (*model.Configuration, error) {
 	return c, nil
 }
 
+// NewV2Beta takes a configuration options and returns a BindPlane configuration
+// with API version bindplane.observiq.com/v2beta
+func NewV2Beta(options ...Option) (*model.Configuration, error) {
+	const (
+		version     = "bindplane.observiq.com/v2beta"
+		kind        = model.KindConfiguration
+		contentType = "text/yaml" // TODO(jsirianni): Is this required and does it make sense?
+	)
+
+	c := &model.Configuration{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: version,
+			Kind:       kind,
+		},
+		Spec: model.ConfigurationSpec{
+			ContentType: contentType,
+		},
+	}
+
+	for _, option := range options {
+		if option == nil {
+			continue
+		}
+		if err := option(c); err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
+}
+
 // WithResourcesByName takes a list of resource configurations
 // and returns a list of bindplane model.ResourceConfigurations.
 func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
@@ -169,6 +203,7 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 			ParameterizedSpec: model.ParameterizedSpec{
 				Processors: processorResources,
 			},
+			Routes: r.Routes,
 		}
 		resources = append(resources, r)
 	}

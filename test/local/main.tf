@@ -280,3 +280,67 @@ resource "bindplane_connector" "routing" {
     ] 
   )
 }
+
+resource "bindplane_configuration_v2" "configuration" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  measurement_interval = "1m"
+
+  rollout = true
+
+  rollout_options {
+    type = "progressive"
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
+      }
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
+  }
+
+  name = "my-config-v2"
+  platform = "linux"
+  labels = {
+    environment = "production"
+    managed-by  = "terraform"
+  }
+
+  source {
+    name = bindplane_source.journald.name
+    processors = [
+      bindplane_processor_bundle.bundle.name,
+    ]
+    route {
+      id = "0"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.custom.id}"
+      ]
+    }
+  }
+
+  destination {
+    name = bindplane_destination.custom.name
+    processors = [
+      bindplane_processor.batch.name,
+
+      // order matters here
+      bindplane_processor.time-parse-http-datatime.name
+    ]
+  }
+
+  extensions = [
+    bindplane_extension.pprof.name
+  ]
+}
