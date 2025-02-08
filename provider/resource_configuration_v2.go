@@ -23,6 +23,7 @@ import (
 
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
@@ -101,19 +102,15 @@ func resourceConfigurationV2() *schema.Resource {
 							ForceNew: false,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									// TODO(jsirianni): Could be plural with
-									// list or array. Provider would handle combining
-									// them into string.
 									"telemetry_type": {
 										Type:        schema.TypeString,
 										Required:    true,
 										ForceNew:    false,
-										Description: "The telemetry type to route, such as 'logs', 'metrics', or 'traces'.",
+										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
 										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
-											// Ensure one of logs, metrics, traces
 											telemetryType := val.(string)
-											if telemetryType != "logs" && telemetryType != "metrics" && telemetryType != "traces" {
-												errs = append(errs, errors.New("telemetry_type must be one of 'logs', 'metrics', or 'traces'"))
+											if err := component.ValidateRouteType(telemetryType); err != nil {
+												errs = append(errs, err)
 											}
 											return
 										},
@@ -124,6 +121,18 @@ func resourceConfigurationV2() *schema.Resource {
 										ForceNew:    false,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "List of component names to route.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											rawComponents := val.([]any)
+											components := []string{}
+											for _, c := range rawComponents {
+												components = append(components, c.(string))
+											}
+											validationErrors := component.ValidateRouteComponents(components)
+											if len(validationErrors) > 0 {
+												errs = append(errs, validationErrors...)
+											}
+											return
+										},
 									},
 								},
 							},
@@ -319,6 +328,22 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 						})
 					case "traces":
 						routes.Traces = append(routes.Traces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics":
+						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
+							Components: components,
+						})
+					case "logs+traces":
+						routes.LogsTraces = append(routes.LogsTraces, model.Route{
+							Components: components,
+						})
+					case "metrics+traces":
+						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics+traces":
+						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
 							Components: components,
 						})
 					}
