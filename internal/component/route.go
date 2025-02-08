@@ -42,6 +42,15 @@ const (
 
 	// RouteTypeLogsMetricsTraces routes logs, metrics, and traces
 	RouteTypeLogsMetricsTraces = "logs+metrics+traces"
+
+	// RoutePrefixProcessor is the prefix for processor routes
+	RoutePrefixProcessor = "processors"
+
+	// RoutePrefixDestination is the prefix for destination routes
+	RoutePrefixDestination = "destinations"
+
+	// RoutePrefixConnector is the prefix for connector routes
+	RoutePrefixConnector = "connectors"
 )
 
 // ValidateRouteType returns an error if the route type is invalid
@@ -59,7 +68,7 @@ func ValidateRouteComponents(components []model.ComponentPath) []error {
 	for _, c := range components {
 		prefix := strings.Split(string(c), "/")[0]
 		switch prefix {
-		case string(model.KindDestination), string(model.KindProcessor), string(model.KindConnector):
+		case RoutePrefixProcessor, RoutePrefixDestination, RoutePrefixConnector:
 			continue
 		default:
 			errs = append(errs, fmt.Errorf("invalid route component: %s", c))
