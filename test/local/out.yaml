@@ -1,0 +1,24 @@
+apiVersion: bindplane.observiq.com/v2beta
+kind: Configuration
+metadata:
+    name: v1-a
+    labels:
+        platform: linux
+spec:
+    contentType: ""
+    measurementInterval: ""
+    disableLegacyEnvVarNormalization: false
+    sources:
+        - id: 01JKKNZZERHCJ01ZDV2M0C68ZX
+          name: example-otlp-default
+          routes:
+            logs+metrics+traces:
+                - id: "0"
+                  components:
+                    - destinations/01JKKP03XRXRZJ64T1DC23FQRG
+    destinations:
+        - id: 01JKKP03XRXRZJ64T1DC23FQRG
+          name: dev
+    selector:
+        matchLabels:
+            configuration: v1-a
