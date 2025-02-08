@@ -32,6 +32,9 @@ type ResourceConfig struct {
 	// A list of processor names to attach to the resource
 	Processors []string
 
+	// RouteID is the ID to use when routing to this resource
+	RouteID string
+
 	// Routes to attach to the resource
 	Routes *model.Routes
 }
@@ -196,6 +199,8 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 			processorResources = append(processorResources, processor)
 		}
 
+		routeID := r.RouteID
+
 		// Build source resource with name and list
 		// of processor resources
 		r := model.ResourceConfiguration{
@@ -205,6 +210,10 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 			},
 			Routes: r.Routes,
 		}
+		if routeID != "" {
+			r.ID = routeID
+		}
+
 		resources = append(resources, r)
 	}
 	return resources
