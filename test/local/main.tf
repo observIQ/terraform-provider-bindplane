@@ -407,7 +407,6 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      id = "1"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.google.id}"
@@ -415,7 +414,6 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      id = "2"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.loki.id}"
