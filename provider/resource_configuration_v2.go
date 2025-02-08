@@ -482,11 +482,94 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
 		}
 		source["processors"] = processors
+
+		logRoutes := s.Routes.Logs
+		if len(logRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		metricRoutes := s.Routes.Metrics
+		if len(metricRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range metricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		traceRoutes := s.Routes.Traces
+		if len(traceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range traceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "traces",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		logMetricRoutes := s.Routes.LogsMetrics
+		if len(logMetricRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logMetricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		logTraceRoutes := s.Routes.LogsTraces
+		if len(logTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+traces",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		metricTraceRoutes := s.Routes.MetricsTraces
+		if len(metricTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range metricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics+traces",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+		logMetricTraceRoutes := s.Routes.LogsMetricsTraces
+		if len(logMetricTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logMetricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics+traces",
+					"components":     r.Components,
+				})
+			}
+			source["route"] = routes
+		}
+
 		sourceBlocks = append(sourceBlocks, source)
 	}
 	if err := d.Set("source", sourceBlocks); err != nil {
 		return err
 	}
+
+	// Save the current state here so we can retrieve the saved
+	// route ID
+	stateDestinationBlocks := d.Get("destination").([]any)
 
 	destinationBlocks := []map[string]any{}
 	for _, d := range config.Spec.Destinations {
@@ -497,8 +580,20 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
 		}
 		destination["processors"] = processors
+
+		// Retrieve the saved route IDs from state and copy them
+		// to the new destination blocks before calling d.Set.
+		for _, stateDestination := range stateDestinationBlocks {
+			stateDestination := stateDestination.(map[string]any)
+			if stateDestination["name"] == destination["name"] {
+				destination["route_id"] = stateDestination["route_id"]
+				continue
+			}
+		}
+
 		destinationBlocks = append(destinationBlocks, destination)
 	}
+
 	if err := d.Set("destination", destinationBlocks); err != nil {
 		return err
 	}

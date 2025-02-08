@@ -52,6 +52,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | ------------------- | ------------ | -------- | ---------------------------- |
 | `name`              | string       | required | The source name.             |
 | `processors`        | list(string) | optional | One or more processor names to attach to the destination. |
+| `route_id` | string | required | An arbitrary string that can be used to configure routes to this destination. |
 
 ### Rollout Options Block
 
