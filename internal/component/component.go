@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package component provides functions for defining bindplane
+// component values.
 package component
 
 import (
