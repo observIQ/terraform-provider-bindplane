@@ -692,6 +692,113 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 
 	// Save the current state here so we can retrieve the saved
 	// route ID
+	stateProcessorGroupBlocks := d.Get("processor_group").([]any)
+
+	processorGroupBlocks := []map[string]any{}
+	for _, pg := range config.Spec.Processors {
+		processorGroup := map[string]any{}
+		processors := []string{}
+		for _, p := range pg.Processors {
+			processors = append(processors, strings.Split(p.Name, ":")[0])
+		}
+		processorGroup["processors"] = processors
+
+		logRoutes := pg.Routes.Logs
+		if len(logRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		metricRoutes := pg.Routes.Metrics
+		if len(metricRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range metricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		traceRoutes := pg.Routes.Traces
+		if len(traceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range traceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "traces",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		logMetricRoutes := pg.Routes.LogsMetrics
+		if len(logMetricRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logMetricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		logTraceRoutes := pg.Routes.LogsTraces
+		if len(logTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+traces",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		metricTraceRoutes := pg.Routes.MetricsTraces
+		if len(metricTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range metricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics+traces",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+		logMetricTraceRoutes := pg.Routes.LogsMetricsTraces
+		if len(logMetricTraceRoutes) > 0 {
+			routes := []map[string]any{}
+			for _, r := range logMetricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics+traces",
+					"components":     r.Components,
+				})
+			}
+			processorGroup["route"] = routes
+		}
+
+		// Retrieve the saved route IDs from state and copy them
+		// to the new destination blocks before calling d.Set.
+		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
+			stateProcessorGroup := stateProcessorGroup.(map[string]any)
+			if stateProcessorGroup["name"] == processorGroup["name"] {
+				processorGroup["route_id"] = stateProcessorGroup["route_id"]
+				break
+			}
+		}
+
+		processorGroupBlocks = append(processorGroupBlocks, processorGroup)
+	}
+	if err := d.Set("processor_group", processorGroupBlocks); err != nil {
+		return err
+	}
+
+	// Save the current state here so we can retrieve the saved
+	// route ID
 	stateDestinationBlocks := d.Get("destination").([]any)
 
 	destinationBlocks := []map[string]any{}
@@ -710,7 +817,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 			stateDestination := stateDestination.(map[string]any)
 			if stateDestination["name"] == destination["name"] {
 				destination["route_id"] = stateDestination["route_id"]
-				continue
+				break
 			}
 		}
 

@@ -414,6 +414,7 @@ resource "bindplane_configuration_v2" "configuration" {
       bindplane_processor.time-parse-http-datatime.name
     ]
     route {
+      telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
