@@ -281,110 +281,6 @@ resource "bindplane_connector" "routing" {
   )
 }
 
-# resource "bindplane_configuration_v2" "configuration" {
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-
-#   rollout = true
-
-#   name = "my-config-v2"
-#   platform = "linux"
-
-#   source {
-#     name = bindplane_source.otlp.name
-
-#     // Route all telemetry types to datadog
-#     route {
-#       components = [
-#         "destinations/${bindplane_destination.datadog.id}"
-#       ]
-#     }
-
-#     // route logs to loki
-#     route {
-#       telemetry_type = "logs"
-#       components = [
-#         "destinations/${bindplane_destination.loki.id}"
-#       ]
-#     }
-
-#     // route traces to google
-#     route {
-#       telemetry_type = "traces"
-#       components = [
-#         "destinations/${bindplane_destination.google.id}"
-#       ]
-#     }
-#   }
-
-#   source {
-#     name = bindplane_source.journald.name
-#     processors = [
-#       bindplane_processor_bundle.bundle.name,
-#     ]
-
-#     route {
-#       components = [
-#         "destinations/${bindplane_destination.custom.id}"
-#       ]
-#     }
-
-#     route {
-#       components = [
-#         "destinations/${bindplane_destination.google.id}"
-#       ]
-#     }
-
-#     route {
-#       components = [
-#         "destinations/${bindplane_destination.loki.id}"
-#       ]
-#     }
-#   }
-
-#   source {
-#     name = bindplane_source.host.name
-#     route {
-#       telemetry_type = "metrics"
-#       components = [
-#         "destinations/${bindplane_destination.google.id}"
-#       ]
-#     }
-#   }
-
-#   destination {
-#     route_id   = bindplane_destination.custom.id
-#     name = bindplane_destination.custom.name
-#     processors = [
-#       bindplane_processor.batch.name,
-
-#       // order matters here
-#       bindplane_processor.time-parse-http-datatime.name
-#     ]
-#   }
-
-#   destination {
-#     route_id   = bindplane_destination.google.id
-#     name = bindplane_destination.google.name
-#   }
-
-#   destination {
-#     route_id   = bindplane_destination.loki.id
-#     name = bindplane_destination.loki.name
-#   }
-
-#   destination {
-#     route_id = bindplane_destination.datadog.id
-#     name = bindplane_destination.datadog.name
-#   }
-
-#   extensions = [
-#     bindplane_extension.pprof.name
-#   ]
-# }
-
-
 resource "bindplane_configuration_v2" "configuration" {
   lifecycle {
     create_before_destroy = true
@@ -398,13 +294,160 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.otlp.name
 
-    // Route all telemetry types to datadog
+    route {
+      telemetry_type = "metrics"
+      components = [
+        "processors/batcher"
+      ]
+    }
+
     route {
       telemetry_type = "logs"
       components = [
-        "destinations/${bindplane_destination.datadog.id}"
+        "processors/parser"
       ]
     }
+
+    route {
+      telemetry_type = "traces"
+      components = [
+        "processors/batcher"
+      ]
+    }
+  }
+
+  source {
+    name = bindplane_source.journald.name
+    processors = [
+      bindplane_processor_bundle.bundle.name,
+    ]
+
+    route {
+      telemetry_type = "logs"
+      components = [
+        "processors/parser"
+      ]
+    }
+
+    route {
+      telemetry_type = "metrics"
+      components = [
+        "processors/batcher"
+      ]
+    }
+
+    route {
+      telemetry_type = "traces"
+      components = [
+        "processors/batcher"
+      ]
+    }
+  }
+
+  source {
+    name = bindplane_source.host.name
+    route {
+      telemetry_type = "metrics"
+      components = [
+        "processors/batcher"
+      ]
+    }
+  }
+
+  processor_group {
+    route_id = "parser"
+    processors = [
+      bindplane_processor.json-parse-body.name,
+      bindplane_processor.time-parse-http-datatime.name
+    ]
+    route {
+      telemetry_type = "logs"
+      components = [
+        "processors/batcher"
+      ]
+    }
+
+    route {
+      components = [
+        "destinations/${bindplane_destination.google.id}"
+      ]
+    }
+
+    route {
+      components = [
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+  }
+
+  source {
+    name = bindplane_source.host.name
+    route {
+      telemetry_type = "metrics"
+      components = [
+        "destinations/${bindplane_destination.google.id}"
+      ]
+    }
+  }
+
+  destination {
+    route_id = bindplane_destination.datadog.id
+    name = bindplane_destination.datadog.name
+  }
+
+  destination {
+    route_id   = bindplane_destination.google.id
+    name = bindplane_destination.google.name
+  }
+
+  destination {
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
+  }
+
+  processor_group {
+    route_id = "batcher"
+    processors = [
+      bindplane_processor.batch.name
+    ]
+    route {
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}",
+        "destinations/${bindplane_destination.google.id}",
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+    route {
+      telemetry_type = "metrics"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}",
+        "destinations/${bindplane_destination.google.id}",
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+    route {
+      telemetry_type = "traces"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}",
+        "destinations/${bindplane_destination.google.id}",
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+  }
+
+  destination {
+    route_id   = bindplane_destination.google.id
+    name = bindplane_destination.google.name
+    processors = [
+      bindplane_processor.batch.name,
+      bindplane_processor.time-parse-http-datatime.name
+    ]
+  }
+
+  destination {
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
   }
 
   destination {
