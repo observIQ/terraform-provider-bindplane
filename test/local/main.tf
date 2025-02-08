@@ -223,3 +223,124 @@ resource "bindplane_processor_bundle" "bundle" {
     name = bindplane_processor.time-parse-http-datatime.name
   }
 }
+
+resource "bindplane_connector" "routing" {
+  rollout = true
+  name = "my-routing"
+  type = "routing"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs"
+        ]
+      },
+      {
+        "name": "routes",
+        "value": [
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"prod\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "prod"
+                  }
+                ]
+              }
+            },
+            "id": "route-1"
+          },
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"dev\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "dev"
+                  }
+                ]
+              }
+            },
+            "id": "route-2"
+          }
+        ]
+      }
+    ] 
+  )
+}
+
+resource "bindplane_configuration_v2" "configuration" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  measurement_interval = "1m"
+
+  rollout = true
+
+  rollout_options {
+    type = "progressive"
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
+      }
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
+  }
+
+  name = "my-config-v2"
+  platform = "linux"
+  labels = {
+    environment = "production"
+    managed-by  = "terraform"
+  }
+
+  source {
+    name = bindplane_source.journald.name
+    processors = [
+      bindplane_processor_bundle.bundle.name,
+    ]
+    route {
+      id = "0"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.custom.id}"
+      ]
+    }
+  }
+
+  destination {
+    name = bindplane_destination.custom.name
+    processors = [
+      bindplane_processor.batch.name,
+
+      // order matters here
+      bindplane_processor.time-parse-http-datatime.name
+    ]
+  }
+
+  extensions = [
+    bindplane_extension.pprof.name
+  ]
+}

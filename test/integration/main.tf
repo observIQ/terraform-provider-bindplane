@@ -403,3 +403,60 @@ resource "bindplane_configuration" "fluent" {
     name = bindplane_destination.logging.name
   }
 }
+
+resource "bindplane_connector" "routing" {
+  rollout = true
+  name = "my-routing"
+  type = "routing"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs"
+        ]
+      },
+      {
+        "name": "routes",
+        "value": [
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"prod\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "prod"
+                  }
+                ]
+              }
+            },
+            "id": "route-1"
+          },
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"dev\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "dev"
+                  }
+                ]
+              }
+            },
+            "id": "route-2"
+          }
+        ]
+      }
+    ] 
+  )
+}
