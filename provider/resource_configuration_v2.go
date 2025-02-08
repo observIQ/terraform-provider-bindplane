@@ -122,6 +122,18 @@ func resourceConfigurationV2() *schema.Resource {
 										ForceNew:    false,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Description: "List of component names to route.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											rawComponents := val.([]any)
+											components := []string{}
+											for _, c := range rawComponents {
+												components = append(components, c.(string))
+											}
+											validationErrors := component.ValidateRouteComponents(components)
+											if len(validationErrors) > 0 {
+												errs = append(errs, validationErrors...)
+											}
+											return
+										},
 									},
 								},
 							},
