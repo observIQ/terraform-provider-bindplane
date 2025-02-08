@@ -36,6 +36,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
 | `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
 | `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
+| `processor_group`  | block           | optional | One or more processor group blocks. See the [processor group block](./bindplane_configuration.md#processor-group-block) section. |
 | `destination`      | block           | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section. |
 | `extensions`       | list(string)    | optional | One or more extension names to attach to the configuration.                 |
 | `rollout`          | bool            | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
@@ -49,13 +50,21 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | `processors`        | list(string) | optional | One or more processor names to attach to the source. |
 | `route`             | string       | optional | One or more routes to attach to the source. See the [route block](./bindplane_configuration.md#route-block) section. |
 
+### Processor Group Block
+
+| Option              | Type         | Default  | Description                  |
+| ------------------- | ------------ | -------- | ---------------------------- |
+| `route_id`          | string       | required | An arbitrary string that can be used to configure routes to this processor group. |
+| `processors`        | list(string) | optional | One or more processor names to attach to the processor group. |
+| `route`             | string       | optional | One or more routes to attach to the processor group. See the [route block](./bindplane_configuration.md#route-block) section. |
+
 ### Destination Block
 
 | Option              | Type         | Default  | Description                  |
 | ------------------- | ------------ | -------- | ---------------------------- |
+| `route_id`          | string       | required | An arbitrary string that can be used to configure routes to this destination. |
 | `name`              | string       | required | The source name.             |
 | `processors`        | list(string) | optional | One or more processor names to attach to the destination. |
-| `route_id` | string | required | An arbitrary string that can be used to configure routes to this destination. |
 
 ### Rollout Options Block
 
