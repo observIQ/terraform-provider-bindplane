@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 )
@@ -87,7 +88,13 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 		if c != nil {
 			return fmt.Errorf("destination with name '%s' already exists with id '%s'", name, c.ID())
 		}
+
+		// If a source does not already exist with this name
+		// and an ID is not set, generate and ID.
+		d.SetId(component.NewResourceID())
 	}
+
+	id := d.Id()
 
 	parameters := []model.Parameter{}
 	if s := d.Get("parameters_json").(string); s != "" {
@@ -98,7 +105,7 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(name, destType, model.KindDestination, parameters, nil)
+	r, err := resource.AnyResourceV1(id, name, destType, model.KindDestination, parameters, nil)
 	if err != nil {
 		return err
 	}
