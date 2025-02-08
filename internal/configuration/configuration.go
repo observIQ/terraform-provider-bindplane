@@ -74,6 +74,15 @@ func WithSourcesByName(s []ResourceConfig) Option {
 	}
 }
 
+// WithProcessorGroups is a Option that configures a configuration's
+// processor groups.
+func WithProcessorGroups(p []ResourceConfig) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Processors = append(c.Spec.Processors, withResourcesByName(p)...)
+		return nil
+	}
+}
+
 // WithDestinationsByName is a Option that configures a configuration's
 // destinations.
 func WithDestinationsByName(d []ResourceConfig) Option {

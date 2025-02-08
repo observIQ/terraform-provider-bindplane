@@ -402,6 +402,19 @@ resource "bindplane_configuration_v2" "configuration" {
     route {
       telemetry_type = "logs"
       components = [
+        "processors/parser",
+      ]
+    }
+  }
+
+  processor_group {
+    route_id = "parser"
+    processors = [
+      bindplane_processor.json-parse-body.name,
+      bindplane_processor.time-parse-http-datatime.name
+    ]
+    route {
+      components = [
         "destinations/${bindplane_destination.datadog.id}"
       ]
     }
@@ -445,18 +458,8 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   destination {
-<<<<<<< HEAD
     route_id = bindplane_destination.datadog.id
     name = bindplane_destination.datadog.name
-=======
-    name = bindplane_destination.custom.name
-    processors = [
-      bindplane_processor.batch.name,
-
-      // order matters here
-      bindplane_processor.time-parse-http-datatime.name
-    ]
->>>>>>> c127134 (WIP: We need component ID to be generated before apply)
   }
 
   extensions = [

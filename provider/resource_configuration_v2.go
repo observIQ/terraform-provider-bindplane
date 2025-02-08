@@ -131,6 +131,60 @@ func resourceConfigurationV2() *schema.Resource {
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
+			"processor_group": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this processor group.",
+						},
+						"processors": {
+							Type:        schema.TypeList,
+							Required:    true,
+							ForceNew:    false,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "List of processor names to attach to the processor group.",
+						},
+						"route": {
+							Type:     schema.TypeList,
+							Required: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"telemetry_type": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										ForceNew:    false,
+										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											telemetryType := val.(string)
+											if err := component.ValidateRouteType(telemetryType); err != nil {
+												errs = append(errs, err)
+											}
+											return
+										},
+										Default: component.RouteTypeLogsMetricsTraces,
+									},
+									"components": {
+										Type:        schema.TypeList,
+										Required:    true,
+										ForceNew:    false,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "List of component names to route.",
+									},
+								},
+							},
+							Description: "Route telemetry to specific components.",
+						},
+					},
+				},
+				Description: "Group of processors that will receive and process telemetry from one or more routes.",
+			},
 			"destination": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -351,6 +405,74 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		}
 	}
 
+	processorGroups := []configuration.ResourceConfig{}
+	if d.Get("processor_group") != nil {
+		processorGroupsRaw := d.Get("processor_group").([]any)
+		for _, v := range processorGroupsRaw {
+			processorGroupRaw := v.(map[string]any)
+
+			processors := []string{}
+			if v := processorGroupRaw["processors"].([]any); v != nil {
+				for _, v := range v {
+					processors = append(processors, v.(string))
+				}
+			}
+
+			routes := &model.Routes{}
+			if rawRoutes := processorGroupRaw["route"].([]any); v != nil {
+				for _, r := range rawRoutes {
+					rawComponents := r.(map[string]any)["components"].([]any)
+					components := []model.ComponentPath{}
+					for _, c := range rawComponents {
+						components = append(components, model.ComponentPath(c.(string)))
+					}
+					if err := component.ValidateRouteComponents(components); err != nil {
+						return fmt.Errorf("validate route components: %v", err)
+					}
+
+					telemetryType := r.(map[string]any)["telemetry_type"].(string)
+					switch telemetryType {
+					case "logs":
+						routes.Logs = append(routes.Logs, model.Route{
+							Components: components,
+						})
+					case "metrics":
+						routes.Metrics = append(routes.Metrics, model.Route{
+							Components: components,
+						})
+					case "traces":
+						routes.Traces = append(routes.Traces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics":
+						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
+							Components: components,
+						})
+					case "logs+traces":
+						routes.LogsTraces = append(routes.LogsTraces, model.Route{
+							Components: components,
+						})
+					case "metrics+traces":
+						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics+traces":
+						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
+							Components: components,
+						})
+					}
+				}
+			}
+
+			processorGroupConf := configuration.ResourceConfig{
+				RouteID:    processorGroupRaw["route_id"].(string),
+				Processors: processors,
+				Routes:     routes,
+			}
+			processorGroups = append(processorGroups, processorGroupConf)
+		}
+	}
+
 	// List of destinations and their processors
 	destinations := []configuration.ResourceConfig{}
 	if d.Get("destination") != nil {
@@ -398,6 +520,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesByName(sources),
+		configuration.WithProcessorGroups(processorGroups),
 		configuration.WithDestinationsByName(destinations),
 		configuration.WithExtensionsByName(extensions),
 		configuration.WithRolloutOptions(rolloutOptions),
