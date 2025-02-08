@@ -366,43 +366,6 @@ resource "bindplane_configuration_v2" "configuration" {
         "processors/batcher"
       ]
     }
-
-    route {
-      components = [
-        "destinations/${bindplane_destination.google.id}"
-      ]
-    }
-
-    route {
-      components = [
-        "destinations/${bindplane_destination.loki.id}"
-      ]
-    }
-  }
-
-  source {
-    name = bindplane_source.host.name
-    route {
-      telemetry_type = "metrics"
-      components = [
-        "destinations/${bindplane_destination.google.id}"
-      ]
-    }
-  }
-
-  destination {
-    route_id = bindplane_destination.datadog.id
-    name = bindplane_destination.datadog.name
-  }
-
-  destination {
-    route_id   = bindplane_destination.google.id
-    name = bindplane_destination.google.name
-  }
-
-  destination {
-    route_id   = bindplane_destination.loki.id
-    name = bindplane_destination.loki.name
   }
 
   processor_group {
@@ -446,13 +409,13 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   destination {
-    route_id   = bindplane_destination.loki.id
-    name = bindplane_destination.loki.name
+    route_id = bindplane_destination.datadog.id
+    name = bindplane_destination.datadog.name
   }
 
   destination {
-    route_id = bindplane_destination.datadog.id
-    name = bindplane_destination.datadog.name
+    route_id   = bindplane_destination.loki.id
+    name = bindplane_destination.loki.name
   }
 
   extensions = [

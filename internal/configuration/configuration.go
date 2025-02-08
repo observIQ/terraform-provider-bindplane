@@ -74,6 +74,15 @@ func WithSourcesByName(s []ResourceConfig) Option {
 	}
 }
 
+// WithConnectorsByName is a Option that configures a configuration's
+// connectors.
+func WithConnectorsByName(connector []ResourceConfig) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Connectors = append(c.Spec.Connectors, withResourcesByName(connector)...)
+		return nil
+	}
+}
+
 // WithProcessorGroups is a Option that configures a configuration's
 // processor groups.
 func WithProcessorGroups(p []ResourceConfig) Option {

@@ -131,6 +131,59 @@ func resourceConfigurationV2() *schema.Resource {
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
+			"connector": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this connector.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "Name of the connector to attach.",
+						},
+						"route": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"telemetry_type": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										ForceNew:    false,
+										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											telemetryType := val.(string)
+											if err := component.ValidateRouteType(telemetryType); err != nil {
+												errs = append(errs, err)
+											}
+											return
+										},
+										Default: component.RouteTypeLogsMetricsTraces,
+									},
+									"components": {
+										Type:        schema.TypeList,
+										Required:    true,
+										ForceNew:    false,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "List of component names to route.",
+									},
+								},
+							},
+							Description: "Route telemetry to specific components.",
+						},
+					},
+				},
+				Description: "Connector to be attached to the configuration. This option can be configured one or many times.",
+			},
 			"processor_group": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -405,6 +458,67 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		}
 	}
 
+	connectors := []configuration.ResourceConfig{}
+	if d.Get("connector") != nil {
+		connectorsRaw := d.Get("connector").([]any)
+		for _, v := range connectorsRaw {
+			connectorRaw := v.(map[string]any)
+
+			routes := &model.Routes{}
+			if rawRoutes := connectorRaw["route"].([]any); v != nil {
+				for _, r := range rawRoutes {
+					rawComponents := r.(map[string]any)["components"].([]any)
+					components := []model.ComponentPath{}
+					for _, c := range rawComponents {
+						components = append(components, model.ComponentPath(c.(string)))
+					}
+					if err := component.ValidateRouteComponents(components); err != nil {
+						return fmt.Errorf("validate route components: %v", err)
+					}
+
+					telemetryType := r.(map[string]any)["telemetry_type"].(string)
+					switch telemetryType {
+					case "logs":
+						routes.Logs = append(routes.Logs, model.Route{
+							Components: components,
+						})
+					case "metrics":
+						routes.Metrics = append(routes.Metrics, model.Route{
+							Components: components,
+						})
+					case "traces":
+						routes.Traces = append(routes.Traces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics":
+						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
+							Components: components,
+						})
+					case "logs+traces":
+						routes.LogsTraces = append(routes.LogsTraces, model.Route{
+							Components: components,
+						})
+					case "metrics+traces":
+						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
+							Components: components,
+						})
+					case "logs+metrics+traces":
+						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
+							Components: components,
+						})
+					}
+				}
+			}
+
+			connectorConf := configuration.ResourceConfig{
+				RouteID: connectorRaw["route_id"].(string),
+				Name:    connectorRaw["name"].(string),
+				Routes:  routes,
+			}
+			connectors = append(connectors, connectorConf)
+		}
+	}
+
 	processorGroups := []configuration.ResourceConfig{}
 	if d.Get("processor_group") != nil {
 		processorGroupsRaw := d.Get("processor_group").([]any)
@@ -520,6 +634,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesByName(sources),
+		configuration.WithConnectorsByName(connectors),
 		configuration.WithProcessorGroups(processorGroups),
 		configuration.WithDestinationsByName(destinations),
 		configuration.WithExtensionsByName(extensions),
@@ -687,6 +802,84 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		sourceBlocks = append(sourceBlocks, source)
 	}
 	if err := d.Set("source", sourceBlocks); err != nil {
+		return err
+	}
+
+	connectorBlocks := []map[string]any{}
+	for _, c := range config.Spec.Connectors {
+		connector := map[string]any{}
+		connector["route_id"] = c.ID
+		connector["name"] = strings.Split(c.Name, ":")[0]
+
+		routes := []map[string]any{}
+		logRoutes := c.Routes.Logs
+		if len(logRoutes) > 0 {
+			for _, r := range logRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs",
+					"components":     r.Components,
+				})
+			}
+		}
+		metricRoutes := c.Routes.Metrics
+		if len(metricRoutes) > 0 {
+			for _, r := range metricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics",
+					"components":     r.Components,
+				})
+			}
+		}
+		traceRoutes := c.Routes.Traces
+		if len(traceRoutes) > 0 {
+			for _, r := range traceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "traces",
+					"components":     r.Components,
+				})
+			}
+		}
+		logMetricRoutes := c.Routes.LogsMetrics
+		if len(logMetricRoutes) > 0 {
+			for _, r := range logMetricRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics",
+					"components":     r.Components,
+				})
+			}
+		}
+		logTraceRoutes := c.Routes.LogsTraces
+		if len(logTraceRoutes) > 0 {
+			for _, r := range logTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+traces",
+					"components":     r.Components,
+				})
+			}
+		}
+		metricTraceRoutes := c.Routes.MetricsTraces
+		if len(metricTraceRoutes) > 0 {
+			for _, r := range metricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "metrics+traces",
+					"components":     r.Components,
+				})
+			}
+		}
+		logMetricTraceRoutes := c.Routes.LogsMetricsTraces
+		if len(logMetricTraceRoutes) > 0 {
+			for _, r := range logMetricTraceRoutes {
+				routes = append(routes, map[string]any{
+					"telemetry_type": "logs+metrics+traces",
+					"components":     r.Components,
+				})
+			}
+		}
+
+		connector["route"] = routes
+		connectorBlocks = append(connectorBlocks, connector)
+	}
+	if err := d.Set("connector", connectorBlocks); err != nil {
 		return err
 	}
 
