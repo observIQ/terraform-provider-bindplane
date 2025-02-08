@@ -59,7 +59,7 @@ func ValidateRouteComponents(components []model.ComponentPath) []error {
 	for _, c := range components {
 		prefix := strings.Split(string(c), "/")[0]
 		switch prefix {
-		case "destinations", "processors", "connectors":
+		case string(model.KindDestination), string(model.KindProcessor), string(model.KindConnector):
 			continue
 		default:
 			errs = append(errs, fmt.Errorf("invalid route component: %s", c))

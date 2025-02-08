@@ -131,6 +131,53 @@ func resourceConfigurationV2() *schema.Resource {
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
 			},
+			"connector": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "Name of the connector to attach.",
+						},
+						"route": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"telemetry_type": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										ForceNew:    false,
+										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
+										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+											telemetryType := val.(string)
+											if err := component.ValidateRouteType(telemetryType); err != nil {
+												errs = append(errs, err)
+											}
+											return
+										},
+										Default: component.RouteTypeLogsMetricsTraces,
+									},
+									"components": {
+										Type:        schema.TypeList,
+										Required:    true,
+										ForceNew:    false,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "List of component names to route.",
+									},
+								},
+							},
+							Description: "Route telemetry to specific components.",
+						},
+					},
+				},
+				Description: "Connector to be attached to the configuration. This option can be configured one or many times.",
+			},
 			"processor_group": {
 				Type:     schema.TypeList,
 				Optional: true,
