@@ -5,6 +5,9 @@ description: |-
   to a Configuration's sources or destinations.
 ---
 
+> [!NOTE]
+> bindplane_connector resources are supported by BindPlane OP version 1.85.0 and later.
+
 # bindplane_connector
 
 The `bindplane_connector` resource creates a BindPlane connector from a BindPlane
