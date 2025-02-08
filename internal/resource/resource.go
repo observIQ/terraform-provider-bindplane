@@ -87,6 +87,10 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 		a.Spec["measurementInterval"] = c.Spec.MeasurementInterval
 	}
 
+	if len(c.Spec.Processors) > 0 {
+		a.Spec["processors"] = c.Spec.Processors
+	}
+
 	return a
 }
 
