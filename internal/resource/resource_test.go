@@ -24,6 +24,7 @@ import (
 func TestAnyResourceV1(t *testing.T) {
 	cases := []struct {
 		name        string
+		id          string
 		rName       string
 		rType       string
 		rkind       model.Kind
@@ -33,6 +34,7 @@ func TestAnyResourceV1(t *testing.T) {
 	}{
 		{
 			"source",
+			"tf-source",
 			"my-host",
 			"host",
 			model.KindSource,
@@ -51,6 +53,7 @@ func TestAnyResourceV1(t *testing.T) {
 		},
 		{
 			"destination",
+			"tf-destination",
 			"my-destination",
 			"googlecloud",
 			model.KindDestination,
@@ -65,6 +68,7 @@ func TestAnyResourceV1(t *testing.T) {
 		},
 		{
 			"processor",
+			"tf-processor",
 			"my-filter",
 			"filter",
 			model.KindProcessor,
@@ -74,6 +78,7 @@ func TestAnyResourceV1(t *testing.T) {
 		},
 		{
 			"extension",
+			"tf-extension",
 			"my-extension",
 			"pprof",
 			model.KindExtension,
@@ -83,6 +88,7 @@ func TestAnyResourceV1(t *testing.T) {
 		},
 		{
 			"invalid-kind",
+			"tf-resource",
 			"my-resource",
 			"resource",
 			model.KindAgent,
@@ -92,6 +98,7 @@ func TestAnyResourceV1(t *testing.T) {
 		},
 		{
 			"valid-processors",
+			"tf-bundle",
 			"my-bundle",
 			"bundle",
 			model.KindProcessor,
@@ -110,7 +117,7 @@ func TestAnyResourceV1(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := AnyResourceV1("", tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
+			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
