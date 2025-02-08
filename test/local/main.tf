@@ -331,6 +331,7 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   destination {
+    route_id   = bindplane_destination.custom.id
     name = bindplane_destination.custom.name
     processors = [
       bindplane_processor.batch.name,

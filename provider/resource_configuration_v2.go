@@ -145,6 +145,12 @@ func resourceConfigurationV2() *schema.Resource {
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this destination.",
+						},
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -353,6 +359,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			}
 
 			destConfig := configuration.ResourceConfig{
+				RouteID:    destinationRaw["route_id"].(string),
 				Name:       destinationRaw["name"].(string),
 				Processors: processors,
 			}
