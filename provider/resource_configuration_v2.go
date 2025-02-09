@@ -647,6 +647,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	processorGroupBlocks := []map[string]any{}
 	for _, pg := range config.Spec.Processors {
 		processorGroup := map[string]any{}
+
 		processors := []string{}
 		for _, p := range pg.Processors {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
@@ -660,7 +661,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		processorGroup["route"] = stateRoutes
 
 		// Retrieve the saved route IDs from state and copy them
-		// to the new destination blocks before calling d.Set.
+		// to the new processor blocks before calling d.Set.
 		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
 			stateProcessorGroup := stateProcessorGroup.(map[string]any)
 			if stateProcessorGroup["name"] == processorGroup["name"] {
