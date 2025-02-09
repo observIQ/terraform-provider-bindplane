@@ -405,48 +405,11 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 
 			routes := &model.Routes{}
 			if rawRoutes := sourcesRaw["route"].([]any); v != nil {
-				for _, r := range rawRoutes {
-					rawComponents := r.(map[string]any)["components"].([]any)
-					components := []model.ComponentPath{}
-					for _, c := range rawComponents {
-						components = append(components, model.ComponentPath(c.(string)))
-					}
-					if err := component.ValidateRouteComponents(components); err != nil {
-						return fmt.Errorf("validate route components: %v", err)
-					}
-
-					telemetryType := r.(map[string]any)["telemetry_type"].(string)
-					switch telemetryType {
-					case "logs":
-						routes.Logs = append(routes.Logs, model.Route{
-							Components: components,
-						})
-					case "metrics":
-						routes.Metrics = append(routes.Metrics, model.Route{
-							Components: components,
-						})
-					case "traces":
-						routes.Traces = append(routes.Traces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics":
-						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
-							Components: components,
-						})
-					case "logs+traces":
-						routes.LogsTraces = append(routes.LogsTraces, model.Route{
-							Components: components,
-						})
-					case "metrics+traces":
-						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics+traces":
-						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
-							Components: components,
-						})
-					}
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
 				}
+				routes = r
 			}
 
 			sourceConf := configuration.ResourceConfig{
@@ -466,48 +429,11 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 
 			routes := &model.Routes{}
 			if rawRoutes := connectorRaw["route"].([]any); v != nil {
-				for _, r := range rawRoutes {
-					rawComponents := r.(map[string]any)["components"].([]any)
-					components := []model.ComponentPath{}
-					for _, c := range rawComponents {
-						components = append(components, model.ComponentPath(c.(string)))
-					}
-					if err := component.ValidateRouteComponents(components); err != nil {
-						return fmt.Errorf("validate route components: %v", err)
-					}
-
-					telemetryType := r.(map[string]any)["telemetry_type"].(string)
-					switch telemetryType {
-					case "logs":
-						routes.Logs = append(routes.Logs, model.Route{
-							Components: components,
-						})
-					case "metrics":
-						routes.Metrics = append(routes.Metrics, model.Route{
-							Components: components,
-						})
-					case "traces":
-						routes.Traces = append(routes.Traces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics":
-						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
-							Components: components,
-						})
-					case "logs+traces":
-						routes.LogsTraces = append(routes.LogsTraces, model.Route{
-							Components: components,
-						})
-					case "metrics+traces":
-						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics+traces":
-						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
-							Components: components,
-						})
-					}
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
 				}
+				routes = r
 			}
 
 			connectorConf := configuration.ResourceConfig{
@@ -534,48 +460,11 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 
 			routes := &model.Routes{}
 			if rawRoutes := processorGroupRaw["route"].([]any); v != nil {
-				for _, r := range rawRoutes {
-					rawComponents := r.(map[string]any)["components"].([]any)
-					components := []model.ComponentPath{}
-					for _, c := range rawComponents {
-						components = append(components, model.ComponentPath(c.(string)))
-					}
-					if err := component.ValidateRouteComponents(components); err != nil {
-						return fmt.Errorf("validate route components: %v", err)
-					}
-
-					telemetryType := r.(map[string]any)["telemetry_type"].(string)
-					switch telemetryType {
-					case "logs":
-						routes.Logs = append(routes.Logs, model.Route{
-							Components: components,
-						})
-					case "metrics":
-						routes.Metrics = append(routes.Metrics, model.Route{
-							Components: components,
-						})
-					case "traces":
-						routes.Traces = append(routes.Traces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics":
-						routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
-							Components: components,
-						})
-					case "logs+traces":
-						routes.LogsTraces = append(routes.LogsTraces, model.Route{
-							Components: components,
-						})
-					case "metrics+traces":
-						routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
-							Components: components,
-						})
-					case "logs+metrics+traces":
-						routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
-							Components: components,
-						})
-					}
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
 				}
+				routes = r
 			}
 
 			processorGroupConf := configuration.ResourceConfig{
@@ -721,83 +610,11 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		}
 		source["processors"] = processors
 
-		logRoutes := s.Routes.Logs
-		if len(logRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
+		stateRoutes, err := component.RoutesToState(s.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
 		}
-		metricRoutes := s.Routes.Metrics
-		if len(metricRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range metricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
-		traceRoutes := s.Routes.Traces
-		if len(traceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range traceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "traces",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
-		logMetricRoutes := s.Routes.LogsMetrics
-		if len(logMetricRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logMetricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
-		logTraceRoutes := s.Routes.LogsTraces
-		if len(logTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+traces",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
-		metricTraceRoutes := s.Routes.MetricsTraces
-		if len(metricTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range metricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics+traces",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
-		logMetricTraceRoutes := s.Routes.LogsMetricsTraces
-		if len(logMetricTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logMetricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics+traces",
-					"components":     r.Components,
-				})
-			}
-			source["route"] = routes
-		}
+		source["route"] = stateRoutes
 
 		sourceBlocks = append(sourceBlocks, source)
 	}
@@ -811,72 +628,12 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		connector["route_id"] = c.ID
 		connector["name"] = strings.Split(c.Name, ":")[0]
 
-		routes := []map[string]any{}
-		logRoutes := c.Routes.Logs
-		if len(logRoutes) > 0 {
-			for _, r := range logRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs",
-					"components":     r.Components,
-				})
-			}
+		stateRoutes, err := component.RoutesToState(c.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
 		}
-		metricRoutes := c.Routes.Metrics
-		if len(metricRoutes) > 0 {
-			for _, r := range metricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics",
-					"components":     r.Components,
-				})
-			}
-		}
-		traceRoutes := c.Routes.Traces
-		if len(traceRoutes) > 0 {
-			for _, r := range traceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "traces",
-					"components":     r.Components,
-				})
-			}
-		}
-		logMetricRoutes := c.Routes.LogsMetrics
-		if len(logMetricRoutes) > 0 {
-			for _, r := range logMetricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics",
-					"components":     r.Components,
-				})
-			}
-		}
-		logTraceRoutes := c.Routes.LogsTraces
-		if len(logTraceRoutes) > 0 {
-			for _, r := range logTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+traces",
-					"components":     r.Components,
-				})
-			}
-		}
-		metricTraceRoutes := c.Routes.MetricsTraces
-		if len(metricTraceRoutes) > 0 {
-			for _, r := range metricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics+traces",
-					"components":     r.Components,
-				})
-			}
-		}
-		logMetricTraceRoutes := c.Routes.LogsMetricsTraces
-		if len(logMetricTraceRoutes) > 0 {
-			for _, r := range logMetricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics+traces",
-					"components":     r.Components,
-				})
-			}
-		}
+		connector["route"] = stateRoutes
 
-		connector["route"] = routes
 		connectorBlocks = append(connectorBlocks, connector)
 	}
 	if err := d.Set("connector", connectorBlocks); err != nil {
@@ -890,92 +647,21 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	processorGroupBlocks := []map[string]any{}
 	for _, pg := range config.Spec.Processors {
 		processorGroup := map[string]any{}
+
 		processors := []string{}
 		for _, p := range pg.Processors {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
 		}
 		processorGroup["processors"] = processors
 
-		logRoutes := pg.Routes.Logs
-		if len(logRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
+		stateRoutes, err := component.RoutesToState(pg.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
 		}
-		metricRoutes := pg.Routes.Metrics
-		if len(metricRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range metricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
-		traceRoutes := pg.Routes.Traces
-		if len(traceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range traceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "traces",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
-		logMetricRoutes := pg.Routes.LogsMetrics
-		if len(logMetricRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logMetricRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
-		logTraceRoutes := pg.Routes.LogsTraces
-		if len(logTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+traces",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
-		metricTraceRoutes := pg.Routes.MetricsTraces
-		if len(metricTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range metricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "metrics+traces",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
-		logMetricTraceRoutes := pg.Routes.LogsMetricsTraces
-		if len(logMetricTraceRoutes) > 0 {
-			routes := []map[string]any{}
-			for _, r := range logMetricTraceRoutes {
-				routes = append(routes, map[string]any{
-					"telemetry_type": "logs+metrics+traces",
-					"components":     r.Components,
-				})
-			}
-			processorGroup["route"] = routes
-		}
+		processorGroup["route"] = stateRoutes
 
 		// Retrieve the saved route IDs from state and copy them
-		// to the new destination blocks before calling d.Set.
+		// to the new processor blocks before calling d.Set.
 		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
 			stateProcessorGroup := stateProcessorGroup.(map[string]any)
 			if stateProcessorGroup["name"] == processorGroup["name"] {
