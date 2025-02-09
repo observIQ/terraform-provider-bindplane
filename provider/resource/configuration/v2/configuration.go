@@ -12,6 +12,12 @@ var RouteSchema *schema.Schema = &schema.Schema{
 	ForceNew: false,
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"route_id": {
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    false,
+				Description: "The unique identifier for the route.",
+			},
 			"telemetry_type": {
 				Type:        schema.TypeString,
 				Optional:    true,

@@ -97,34 +97,44 @@ func ParseRoutes(rawRoutes []any) (*model.Routes, error) {
 			return nil, fmt.Errorf("validate route components: %v", err)
 		}
 
+		// Schema validation ensures the type assertion used here
+		id := r.(map[string]any)["route_id"].(string)
+
 		telemetryType := r.(map[string]any)["telemetry_type"].(string)
 		switch telemetryType {
 		case RouteTypeLogs:
 			routes.Logs = append(routes.Logs, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeMetrics:
 			routes.Metrics = append(routes.Metrics, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeTraces:
 			routes.Traces = append(routes.Traces, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeLogsMetrics:
 			routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeLogsTraces:
 			routes.LogsTraces = append(routes.LogsTraces, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeMetricsTraces:
 			routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		case RouteTypeLogsMetricsTraces:
 			routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
+				ID:         id,
 				Components: components,
 			})
 		}
@@ -160,6 +170,7 @@ func RoutesToState(inRoutes *model.Routes) ([]map[string]any, error) {
 			r := []map[string]any{}
 			for _, route := range routes {
 				r = append(r, map[string]any{
+					"route_id":       route.ID,
 					"telemetry_type": routeType,
 					"components":     route.Components,
 				})
