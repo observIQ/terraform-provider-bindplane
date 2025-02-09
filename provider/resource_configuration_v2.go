@@ -27,6 +27,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
+	v2 "github.com/observiq/terraform-provider-bindplane/provider/resource/configuration/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -96,37 +97,7 @@ func resourceConfigurationV2() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the source.",
 						},
-						"route": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: false,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"telemetry_type": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										ForceNew:    false,
-										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
-										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
-											telemetryType := val.(string)
-											if err := component.ValidateRouteType(telemetryType); err != nil {
-												errs = append(errs, err)
-											}
-											return
-										},
-										Default: component.RouteTypeLogsMetricsTraces,
-									},
-									"components": {
-										Type:        schema.TypeList,
-										Required:    true,
-										ForceNew:    false,
-										Elem:        &schema.Schema{Type: schema.TypeString},
-										Description: "List of component names to route.",
-									},
-								},
-							},
-							Description: "Route telemetry to specific components.",
-						},
+						"route": v2.RouteSchema,
 					},
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
@@ -149,37 +120,7 @@ func resourceConfigurationV2() *schema.Resource {
 							ForceNew:    false,
 							Description: "Name of the connector to attach.",
 						},
-						"route": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: false,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"telemetry_type": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										ForceNew:    false,
-										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
-										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
-											telemetryType := val.(string)
-											if err := component.ValidateRouteType(telemetryType); err != nil {
-												errs = append(errs, err)
-											}
-											return
-										},
-										Default: component.RouteTypeLogsMetricsTraces,
-									},
-									"components": {
-										Type:        schema.TypeList,
-										Required:    true,
-										ForceNew:    false,
-										Elem:        &schema.Schema{Type: schema.TypeString},
-										Description: "List of component names to route.",
-									},
-								},
-							},
-							Description: "Route telemetry to specific components.",
-						},
+						"route": v2.RouteSchema,
 					},
 				},
 				Description: "Connector to be attached to the configuration. This option can be configured one or many times.",
@@ -203,37 +144,7 @@ func resourceConfigurationV2() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the processor group.",
 						},
-						"route": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: false,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"telemetry_type": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										ForceNew:    false,
-										Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
-										ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
-											telemetryType := val.(string)
-											if err := component.ValidateRouteType(telemetryType); err != nil {
-												errs = append(errs, err)
-											}
-											return
-										},
-										Default: component.RouteTypeLogsMetricsTraces,
-									},
-									"components": {
-										Type:        schema.TypeList,
-										Required:    true,
-										ForceNew:    false,
-										Elem:        &schema.Schema{Type: schema.TypeString},
-										Description: "List of component names to route.",
-									},
-								},
-							},
-							Description: "Route telemetry to specific components.",
-						},
+						"route": v2.RouteSchema,
 					},
 				},
 				Description: "Group of processors that will receive and process telemetry from one or more routes.",

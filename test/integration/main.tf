@@ -404,63 +404,6 @@ resource "bindplane_configuration" "fluent" {
   }
 }
 
-resource "bindplane_connector" "routing" {
-  rollout = true
-  name = "my-routing"
-  type = "routing"
-  parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Logs"
-        ]
-      },
-      {
-        "name": "routes",
-        "value": [
-          {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"prod\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
-                  {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "prod"
-                  }
-                ]
-              }
-            },
-            "id": "route-1"
-          },
-          {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"dev\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
-                  {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "dev"
-                  }
-                ]
-              }
-            },
-            "id": "route-2"
-          }
-        ]
-      }
-    ] 
-  )
-}
-
 resource "bindplane_extension" "pprof" {
   rollout = true
   name = "my-pprof"
@@ -549,6 +492,137 @@ resource "bindplane_source" "journald" {
   type = "journald"
 }
 
+resource "bindplane_connector" "routing" {
+  rollout = true
+  name = "log-router"
+  type = "routing"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs"
+        ]
+      },
+      {
+        "name": "routes",
+        "value": [
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"prod\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "prod"
+                  }
+                ]
+              }
+            },
+            "id": "datadog"
+          },
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"dev\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "dev"
+                  }
+                ]
+              }
+            },
+            "id": "google"
+          },
+          {
+            "condition": {
+              "ottl": "",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "",
+                    "match": "attributes",
+                    "operator": "Equals",
+                    "value": ""
+                  }
+                ]
+              }
+            },
+            "id": "fallback"
+          }
+        ]
+      }
+    ] 
+  )
+}
+
+resource "bindplane_connector" "fluent_router" {
+  rollout = true
+  name = "fluent-router"
+  type = "routing"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": [
+          "Logs"
+        ]
+      },
+      {
+        "name": "routes",
+        "value": [
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"prod\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "prod"
+                  }
+                ]
+              }
+            },
+            "id": "parser"
+          },
+          {
+            "condition": {
+              "ottl": "(attributes[\"env\"] == \"dev\")",
+              "ottlContext": "resource",
+              "ui": {
+                "operator": "",
+                "statements": [
+                  {
+                    "key": "env",
+                    "match": "resource",
+                    "operator": "Equals",
+                    "value": "dev"
+                  }
+                ]
+              }
+            },
+            "id": "loki"
+          },
+        ]
+      }
+    ] 
+  )
+}
+
 resource "bindplane_configuration_v2" "configuration" {
   lifecycle {
     create_before_destroy = true
@@ -563,6 +637,7 @@ resource "bindplane_configuration_v2" "configuration" {
     name = bindplane_source.otlp.name
 
     route {
+      route_id = "metric-batcher"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -570,6 +645,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
+      route_id = "log-parser"
       telemetry_type = "logs"
       components = [
         "processors/parser"
@@ -577,6 +653,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
+      route_id = "trace-batcher"
       telemetry_type = "traces"
       components = [
         "processors/batcher"
@@ -591,6 +668,7 @@ resource "bindplane_configuration_v2" "configuration" {
     ]
 
     route {
+      route_id = "log-parser"
       telemetry_type = "logs"
       components = [
         "processors/parser"
@@ -598,6 +676,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
+      route_id = "metric-batcher"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -605,6 +684,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
+      route_id = "trace-batcher"
       telemetry_type = "traces"
       components = [
         "processors/batcher"
@@ -613,8 +693,20 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   source {
+    name = bindplane_source.fluent.name
+    route {
+      route_id = "fluent-router"
+      telemetry_type = "logs"
+      components = [
+        "connectors/fluent-router"
+      ]
+    }
+  }
+
+  source {
     name = bindplane_source.host.name
     route {
+      route_id = "batch-metrics"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -629,6 +721,7 @@ resource "bindplane_configuration_v2" "configuration" {
       bindplane_processor.time-parse-http-datatime.name
     ]
     route {
+      route_id = "log-batcher"
       telemetry_type = "logs"
       components = [
         "processors/batcher"
@@ -642,14 +735,14 @@ resource "bindplane_configuration_v2" "configuration" {
       bindplane_processor.batch.name
     ]
     route {
+      route_id = "log-destinations"
       telemetry_type = "logs"
       components = [
-        "destinations/${bindplane_destination.datadog.id}",
-        "destinations/${bindplane_destination.google.id}",
-        "destinations/${bindplane_destination.loki.id}"
+        "connectors/logging-router"
       ]
     }
     route {
+      route_id = "metric-destinations"
       telemetry_type = "metrics"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
@@ -658,10 +751,56 @@ resource "bindplane_configuration_v2" "configuration" {
       ]
     }
     route {
+      route_id = "trace-destinations"
       telemetry_type = "traces"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
         "destinations/${bindplane_destination.google.id}",
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+  }
+
+  connector {
+    route_id = "logging-router"
+    name = bindplane_connector.routing.name
+    route {
+      route_id = "datadog"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.datadog.id}",
+      ]
+    }
+    route {
+      route_id = "google"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.google.id}",
+      ]
+    }
+    route {
+      route_id = "fallback"
+      telemetry_type = "logs"
+      components = [
+        "destinations/${bindplane_destination.loki.id}"
+      ]
+    }
+  }
+
+  connector {
+    route_id = "fluent-router"
+    name = bindplane_connector.fluent_router.name
+    route {
+      route_id = "parser"
+      telemetry_type = "logs"
+      components = [
+        "processors/parser"
+      ]
+    }
+    route {
+      route_id = "loki"
+      telemetry_type = "logs"
+      components = [
         "destinations/${bindplane_destination.loki.id}"
       ]
     }
