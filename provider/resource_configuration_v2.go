@@ -664,7 +664,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		// to the new processor blocks before calling d.Set.
 		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
 			stateProcessorGroup := stateProcessorGroup.(map[string]any)
-			if stateProcessorGroup["name"] == processorGroup["name"] {
+			if stateProcessorGroup["route_id"] == pg.ID {
 				processorGroup["route_id"] = stateProcessorGroup["route_id"]
 				break
 			}
