@@ -186,3 +186,141 @@ func TestParseRoutes(t *testing.T) {
 		})
 	}
 }
+func TestRoutesToState(t *testing.T) {
+	cases := []struct {
+		name     string
+		routes   *model.Routes
+		expected []map[string]any
+	}{
+		{
+			"nil routes",
+			nil,
+			nil,
+		},
+		{
+			"empty routes",
+			&model.Routes{},
+			[]map[string]any{},
+		},
+		{
+			"logs route",
+			&model.Routes{
+				Logs: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/loki"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "logs",
+					"components":     []model.ComponentPath{"destinations/loki"},
+				},
+			},
+		},
+		{
+			"metrics route",
+			&model.Routes{
+				Metrics: []model.Route{
+					{
+						Components: []model.ComponentPath{"processors/batcher"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "metrics",
+					"components":     []model.ComponentPath{"processors/batcher"},
+				},
+			},
+		},
+		{
+			"traces route",
+			&model.Routes{
+				Traces: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/jaeger"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "traces",
+					"components":     []model.ComponentPath{"destinations/jaeger"},
+				},
+			},
+		},
+		{
+			"logs+metrics route",
+			&model.Routes{
+				LogsMetrics: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "logs+metrics",
+					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+				},
+			},
+		},
+		{
+			"logs+traces route",
+			&model.Routes{
+				LogsTraces: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "logs+traces",
+					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+				},
+			},
+		},
+		{
+			"metrics+traces route",
+			&model.Routes{
+				MetricsTraces: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "metrics+traces",
+					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
+				},
+			},
+		},
+		{
+			"logs+metrics+traces route",
+			&model.Routes{
+				LogsMetricsTraces: []model.Route{
+					{
+						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher", "connectors/router"},
+					},
+				},
+			},
+			[]map[string]any{
+				{
+					"telemetry_type": "logs+metrics+traces",
+					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher", "connectors/router"},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			state, err := RoutesToState(tc.routes)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, state)
+		})
+	}
+}
