@@ -20,6 +20,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/component"
 )
 
+// RouteSchema defines the schema for a route.
 var RouteSchema *schema.Schema = &schema.Schema{
 	Type:     schema.TypeSet,
 	Optional: true,
