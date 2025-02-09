@@ -97,7 +97,7 @@ func resourceConfigurationV2() *schema.Resource {
 							Description: "List of processor names to attach to the source.",
 						},
 						"route": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: false,
 							Elem: &schema.Resource{
@@ -150,7 +150,7 @@ func resourceConfigurationV2() *schema.Resource {
 							Description: "Name of the connector to attach.",
 						},
 						"route": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: false,
 							Elem: &schema.Resource{
@@ -204,7 +204,7 @@ func resourceConfigurationV2() *schema.Resource {
 							Description: "List of processor names to attach to the processor group.",
 						},
 						"route": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: false,
 							Elem: &schema.Resource{
@@ -404,7 +404,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			}
 
 			routes := &model.Routes{}
-			if rawRoutes := sourcesRaw["route"].([]any); v != nil {
+			if rawRoutes := sourcesRaw["route"].(*schema.Set).List(); v != nil {
 				r, err := component.ParseRoutes(rawRoutes)
 				if err != nil {
 					return fmt.Errorf("parse routes: %w", err)
@@ -428,7 +428,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			connectorRaw := v.(map[string]any)
 
 			routes := &model.Routes{}
-			if rawRoutes := connectorRaw["route"].([]any); v != nil {
+			if rawRoutes := connectorRaw["route"].(*schema.Set).List(); v != nil {
 				r, err := component.ParseRoutes(rawRoutes)
 				if err != nil {
 					return fmt.Errorf("parse routes: %w", err)
@@ -459,7 +459,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			}
 
 			routes := &model.Routes{}
-			if rawRoutes := processorGroupRaw["route"].([]any); v != nil {
+			if rawRoutes := processorGroupRaw["route"].(*schema.Set).List(); v != nil {
 				r, err := component.ParseRoutes(rawRoutes)
 				if err != nil {
 					return fmt.Errorf("parse routes: %w", err)
