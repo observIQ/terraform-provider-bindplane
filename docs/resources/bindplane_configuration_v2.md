@@ -84,6 +84,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 
 | Option              | Type         | Default  | Description                  |
 | ------------------- | ------------ | -------- | ---------------------------- |
+| `route_id`          | string       | required | A unique string that identifies the route. |
 | `telemetry_type`    | enum         | `logs+metrics+traces` | The telemetry type to route. |
 | `components`        | list(string) | required | One or more components to route the telemetry to. |
 
