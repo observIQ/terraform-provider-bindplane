@@ -76,3 +76,59 @@ func ValidateRouteComponents(components []model.ComponentPath) []error {
 	}
 	return errs
 }
+
+// ParseRoutes reads routes from the state and returns
+// them as a model.Routes object.
+//
+// This function expects to be passed the raw value from
+// from (d *schema.ResourceData) Get Terraform SDK method.
+// Schema validation ensures the type assertion used here
+// will succeed.
+func ParseRoutes(rawRoutes []any) (*model.Routes, error) {
+	routes := &model.Routes{}
+
+	for _, r := range rawRoutes {
+		rawComponents := r.(map[string]any)["components"].([]any)
+		components := []model.ComponentPath{}
+		for _, c := range rawComponents {
+			components = append(components, model.ComponentPath(c.(string)))
+		}
+		if err := ValidateRouteComponents(components); err != nil {
+			return nil, fmt.Errorf("validate route components: %v", err)
+		}
+
+		telemetryType := r.(map[string]any)["telemetry_type"].(string)
+		switch telemetryType {
+		case RouteTypeLogs:
+			routes.Logs = append(routes.Logs, model.Route{
+				Components: components,
+			})
+		case RouteTypeMetrics:
+			routes.Metrics = append(routes.Metrics, model.Route{
+				Components: components,
+			})
+		case RouteTypeTraces:
+			routes.Traces = append(routes.Traces, model.Route{
+				Components: components,
+			})
+		case RouteTypeLogsMetrics:
+			routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
+				Components: components,
+			})
+		case RouteTypeLogsTraces:
+			routes.LogsTraces = append(routes.LogsTraces, model.Route{
+				Components: components,
+			})
+		case RouteTypeMetricsTraces:
+			routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
+				Components: components,
+			})
+		case RouteTypeLogsMetricsTraces:
+			routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
+				Components: components,
+			})
+		}
+	}
+
+	return routes, nil
+}
