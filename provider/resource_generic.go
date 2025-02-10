@@ -39,15 +39,11 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	// A nil return from GenericResource indicates that the resource
 	// did not exist. Terraform read operations should always set the
 	// ID to "" and return a nil error. This will allow Terraform to
-	// re-create the resource or comfirm that it was deleted.
+	// re-create the resource or confirm that it was deleted.
 	if g == nil {
 		d.SetId("")
 		return nil
 	}
-
-	// Save values returned by bindplane to Terraform's state
-
-	d.SetId(g.ID)
 
 	// If the state ID is set but differs from the ID returned by,
 	// bindplane, mark the resource to be re-created by unsetting
@@ -55,11 +51,9 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	// instead of updating it. The creation step will fail because
 	// the resource already exists. This behavior is desirable, it will
 	// prevent Terraform from modifying resources created by other means.
-	if id := d.Id(); id != "" {
-		if g.ID != d.Id() {
-			d.SetId("")
-			return nil
-		}
+	if g.ID != d.Id() {
+		d.SetId("")
+		return nil
 	}
 
 	if err := d.Set("name", g.Name); err != nil {

@@ -28,7 +28,7 @@ import (
 // configurations, use AnyResourceFromConfigurationV1.
 //
 // rParameters and rProcessors can be nil.
-func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration) (model.AnyResource, error) {
+func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration) (model.AnyResource, error) {
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
 		proc := map[string]string{}
@@ -47,6 +47,7 @@ func AnyResourceV1(rName, rType string, rKind model.Kind, rParameters []model.Pa
 				APIVersion: "bindplane.observiq.com/v1",
 				Kind:       rKind,
 				Metadata: model.Metadata{
+					ID:   id,
 					Name: rName,
 				},
 			},

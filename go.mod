@@ -8,6 +8,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/observiq/bindplane-op-enterprise v1.86.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.35.0
 	go.uber.org/zap v1.27.0
@@ -135,7 +136,6 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/observiq/stanza v1.6.1 // indirect
 	github.com/oklog/run v1.0.0 // indirect
-	github.com/oklog/ulid/v2 v2.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/golden v0.118.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.118.0 // indirect

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 )
 
@@ -107,7 +108,13 @@ func resourceProcessorBundleCreate(d *schema.ResourceData, meta any) error {
 		if c != nil {
 			return fmt.Errorf("processor with name '%s' already exists with id '%s'", name, c.ID())
 		}
+
+		// If a source does not already exist with this name
+		// and an ID is not set, generate and ID.
+		d.SetId(component.NewResourceID())
 	}
+
+	id := d.Id()
 
 	// Using resource configuration instead of []string (names)
 	// to allow for future use of type + parameters_json.
@@ -131,7 +138,7 @@ func resourceProcessorBundleCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	r, err := resource.AnyResourceV1(name, processorType, model.KindProcessor, nil, processors)
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors)
 	if err != nil {
 		return err
 	}
