@@ -41,7 +41,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 	}
 
 	switch rKind {
-	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension:
+	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension, model.KindConnector:
 		return model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",
@@ -85,6 +85,14 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 
 	if len(c.Spec.MeasurementInterval) > 0 {
 		a.Spec["measurementInterval"] = c.Spec.MeasurementInterval
+	}
+
+	if len(c.Spec.Processors) > 0 {
+		a.Spec["processors"] = c.Spec.Processors
+	}
+
+	if len(c.Spec.Connectors) > 0 {
+		a.Spec["connectors"] = c.Spec.Connectors
 	}
 
 	return a

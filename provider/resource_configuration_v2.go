@@ -23,18 +23,20 @@ import (
 
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
+	v2 "github.com/observiq/terraform-provider-bindplane/provider/resource/configuration/v2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func resourceConfiguration() *schema.Resource {
+func resourceConfigurationV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Update: resourceConfigurationCreate, // Run create as update
-		Read:   resourceConfigurationRead,
+		Create: resourceConfigurationV2Create,
+		Update: resourceConfigurationV2Create, // Run create as update
+		Read:   resourceConfigurationV2Read,
 		Delete: genericConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -95,9 +97,57 @@ func resourceConfiguration() *schema.Resource {
 							Elem:        &schema.Schema{Type: schema.TypeString},
 							Description: "List of processor names to attach to the source.",
 						},
+						"route": v2.RouteSchema,
 					},
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
+			},
+			"connector": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this connector.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "Name of the connector to attach.",
+						},
+						"route": v2.RouteSchema,
+					},
+				},
+				Description: "Connector to be attached to the configuration. This option can be configured one or many times.",
+			},
+			"processor_group": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this processor group.",
+						},
+						"processors": {
+							Type:        schema.TypeList,
+							Required:    true,
+							ForceNew:    false,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Description: "List of processor names to attach to the processor group.",
+						},
+						"route": v2.RouteSchema,
+					},
+				},
+				Description: "Group of processors that will receive and process telemetry from one or more routes.",
 			},
 			"destination": {
 				Type:     schema.TypeList,
@@ -105,6 +155,12 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"route_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							ForceNew:    false,
+							Description: "The ID to use for routing to this destination.",
+						},
 						"name": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -214,7 +270,7 @@ func resourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
+func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	name := d.Get("name").(string)
@@ -258,11 +314,76 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 				}
 			}
 
+			routes := &model.Routes{}
+			if rawRoutes := sourcesRaw["route"].(*schema.Set).List(); v != nil {
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
+				}
+				routes = r
+			}
+
 			sourceConf := configuration.ResourceConfig{
 				Name:       sourcesRaw["name"].(string),
 				Processors: processors,
+				Routes:     routes,
 			}
 			sources = append(sources, sourceConf)
+		}
+	}
+
+	connectors := []configuration.ResourceConfig{}
+	if d.Get("connector") != nil {
+		connectorsRaw := d.Get("connector").([]any)
+		for _, v := range connectorsRaw {
+			connectorRaw := v.(map[string]any)
+
+			routes := &model.Routes{}
+			if rawRoutes := connectorRaw["route"].(*schema.Set).List(); v != nil {
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
+				}
+				routes = r
+			}
+
+			connectorConf := configuration.ResourceConfig{
+				RouteID: connectorRaw["route_id"].(string),
+				Name:    connectorRaw["name"].(string),
+				Routes:  routes,
+			}
+			connectors = append(connectors, connectorConf)
+		}
+	}
+
+	processorGroups := []configuration.ResourceConfig{}
+	if d.Get("processor_group") != nil {
+		processorGroupsRaw := d.Get("processor_group").([]any)
+		for _, v := range processorGroupsRaw {
+			processorGroupRaw := v.(map[string]any)
+
+			processors := []string{}
+			if v := processorGroupRaw["processors"].([]any); v != nil {
+				for _, v := range v {
+					processors = append(processors, v.(string))
+				}
+			}
+
+			routes := &model.Routes{}
+			if rawRoutes := processorGroupRaw["route"].(*schema.Set).List(); v != nil {
+				r, err := component.ParseRoutes(rawRoutes)
+				if err != nil {
+					return fmt.Errorf("parse routes: %w", err)
+				}
+				routes = r
+			}
+
+			processorGroupConf := configuration.ResourceConfig{
+				RouteID:    processorGroupRaw["route_id"].(string),
+				Processors: processors,
+				Routes:     routes,
+			}
+			processorGroups = append(processorGroups, processorGroupConf)
 		}
 	}
 
@@ -281,6 +402,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			}
 
 			destConfig := configuration.ResourceConfig{
+				RouteID:    destinationRaw["route_id"].(string),
 				Name:       destinationRaw["name"].(string),
 				Processors: processors,
 			}
@@ -312,13 +434,15 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesByName(sources),
+		configuration.WithConnectorsByName(connectors),
+		configuration.WithProcessorGroups(processorGroups),
 		configuration.WithDestinationsByName(destinations),
 		configuration.WithExtensionsByName(extensions),
 		configuration.WithRolloutOptions(rolloutOptions),
 		configuration.WithMeasurementInterval(measurementInterval),
 	}
 
-	config, err := configuration.NewV1(opts...)
+	config, err := configuration.NewV2Beta(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new configuration: %w", err)
 	}
@@ -330,10 +454,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return resourceConfigurationV2Read(d, meta)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
+func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	config, err := bindplane.Configuration(d.Get("name").(string))
@@ -396,11 +520,76 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
 		}
 		source["processors"] = processors
+
+		stateRoutes, err := component.RoutesToState(s.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
+		}
+		source["route"] = stateRoutes
+
 		sourceBlocks = append(sourceBlocks, source)
 	}
 	if err := d.Set("source", sourceBlocks); err != nil {
 		return err
 	}
+
+	connectorBlocks := []map[string]any{}
+	for _, c := range config.Spec.Connectors {
+		connector := map[string]any{}
+		connector["route_id"] = c.ID
+		connector["name"] = strings.Split(c.Name, ":")[0]
+
+		stateRoutes, err := component.RoutesToState(c.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
+		}
+		connector["route"] = stateRoutes
+
+		connectorBlocks = append(connectorBlocks, connector)
+	}
+	if err := d.Set("connector", connectorBlocks); err != nil {
+		return err
+	}
+
+	// Save the current state here so we can retrieve the saved
+	// route ID
+	stateProcessorGroupBlocks := d.Get("processor_group").([]any)
+
+	processorGroupBlocks := []map[string]any{}
+	for _, pg := range config.Spec.Processors {
+		processorGroup := map[string]any{}
+
+		processors := []string{}
+		for _, p := range pg.Processors {
+			processors = append(processors, strings.Split(p.Name, ":")[0])
+		}
+		processorGroup["processors"] = processors
+
+		stateRoutes, err := component.RoutesToState(pg.Routes)
+		if err != nil {
+			return fmt.Errorf("routes to state: %w", err)
+		}
+		processorGroup["route"] = stateRoutes
+
+		// Retrieve the saved route IDs from state and copy them
+		// to the new processor blocks before calling d.Set.
+		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
+			stateProcessorGroup := stateProcessorGroup.(map[string]any)
+			if stateProcessorGroup["route_id"] == pg.ID {
+				processorGroup["route_id"] = stateProcessorGroup["route_id"]
+				break
+			}
+		}
+
+		processorGroupBlocks = append(processorGroupBlocks, processorGroup)
+	}
+	if err := d.Set("processor_group", processorGroupBlocks); err != nil {
+		return err
+	}
+
+	// Save the current state here so we can retrieve the saved
+	// route ID
+	stateDestinationBlocks := d.Get("destination").([]any)
 
 	destinationBlocks := []map[string]any{}
 	for _, d := range config.Spec.Destinations {
@@ -411,8 +600,20 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 			processors = append(processors, strings.Split(p.Name, ":")[0])
 		}
 		destination["processors"] = processors
+
+		// Retrieve the saved route IDs from state and copy them
+		// to the new destination blocks before calling d.Set.
+		for _, stateDestination := range stateDestinationBlocks {
+			stateDestination := stateDestination.(map[string]any)
+			if stateDestination["name"] == destination["name"] {
+				destination["route_id"] = stateDestination["route_id"]
+				break
+			}
+		}
+
 		destinationBlocks = append(destinationBlocks, destination)
 	}
+
 	if err := d.Set("destination", destinationBlocks); err != nil {
 		return err
 	}
@@ -425,7 +626,7 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
+	if err := resourceConfigurationV2RolloutOptionsRead(d, config.Spec.Rollout); err != nil {
 		return err
 	}
 
@@ -438,10 +639,10 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	return nil
 }
 
-// resourceConfigurationRolloutOptionsRead takes a configuration's rollout options
+// resourceConfigurationV2RolloutOptionsRead takes a configuration's rollout options
 // and sets them in the Terraform state. This will trigger a terraform apply if the
 // rollout options have changed outside of Terraform.
-func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
+func resourceConfigurationV2RolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
 	if len(rollout.Parameters) == 0 {
 		return nil
 	}
