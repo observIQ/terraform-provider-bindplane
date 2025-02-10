@@ -97,24 +97,27 @@ resource "bindplane_processor" "include_java_microservice" {
   name    = "k8s-include-java-microservice-tf"
   type    = "filter-by-condition"
   parameters_json = jsonencode(
-    [
-      {
-        "name": "telemetry_types",
-        "value": [
-          "Metrics",
-          "Logs",
-          "Traces"
-        ]
-      },
-      {
-        "name": "action",
-        "value": "include"
-      },
-      {
-        "name": "condition",
-        "value":   {
-          "ottl": "(resource.attributes[\"service.name\"] == \"adservice\")",
-          "ui": {
+[
+  {
+    "name": "telemetry_types",
+    "value": [
+      "Metrics",
+      "Logs",
+      "Traces"
+    ]
+  },
+  {
+    "name": "action",
+    "value": "include"
+  },
+  {
+    "name": "condition",
+    "value": {
+      "ottl": "(resource.attributes[\"service.name\"] == \"adservice\") or (resource.attributes[\"service\"] == \"frauddetectionservice\")",
+      "ui": {
+        "operator": "OR",
+        "statements": [
+          {
             "operator": "",
             "statements": [
               {
@@ -124,14 +127,23 @@ resource "bindplane_processor" "include_java_microservice" {
                 "value": "adservice"
               }
             ]
+          },
+          {
+            "operator": "",
+            "statements": [
+              {
+                "key": "service",
+                "match": "resource",
+                "operator": "Equals",
+                "value": "frauddetectionservice"
+              }
+            ]
           }
-        }
-      },
-      {
-        "name": "timezone",
-        "value": "UTC"
+        ]
       }
-    ]
+    }
+  }
+]
   )
 }
 
@@ -184,9 +196,9 @@ resource "bindplane_configuration" "k8s-node" {
 
   source {
     name = bindplane_source.k8s_otlp_gateway.name
-    processors = [
-      bindplane_processor.include_java_microservice.name
-    ]
+    # processors = [
+    #   bindplane_processor.include_java_microservice.name
+    # ]
   }
 
   destination {
@@ -230,6 +242,6 @@ resource "bindplane_configuration" "k8s-gateway" {
   }
 
   destination {
-    name = bindplane_destination.k8s_gateway.name
+    name = bindplane_destination.gateway-east1.name
   }
 }
