@@ -31,18 +31,6 @@ const (
 	// RouteTypeTraces routes traces
 	RouteTypeTraces = "traces"
 
-	// RouteTypeLogsMetrics routes logs and metrics
-	RouteTypeLogsMetrics = "logs+metrics"
-
-	// RouteTypeLogsTraces routes logs and traces
-	RouteTypeLogsTraces = "logs+traces"
-
-	// RouteTypeMetricsTraces routes metrics and traces
-	RouteTypeMetricsTraces = "metrics+traces"
-
-	// RouteTypeLogsMetricsTraces routes logs, metrics, and traces
-	RouteTypeLogsMetricsTraces = "logs+metrics+traces"
-
 	// RoutePrefixProcessor is the prefix for processor routes
 	RoutePrefixProcessor = "processors"
 
@@ -56,7 +44,7 @@ const (
 // ValidateRouteType returns an error if the route type is invalid
 func ValidateRouteType(routeType string) error {
 	switch routeType {
-	case RouteTypeLogs, RouteTypeMetrics, RouteTypeTraces, RouteTypeLogsMetrics, RouteTypeLogsTraces, RouteTypeMetricsTraces, RouteTypeLogsMetricsTraces:
+	case RouteTypeLogs, RouteTypeMetrics, RouteTypeTraces:
 		return nil
 	}
 	return fmt.Errorf("invalid route type: %s", routeType)
@@ -117,26 +105,6 @@ func ParseRoutes(rawRoutes []any) (*model.Routes, error) {
 				ID:         id,
 				Components: components,
 			})
-		case RouteTypeLogsMetrics:
-			routes.LogsMetrics = append(routes.LogsMetrics, model.Route{
-				ID:         id,
-				Components: components,
-			})
-		case RouteTypeLogsTraces:
-			routes.LogsTraces = append(routes.LogsTraces, model.Route{
-				ID:         id,
-				Components: components,
-			})
-		case RouteTypeMetricsTraces:
-			routes.MetricsTraces = append(routes.MetricsTraces, model.Route{
-				ID:         id,
-				Components: components,
-			})
-		case RouteTypeLogsMetricsTraces:
-			routes.LogsMetricsTraces = append(routes.LogsMetricsTraces, model.Route{
-				ID:         id,
-				Components: components,
-			})
 		}
 	}
 
@@ -156,13 +124,9 @@ func RoutesToState(inRoutes *model.Routes) ([]map[string]any, error) {
 	stateRoutes := []map[string]any{}
 
 	routeMap := map[string][]model.Route{
-		RouteTypeLogs:              inRoutes.Logs,
-		RouteTypeMetrics:           inRoutes.Metrics,
-		RouteTypeTraces:            inRoutes.Traces,
-		RouteTypeLogsMetrics:       inRoutes.LogsMetrics,
-		RouteTypeLogsTraces:        inRoutes.LogsTraces,
-		RouteTypeMetricsTraces:     inRoutes.MetricsTraces,
-		RouteTypeLogsMetricsTraces: inRoutes.LogsMetricsTraces,
+		RouteTypeLogs:    inRoutes.Logs,
+		RouteTypeMetrics: inRoutes.Metrics,
+		RouteTypeTraces:  inRoutes.Traces,
 	}
 
 	for routeType, routes := range routeMap {

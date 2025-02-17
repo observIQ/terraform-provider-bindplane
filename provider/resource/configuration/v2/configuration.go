@@ -35,9 +35,9 @@ var RouteSchema *schema.Schema = &schema.Schema{
 			},
 			"telemetry_type": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    false,
-				Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces' 'logs+metrics', 'logs+traces', 'metrics+traces', 'logs+metrics+traces'.",
+				Description: "The telemetry type to route. Valid route types include 'logs', 'metrics', or 'traces'.",
 				ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
 					telemetryType := val.(string)
 					if err := component.ValidateRouteType(telemetryType); err != nil {
@@ -45,7 +45,6 @@ var RouteSchema *schema.Schema = &schema.Schema{
 					}
 					return
 				},
-				Default: component.RouteTypeLogsMetricsTraces,
 			},
 			"components": {
 				Type:        schema.TypeList,
