@@ -31,10 +31,6 @@ func TestValidateRouteType(t *testing.T) {
 		{"logs", nil},
 		{"metrics", nil},
 		{"traces", nil},
-		{"logs+metrics", nil},
-		{"logs+traces", nil},
-		{"metrics+traces", nil},
-		{"logs+metrics+traces", nil},
 		{"invalid", errors.New("invalid route type: invalid")},
 	}
 
@@ -79,11 +75,11 @@ func TestParseRoutes(t *testing.T) {
 				map[string]any{
 					"route_id":       "logs-otlp",
 					"components":     []any{"destinations/otlp"},
-					"telemetry_type": "logs+metrics+traces",
+					"telemetry_type": "logs",
 				},
 			},
 			&model.Routes{
-				LogsMetricsTraces: []model.Route{
+				Logs: []model.Route{
 					{
 						ID:         "logs-otlp",
 						Components: []model.ComponentPath{"destinations/otlp"},
@@ -110,26 +106,6 @@ func TestParseRoutes(t *testing.T) {
 					"components":     []any{"destinations/jaeger"},
 					"telemetry_type": "traces",
 				},
-				map[string]any{
-					"route_id":       "logs-metrics",
-					"components":     []any{"destinations/otlp", "processors/batcher"},
-					"telemetry_type": "logs+metrics",
-				},
-				map[string]any{
-					"route_id":       "logs-traces",
-					"components":     []any{"destinations/otlp", "processors/batcher"},
-					"telemetry_type": "logs+traces",
-				},
-				map[string]any{
-					"route_id":       "metrics-traces",
-					"components":     []any{"destinations/otlp", "processors/batcher"},
-					"telemetry_type": "metrics+traces",
-				},
-				map[string]any{
-					"route_id":       "all",
-					"components":     []any{"destinations/otlp", "processors/batcher", "connectors/router"},
-					"telemetry_type": "logs+metrics+traces",
-				},
 			},
 			&model.Routes{
 				Logs: []model.Route{
@@ -150,30 +126,6 @@ func TestParseRoutes(t *testing.T) {
 						Components: []model.ComponentPath{"destinations/jaeger"},
 					},
 				},
-				LogsMetrics: []model.Route{
-					{
-						ID:         "logs-metrics",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-				LogsTraces: []model.Route{
-					{
-						ID:         "logs-traces",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-				MetricsTraces: []model.Route{
-					{
-						ID:         "metrics-traces",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-				LogsMetricsTraces: []model.Route{
-					{
-						ID:         "all",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher", "connectors/router"},
-					},
-				},
 			},
 			false,
 		},
@@ -182,7 +134,7 @@ func TestParseRoutes(t *testing.T) {
 			[]any{
 				map[string]any{
 					"components":     []any{"dest/otlp"},
-					"telemetry_type": "logs+metrics+traces",
+					"telemetry_type": "traces",
 				},
 			},
 			nil,
@@ -269,78 +221,6 @@ func TestRoutesToState(t *testing.T) {
 					"route_id":       "jaeger",
 					"telemetry_type": "traces",
 					"components":     []model.ComponentPath{"destinations/jaeger"},
-				},
-			},
-		},
-		{
-			"logs+metrics route",
-			&model.Routes{
-				LogsMetrics: []model.Route{
-					{
-						ID:         "all-types",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-			},
-			[]map[string]any{
-				{
-					"route_id":       "all-types",
-					"telemetry_type": "logs+metrics",
-					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-				},
-			},
-		},
-		{
-			"logs+traces route",
-			&model.Routes{
-				LogsTraces: []model.Route{
-					{
-						ID:         "logs-traces",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-			},
-			[]map[string]any{
-				{
-					"route_id":       "logs-traces",
-					"telemetry_type": "logs+traces",
-					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-				},
-			},
-		},
-		{
-			"metrics+traces route",
-			&model.Routes{
-				MetricsTraces: []model.Route{
-					{
-						ID:         "metrics-traces",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-					},
-				},
-			},
-			[]map[string]any{
-				{
-					"route_id":       "metrics-traces",
-					"telemetry_type": "metrics+traces",
-					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher"},
-				},
-			},
-		},
-		{
-			"logs+metrics+traces route",
-			&model.Routes{
-				LogsMetricsTraces: []model.Route{
-					{
-						ID:         "all",
-						Components: []model.ComponentPath{"destinations/otlp", "processors/batcher", "connectors/router"},
-					},
-				},
-			},
-			[]map[string]any{
-				{
-					"route_id":       "all",
-					"telemetry_type": "logs+metrics+traces",
-					"components":     []model.ComponentPath{"destinations/otlp", "processors/batcher", "connectors/router"},
 				},
 			},
 		},
