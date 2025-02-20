@@ -241,25 +241,21 @@ resource "bindplane_configuration_v2" "configuration" {
   ]
   rollout_options {
     type = "progressive"
-    parameters = [
-      {
-        name = "stages"
-        value = [
-          {
-            labels = {
-              env = "stage"
-            }
-            name = "stage"
-          },
-          {
-            labels = {
-              env = "production"
-            }
-            name = "production"
-          }
-        ]
+    parameters {
+      name = "stages"
+      value {
+        labels = {
+          env = "stage"
+        }
+        name = "stage"
       }
-    ]
+      value {
+        labels = {
+          env = "production"
+        }
+        name = "production"
+      }
+    }
   }
 }
 ```
