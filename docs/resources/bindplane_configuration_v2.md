@@ -209,6 +209,8 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.host.name
     route {
+      route_id = "host-metrics"
+      telemetry_type = "metrics"
       components = [
         "destinations/${bindplane_destination.google.id}"
       ]
@@ -218,6 +220,8 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.journald.name
     route {
+      route_id = "journald-logs"
+      telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.google.id}"
       ]
@@ -226,6 +230,7 @@ resource "bindplane_configuration_v2" "configuration" {
 
   destination {
     name = bindplane_destination.google.name
+    route_id = "destinations/${bindplane_destination.google.id}"
     processors = [
       bindplane_processor.batch.name
     ]
@@ -234,7 +239,6 @@ resource "bindplane_configuration_v2" "configuration" {
   extensions = [
     bindplane_extension.pprof.name
   ]
-
   rollout_options {
     type = "progressive"
     parameters = [
