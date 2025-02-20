@@ -230,7 +230,7 @@ resource "bindplane_configuration_v2" "configuration" {
 
   destination {
     name = bindplane_destination.google.name
-    route_id = "destinations/${bindplane_destination.google.id}"
+    route_id = bindplane_destination.google.id
     processors = [
       bindplane_processor.batch.name
     ]
