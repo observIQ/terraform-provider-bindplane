@@ -76,7 +76,7 @@ func TestNewTestConfig(t *testing.T) {
 	require.NotNil(t, c)
 }
 
-// BindPlane is not configured, API calls should fail
+// Bindplane is not configured, API calls should fail
 func TestApply(t *testing.T) {
 	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)
@@ -84,7 +84,7 @@ func TestApply(t *testing.T) {
 	require.Error(t, i.Apply(&model.AnyResource{}, false))
 }
 
-// BindPlane is not configured, API calls should fail
+// Bindplane is not configured, API calls should fail
 func TestConfiguration(t *testing.T) {
 	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func TestConfiguration(t *testing.T) {
 	require.Error(t, err)
 }
 
-// BindPlane is not configured, API calls should fail
+// Bindplane is not configured, API calls should fail
 func TestDeleteConfiguration(t *testing.T) {
 	i, err := newTestConfig("", "", "", "", "", "")
 	require.NoError(t, err)

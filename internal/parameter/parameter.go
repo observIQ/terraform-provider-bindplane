@@ -13,7 +13,8 @@
 // limitations under the License.
 
 // Package parameter provides functions for marshalling and unmarshalling
-// BindPlane resource parameters.
+//
+//	resource parameters.
 package parameter
 
 import (
@@ -24,7 +25,7 @@ import (
 )
 
 // StringToParameter unmarshals serialized json parameters
-// to a list of BindPlane parameters.
+// to a list of Bindplane parameters.
 func StringToParameter(s string) ([]model.Parameter, error) {
 	parameters := []model.Parameter{}
 	if err := json.Unmarshal([]byte(s), &parameters); err != nil {

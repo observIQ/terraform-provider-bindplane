@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package resource provides functions for defining bindplane
+// Package resource provides functions for defining Bindplane
 // generic resources.
 package resource
 
@@ -22,7 +22,7 @@ import (
 	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
-// AnyResourceV1 takes a BindPlane resource name, kind, type, parameters
+// AnyResourceV1 takes a Bindplane resource name, kind, type, parameters
 // and processors and returns a bindplane.observiq.com/v1.AnyResource.
 // Supported resources are Sources, Destinations, and Processors. For
 // configurations, use AnyResourceFromConfigurationV1.
@@ -62,7 +62,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 	}
 }
 
-// AnyResourceFromConfigurationV1 takes a BindPlane configuration and returns a
+// AnyResourceFromConfigurationV1 takes a Bindplane configuration and returns a
 // bindplane.observiq.com/v1.AnyResource
 func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 	a := anyResourceFromConfiguration(c)

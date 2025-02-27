@@ -1,12 +1,12 @@
 ---
-page_title: "Provider: BindPlane Observability Pipelines"
+page_title: "Provider: Bindplane Observability Pipelines"
 description: |-
-   The BindPlane provider is used to configure your BindPlane OP resources
+   The Bindplane provider is used to configure your Bindplane resources
 ---
 
-# BindPlane OP Provider
+# Bindplane Provider
 
-The BindPlane provider is used to configure your [BindPlane OP](https://observiq.com/solutions/bindplane-op/) resources.
+The Bindplane provider is used to configure your [Bindplane](https://observiq.com/solutions/bindplane-op/) resources.
 
 To learn the basics of Terraform using follow the hands-on
 [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/infrastructure-as-code).
@@ -17,11 +17,11 @@ The provider can be configured with options and environment variables.
 
 | Option                      | Evironment                | Description                  |
 | --------------------------- | ------------------------- | ---------------------------- |
-| `remote_url`                | `BINDPLANE_TF_REMOTE_URL` | The URL for the BindPlane server.  |
+| `remote_url`                | `BINDPLANE_TF_REMOTE_URL` | The URL for the Bindplane server.  |
 | `api_key`                   | `BINDPLANE_TF_API_KEY`    | The API key to use for authentication as an alternative to `username` and `password`. |
-| `username`                  | `BINDPLANE_TF_USERNAME`   | The BindPlane basic auth username. |
-| `password`                  | `BINDPLANE_TF_PASSWORD`   | The BindPlane basic auth password. |
-| `tls_certificate_authority` | `BINDPLANE_TF_TLS_CA`     | Path to x509 PEM encoded certificate authority to trust when connecting to BindPlane. |
+| `username`                  | `BINDPLANE_TF_USERNAME`   | The Bindplane basic auth username. |
+| `password`                  | `BINDPLANE_TF_PASSWORD`   | The Bindplane basic auth password. |
+| `tls_certificate_authority` | `BINDPLANE_TF_TLS_CA`     | Path to x509 PEM encoded certificate authority to trust when connecting to Bindplane. |
 | `tls_certificate`           | `BINDPLANE_TF_TLS_CERT`   | Path to x509 PEM encoded client certificate to use when mTLS is desired. |
 | `tls_private_key`           | `BINDPLANE_TF_TLS_KEY`    | Path to x509 PEM encoded private key to use when mTLS is desired. |
 
@@ -109,5 +109,5 @@ for release notes and additional information.
 
 ## External Links
 
-* [BindPlane OP Docs](https://docs.bindplane.observiq.com/docs)
-* [BindPlane OP Community Slack](https://launchpass.com/bindplane)
+* [Bindplane Docs](https://bindplane.com/docs)
+* [Bindplane Community Slack](https://launchpass.com/bindplane)

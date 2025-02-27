@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Environment:**
  - OS
- - BindPlane Terraform Provider Version or Commit Hash
+ - Bindplane Terraform Provider Version or Commit Hash
 
 **Additional context**
 Add any other context about the problem here.
