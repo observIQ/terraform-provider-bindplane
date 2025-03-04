@@ -31,15 +31,16 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/observiq/bindplane-op-enterprise/client"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	hashiversion "github.com/hashicorp/go-version"
-	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -50,9 +51,25 @@ const (
 
 	username = "int-test-user"
 	password = "int-test-password"
+
+	networkName   = "bindplane-test-network"
+	postgresName  = "bindplane-postgres"
+	bindplaneName = "bindplane-server"
 )
 
-func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Container, *hashiversion.Version) {
+func createTestNetwork(t *testing.T, ctx context.Context) func() {
+	nw, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
+		NetworkRequest: testcontainers.NetworkRequest{
+			Name: networkName,
+		},
+	})
+	require.NoError(t, err)
+	return func() {
+		require.NoError(t, nw.Remove(ctx))
+	}
+}
+
+func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string, postgresHost string) (testcontainers.Container, *hashiversion.Version) {
 	// Get the bindplane version to determine the image and tag
 	version := os.Getenv("BINDPLANE_VERSION")
 	if version == "" {
@@ -67,31 +84,6 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 	image := fmt.Sprintf("observiq/bindplane-ee:%s", version)
 
 	dir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := context.Background()
-
-	env["POSTGRES_PASSWORD"] = "password"
-	env["POSTGRES_USER"] = "bindplane"
-	env["POSTGRES_DB"] = "bindplane"
-
-	postgresReq := testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Image:        "postgres:16",
-			Env:          env,
-			ExposedPorts: []string{"5432:5432"},
-			WaitingFor:   wait.ForListeningPort("5432"),
-		},
-	}
-
-	postgresContainer, err := testcontainers.GenericContainer(ctx, postgresReq)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	postgresHost, err := postgresContainer.Host(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,6 +105,7 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 	req := testcontainers.ContainerRequest{
 		Image:  image,
 		Env:    env,
+		Name:   bindplaneName,
 		Mounts: []testcontainers.ContainerMount{mount},
 		Files: []testcontainers.ContainerFile{
 			{
@@ -124,6 +117,14 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 		// TODO(jsirianni): dynamic port?
 		ExposedPorts: []string{fmt.Sprintf("%d:%d", bindplaneExtPort, 3001)},
 		WaitingFor:   wait.ForListeningPort("3001"),
+	}
+
+	// Add network configuration if a network name is provided
+	if networkName != "" {
+		req.Networks = []string{networkName}
+		req.NetworkAliases = map[string][]string{
+			networkName: {"bindplane-server"},
+		}
 	}
 
 	require.NoError(t, req.Validate())
@@ -216,7 +217,50 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 	return json.Unmarshal(body, &respBody)
 }
 
+func postgresContainer(t *testing.T, ctx context.Context, env map[string]string) (testcontainers.Container, string) {
+	env["POSTGRES_PASSWORD"] = "password"
+	env["POSTGRES_USER"] = "bindplane"
+	env["POSTGRES_DB"] = "bindplane"
+
+	postgresReq := testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Name:         postgresName,
+			Image:        "postgres:16",
+			Env:          env,
+			ExposedPorts: []string{"5432:5432"},
+			WaitingFor:   wait.ForListeningPort("5432"),
+			Networks:     []string{networkName},
+			NetworkAliases: map[string][]string{
+				networkName: {postgresName},
+			},
+		},
+	}
+
+	postgresContainer, err := testcontainers.GenericContainer(ctx, postgresReq)
+	require.NoError(t, err)
+
+	// When using a network, we can just return the container name as the host
+	return postgresContainer, postgresName
+}
+
+var networkOnce sync.Once
+var networkCleanup func()
+
+// TODO(schmikei) refactor tests to be able to run in parallel while also not having to create postgres on every test
+func beforeTest(t *testing.T, ctx context.Context) {
+	networkOnce.Do(func() {
+		networkCleanup = createTestNetwork(t, ctx)
+	})
+}
+
+func afterTest(t *testing.T) {
+	networkCleanup()
+}
+
 func TestIntegration_http_config(t *testing.T) {
+	beforeTest(t, context.Background())
+	defer afterTest(t)
+
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
 		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
@@ -236,13 +280,30 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
 
-	container, version := bindplaneContainer(t, env)
+	ctx := context.Background()
+
+	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
+	defer func() {
+		require.NoError(t, postgresContainer.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+
+	time.Sleep(time.Second * 1)
+	err := postgresContainer.Start(ctx)
+	require.NoError(t, err)
+
+	// Create the bindplane container on the same network
+	container, version := bindplaneContainer(t, ctx, env, postgresHost)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
 	}()
 
 	time.Sleep(time.Second * 3)
+
+	err = container.Start(ctx)
+	time.Sleep(time.Minute * 1)
+	require.NoError(t, err)
 
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
@@ -408,6 +469,9 @@ func TestIntegration_http_config(t *testing.T) {
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {
+	beforeTest(t, context.Background())
+	defer afterTest(t)
+
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
 		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
@@ -424,7 +488,24 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
-	container, version := bindplaneContainer(t, env)
+	ctx := context.Background()
+
+	// Create a shared network for the containers
+	networkCleanup := createTestNetwork(t, ctx)
+	defer networkCleanup()
+
+	// Create the postgres container on the network
+
+	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
+	defer func() {
+		require.NoError(t, postgresContainer.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	time.Sleep(time.Second * 1)
+	err := postgresContainer.Start(ctx)
+	require.NoError(t, err)
+
+	container, version := bindplaneContainer(t, ctx, env, postgresHost)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
@@ -455,6 +536,9 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 }
 
 func TestIntegration_https(t *testing.T) {
+	beforeTest(t, context.Background())
+	defer afterTest(t)
+
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
 		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
@@ -477,8 +561,21 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
+	ctx := context.Background()
+	// Create a shared network for the containers
+	networkCleanup := createTestNetwork(t, ctx)
+	defer networkCleanup()
 
-	container, version := bindplaneContainer(t, env)
+	// Create the postgres container on the network
+	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
+	defer func() {
+		require.NoError(t, postgresContainer.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	err := postgresContainer.Start(ctx)
+	require.NoError(t, err)
+
+	container, version := bindplaneContainer(t, ctx, env, postgresHost)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
@@ -509,6 +606,9 @@ func TestIntegration_https(t *testing.T) {
 }
 
 func TestIntegration_mtls(t *testing.T) {
+	beforeTest(t, context.Background())
+	defer afterTest(t)
+
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
 		t.Fatal("BINDPLANE_LICENSE must be set in the environment")
@@ -532,8 +632,22 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
+	ctx := context.Background()
 
-	container, version := bindplaneContainer(t, env)
+	// Create a shared network for the containers
+	networkCleanup := createTestNetwork(t, ctx)
+	defer networkCleanup()
+
+	// Create the postgres container on the network
+	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
+	defer func() {
+		require.NoError(t, postgresContainer.Terminate(context.Background()))
+		time.Sleep(time.Second * 1)
+	}()
+	err := postgresContainer.Start(ctx)
+	require.NoError(t, err)
+
+	container, version := bindplaneContainer(t, ctx, env, postgresHost)
 	defer func() {
 		require.NoError(t, container.Terminate(context.Background()))
 		time.Sleep(time.Second * 1)
