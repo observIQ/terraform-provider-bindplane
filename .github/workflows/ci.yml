@@ -316,10 +316,23 @@ jobs:
                 - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
                 - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
                 - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
+                - BINDPLANE_POSTGRES_HOST=postgres
+                - BINDPLANE_POSTGRES_PORT=5432
+                - BINDPLANE_POSTGRES_DATABASE=bindplane
+                - BINDPLANE_POSTGRES_USERNAME=bindplane
+                - BINDPLANE_POSTGRES_PASSWORD=password
               volumes:
                 - bindplane:/data
               depends_on:
                 - transform
+                - postgres
+            postgres:
+              container_name: bindplane-postgres
+              restart: always
+              image: postgres:16
+              environment:
+                - POSTGRES_DB=bindplane
+                - POSTGRES_USER=bindplane
           EOF
           docker-compose up -d
         env:
