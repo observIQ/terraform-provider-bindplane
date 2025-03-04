@@ -316,10 +316,26 @@ jobs:
                 - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
                 - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
                 - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
+                - BINDPLANE_POSTGRES_HOST=bindplane-postgres
+                - BINDPLANE_POSTGRES_PORT=5432
+                - BINDPLANE_POSTGRES_DATABASE=bindplane
+                - BINDPLANE_POSTGRES_USERNAME=bindplane
+                - BINDPLANE_POSTGRES_PASSWORD=password
               volumes:
                 - bindplane:/data
               depends_on:
                 - transform
+                - postgres
+            postgres:
+              container_name: bindplane-postgres
+              restart: always
+              image: postgres:16
+              ports:
+                - "5432:5432"
+              environment:
+                - POSTGRES_DB=bindplane
+                - POSTGRES_PASSWORD=password
+                - POSTGRES_USER=bindplane
           EOF
           docker-compose up -d
         env:
@@ -346,11 +362,13 @@ jobs:
         run: make test-local
 
       - name: run local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -parallelism=1
         working-directory: test/local
 
       - name: cleanup local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -parallelism=1
         working-directory: test/local
 
       - name: prep example/
@@ -359,11 +377,13 @@ jobs:
           cp -r test/local/providers example/
 
       - name: apply example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -parallelism=1
         working-directory: example/
 
       - name: cleanup example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -parallelism=1
         working-directory: example/
 
       - run: goreleaser --version
@@ -383,6 +403,10 @@ jobs:
       - name: bindplane logs (debug)
         if: always()
         run: docker logs bindplane-server
+
+      - name: postgres logs (debug)
+        if: always()
+        run: docker logs bindplane-postgres
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG

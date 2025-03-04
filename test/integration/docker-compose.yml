@@ -1,5 +1,8 @@
 
 version: "3.9"
+volumes:
+  bindplane:
+
 services:
   bindplane:
     hostname: bindplane.bindplane-dev.svc.cluster.local
@@ -20,8 +23,25 @@ services:
       - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
       - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
       - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
+      - BINDPLANE_POSTGRES_HOST=postgres
+      - BINDPLANE_POSTGRES_PORT=5432
+      - BINDPLANE_POSTGRES_DATABASE=bindplane
+      - BINDPLANE_POSTGRES_USERNAME=bindplane
+      - BINDPLANE_POSTGRES_PASSWORD=password
     volumes:
       - "../../client/tls/bindplane-ca.crt:/bindplane-ca.crt:ro"
       - "../../client/tls/bindplane.crt:/bindplane.crt:ro"
       - "../../client/tls/bindplane.key:/bindplane.key:ro"
       - "./resources.yaml:/resources.yaml:ro"
+    depends_on:
+      - postgres
+  postgres:
+    container_name: bindplane-postgres
+    restart: always
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=bindplane
+      - POSTGRES_USER=bindplane
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - bindplane:/var/lib/postgresql/data
