@@ -373,11 +373,12 @@ jobs:
           cp -r test/local/providers example/
 
       - name: apply example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -parallelism=1
         working-directory: example/
 
       - name: cleanup example resources
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -parallelism=1
         working-directory: example/
 
       - run: goreleaser --version
