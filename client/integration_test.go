@@ -23,7 +23,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -151,7 +151,7 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 			return fmt.Errorf("failed to load client cert: %w", err)
 		}
 
-		caCert, err := io.ReadFile("tls/bindplane-ca.crt")
+		caCert, err := ioutil.ReadFile("tls/bindplane-ca.crt")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -198,7 +198,7 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
