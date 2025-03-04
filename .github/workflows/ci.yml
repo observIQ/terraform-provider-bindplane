@@ -362,11 +362,13 @@ jobs:
         run: make test-local
 
       - name: run local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -parallelism=1
         working-directory: test/local
 
       - name: cleanup local tests
-        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -parallelism=1
         working-directory: test/local
 
       - name: prep example/
@@ -380,6 +382,7 @@ jobs:
         working-directory: example/
 
       - name: cleanup example resources
+        # TODO(schmikei) remove parallelism once we improve bindplane with postgres to handle parallel resource upserts
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -parallelism=1
         working-directory: example/
 
@@ -400,6 +403,10 @@ jobs:
       - name: bindplane logs (debug)
         if: always()
         run: docker logs bindplane-server
+
+      - name: postgres logs (debug)
+        if: always()
+        run: docker logs bindplane-postgres
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG
