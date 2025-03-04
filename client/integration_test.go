@@ -441,7 +441,7 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
 		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 		"BINDPLANE_POSTGRES_HOST":                 "postgres",
-		"BINDPLANE_POSTGRES_PORT":                 5432,
+		"BINDPLANE_POSTGRES_PORT":                 "5432",
 		"BINDPLANE_POSTGRES_DATABASE":             "bindplane",
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
