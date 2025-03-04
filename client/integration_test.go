@@ -500,7 +500,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		endpoint.String(),
 		username,
 		password,
-		"", "", "",
+		"tls/bindplane-ca.crt", "", "",
 	)
 	require.NoError(t, err)
 
