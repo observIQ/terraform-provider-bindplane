@@ -31,7 +31,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -57,16 +56,14 @@ const (
 	bindplaneName = "bindplane-server"
 )
 
-func createTestNetwork(t *testing.T, ctx context.Context) func() {
+func createTestNetwork(t *testing.T, ctx context.Context) func(ctx context.Context) error {
 	nw, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
 			Name: networkName,
 		},
 	})
 	require.NoError(t, err)
-	return func() {
-		require.NoError(t, nw.Remove(ctx))
-	}
+	return nw.Remove
 }
 
 func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string, postgresHost string) (testcontainers.Container, *hashiversion.Version) {
@@ -107,13 +104,6 @@ func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string
 		Env:    env,
 		Name:   bindplaneName,
 		Mounts: []testcontainers.ContainerMount{mount},
-		Files: []testcontainers.ContainerFile{
-			{
-				HostFilePath:      path.Join(dir, "tls"),
-				ContainerFilePath: "/tmp",
-				FileMode:          0644,
-			},
-		},
 		// TODO(jsirianni): dynamic port?
 		ExposedPorts: []string{fmt.Sprintf("%d:%d", bindplaneExtPort, 3001)},
 		WaitingFor:   wait.ForListeningPort("3001"),
@@ -123,7 +113,7 @@ func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string
 	if networkName != "" {
 		req.Networks = []string{networkName}
 		req.NetworkAliases = map[string][]string{
-			networkName: {"bindplane-server"},
+			networkName: {bindplaneName},
 		}
 	}
 
@@ -243,23 +233,12 @@ func postgresContainer(t *testing.T, ctx context.Context, env map[string]string)
 	return postgresContainer, postgresName
 }
 
-var networkOnce sync.Once
-var networkCleanup func()
-
-// TODO(schmikei) refactor tests to be able to run in parallel while also not having to create postgres on every test
-func beforeTest(t *testing.T, ctx context.Context) {
-	networkOnce.Do(func() {
-		networkCleanup = createTestNetwork(t, ctx)
-	})
-}
-
-func afterTest(t *testing.T) {
-	networkCleanup()
-}
-
 func TestIntegration_http_config(t *testing.T) {
-	beforeTest(t, context.Background())
-	defer afterTest(t)
+	ctx := context.Background()
+	networkCleanup := createTestNetwork(t, ctx)
+	t.Cleanup(func() {
+		require.NoError(t, networkCleanup(ctx))
+	})
 
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
@@ -279,8 +258,6 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
-
-	ctx := context.Background()
 
 	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
 	defer func() {
@@ -469,8 +446,11 @@ func TestIntegration_http_config(t *testing.T) {
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {
-	beforeTest(t, context.Background())
-	defer afterTest(t)
+	ctx := context.Background()
+	networkCleanup := createTestNetwork(t, ctx)
+	t.Cleanup(func() {
+		require.NoError(t, networkCleanup(ctx))
+	})
 
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
@@ -488,14 +468,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
 	}
 
-	ctx := context.Background()
-
-	// Create a shared network for the containers
-	networkCleanup := createTestNetwork(t, ctx)
-	defer networkCleanup()
-
 	// Create the postgres container on the network
-
 	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
 	defer func() {
 		require.NoError(t, postgresContainer.Terminate(context.Background()))
@@ -527,7 +500,7 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 		endpoint.String(),
 		username,
 		password,
-		"tls/bindplane-ca.crt", "", "",
+		"", "", "",
 	)
 	require.NoError(t, err)
 
@@ -536,8 +509,11 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 }
 
 func TestIntegration_https(t *testing.T) {
-	beforeTest(t, context.Background())
-	defer afterTest(t)
+	ctx := context.Background()
+	networkCleanup := createTestNetwork(t, ctx)
+	t.Cleanup(func() {
+		require.NoError(t, networkCleanup(ctx))
+	})
 
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
@@ -561,10 +537,6 @@ func TestIntegration_https(t *testing.T) {
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
-	ctx := context.Background()
-	// Create a shared network for the containers
-	networkCleanup := createTestNetwork(t, ctx)
-	defer networkCleanup()
 
 	// Create the postgres container on the network
 	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
@@ -606,8 +578,11 @@ func TestIntegration_https(t *testing.T) {
 }
 
 func TestIntegration_mtls(t *testing.T) {
-	beforeTest(t, context.Background())
-	defer afterTest(t)
+	ctx := context.Background()
+	networkCleanup := createTestNetwork(t, ctx)
+	t.Cleanup(func() {
+		require.NoError(t, networkCleanup(ctx))
+	})
 
 	license := os.Getenv("BINDPLANE_LICENSE")
 	if license == "" {
@@ -632,12 +607,6 @@ func TestIntegration_mtls(t *testing.T) {
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
 	}
-	ctx := context.Background()
-
-	// Create a shared network for the containers
-	networkCleanup := createTestNetwork(t, ctx)
-	defer networkCleanup()
-
 	// Create the postgres container on the network
 	postgresContainer, postgresHost := postgresContainer(t, ctx, env)
 	defer func() {
