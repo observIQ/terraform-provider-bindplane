@@ -102,9 +102,18 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 	env["BINDPLANE_POSTGRES_USERNAME"] = "bindplane"
 	env["BINDPLANE_POSTGRES_PASSWORD"] = "password"
 
+	mount := testcontainers.ContainerMount{
+		Source: testcontainers.GenericBindMountSource{
+			HostPath: path.Join(dir, "tls"),
+		},
+		Target:   "/tmp",
+		ReadOnly: false,
+	}
+
 	req := testcontainers.ContainerRequest{
-		Image: image,
-		Env:   env,
+		Image:  image,
+		Env:    env,
+		Mounts: []testcontainers.ContainerMount{mount},
 		Files: []testcontainers.ContainerFile{
 			{
 				HostFilePath:      path.Join(dir, "tls"),
