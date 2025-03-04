@@ -23,7 +23,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -71,23 +71,47 @@ func bindplaneContainer(t *testing.T, env map[string]string) (testcontainers.Con
 		t.Fatal(err)
 	}
 
-	mount := testcontainers.ContainerMount{
-		Source: testcontainers.GenericBindMountSource{
-			HostPath: path.Join(dir, "tls"),
-		},
-		Target:   "/tmp",
-		ReadOnly: false,
-	}
-
-	mounts := []testcontainers.ContainerMount{
-		mount,
-	}
-
 	ctx := context.Background()
+
+	env["POSTGRES_PASSWORD"] = "password"
+	env["POSTGRES_USER"] = "bindplane"
+	env["POSTGRES_DB"] = "bindplane"
+
+	postgresReq := testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Image:        "postgres:16",
+			Env:          env,
+			ExposedPorts: []string{"5432:5432"},
+			WaitingFor:   wait.ForListeningPort("5432"),
+		},
+	}
+
+	postgresContainer, err := testcontainers.GenericContainer(ctx, postgresReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	postgresHost, err := postgresContainer.Host(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	env["BINDPLANE_POSTGRES_HOST"] = postgresHost
+	env["BINDPLANE_POSTGRES_PORT"] = "5432"
+	env["BINDPLANE_POSTGRES_DATABASE"] = "bindplane"
+	env["BINDPLANE_POSTGRES_USERNAME"] = "bindplane"
+	env["BINDPLANE_POSTGRES_PASSWORD"] = "password"
+
 	req := testcontainers.ContainerRequest{
-		Image:  image,
-		Env:    env,
-		Mounts: mounts,
+		Image: image,
+		Env:   env,
+		Files: []testcontainers.ContainerFile{
+			{
+				HostFilePath:      path.Join(dir, "tls"),
+				ContainerFilePath: "/tmp",
+				FileMode:          0644,
+			},
+		},
 		// TODO(jsirianni): dynamic port?
 		ExposedPorts: []string{fmt.Sprintf("%d:%d", bindplaneExtPort, 3001)},
 		WaitingFor:   wait.ForListeningPort("3001"),
@@ -127,7 +151,7 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 			return fmt.Errorf("failed to load client cert: %w", err)
 		}
 
-		caCert, err := ioutil.ReadFile("tls/bindplane-ca.crt")
+		caCert, err := io.ReadFile("tls/bindplane-ca.crt")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -174,7 +198,7 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -198,8 +222,6 @@ func TestIntegration_http_config(t *testing.T) {
 		"BINDPLANE_LICENSE":                       license,
 		"BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE": "true",
 		"BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS": "transform:4568",
-		"BINDPLANE_POSTGRES_HOST":                 "postgres",
-		"BINDPLANE_POSTGRES_PORT":                 "5432",
 		"BINDPLANE_POSTGRES_DATABASE":             "bindplane",
 		"BINDPLANE_POSTGRES_USERNAME":             "bindplane",
 		"BINDPLANE_POSTGRES_PASSWORD":             "password",
