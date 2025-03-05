@@ -1,14 +1,14 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  A Destination creates a BindPlane OP destination that can be attached
+  A Destination creates a Bindplane destination that can be attached
   to a Configuration. Destinations are used by agents to send telemetry
   to a backend, such as Google, Grafana, or New Relic.
 ---
 
 # bindplane_destination
 
-The `bindplane_destination` resource creates a BindPlane destination from a BindPlane
+The `bindplane_destination` resource creates a Bindplane destination from a Bindplane
 destination-type. The destination can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

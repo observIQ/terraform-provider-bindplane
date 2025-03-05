@@ -1,13 +1,13 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  A Processor creates a BindPlane OP processor that can be attached
+  A Processor creates a Bindplane processor that can be attached
   to a Configuration's sources or destinations.
 ---
 
 # bindplane_processor
 
-The `bindplane_processor` resource creates a BindPlane processor from a BindPlane
+The `bindplane_processor` resource creates a Bindplane processor from a Bindplane
 processor-type. The processor can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

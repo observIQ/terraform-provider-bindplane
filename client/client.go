@@ -241,7 +241,7 @@ func (i *BindPlane) Extension(name string) (*model.Extension, error) {
 	return r, nil
 }
 
-// DeleteExtension will delete a BindPlane extension
+// DeleteExtension will delete a Bindplane extension
 func (i *BindPlane) DeleteExtension(name string) error {
 	err := i.Client.DeleteExtension(context.Background(), name)
 	if err != nil {
@@ -250,7 +250,7 @@ func (i *BindPlane) DeleteExtension(name string) error {
 	return nil
 }
 
-// Delete will delete a BindPlane resource
+// Delete will delete a Bindplane resource
 func (i *BindPlane) Delete(k model.Kind, name string) error {
 	switch k {
 	case model.KindConfiguration:
@@ -270,7 +270,7 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 	}
 }
 
-// GenericResource represents a BindPlane resource's
+// GenericResource represents a Bindplane resource's
 // id, name, version, and ParameterizedSpec.
 type GenericResource struct {
 	ID      string
@@ -279,7 +279,7 @@ type GenericResource struct {
 	Spec    model.ParameterizedSpec
 }
 
-// GenericResource looks up a BindPlane resource and returns a GenericResource.
+// GenericResource looks up a Bindplane resource and returns a GenericResource.
 // The returned GenericResource will be nil if it does not exist. It is up to
 // the caller to check.
 func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource, error) {
@@ -363,7 +363,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 	return g, nil
 }
 
-// TODO(jsirianni): BindPlane should probably have error types so we can check
+// TODO(jsirianni): Bindplane should probably have error types so we can check
 // error.Is.
 func isNotFoundError(err error) bool {
 	e := strings.ToLower(err.Error())

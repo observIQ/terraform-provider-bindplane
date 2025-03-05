@@ -1,16 +1,16 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  A Connector creates a BindPlane OP connector that can be attached
+  A Connector creates a Bindplane connector that can be attached
   to a Configuration's sources or destinations.
 ---
 
 > [!NOTE]
-> bindplane_connector resources are supported by BindPlane OP version 1.85.0 and later.
+> bindplane_connector resources are supported by Bindplane version 1.85.0 and later.
 
 # bindplane_connector
 
-The `bindplane_connector` resource creates a BindPlane connector from a BindPlane
+The `bindplane_connector` resource creates a Bindplane connector from a Bindplane
 connector-type. The connector can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

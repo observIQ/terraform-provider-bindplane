@@ -135,13 +135,13 @@ func WithMeasurementInterval(interval string) Option {
 	return func(c *model.Configuration) error {
 		// Validation is not performed here because Terraform
 		// schema validation will already ensure the value is
-		// a valid duration acceptable by BindPlane.
+		// a valid duration acceptable by Bindplane.
 		c.Spec.MeasurementInterval = interval
 		return nil
 	}
 }
 
-// NewV1 takes configuration options and returns a BindPlane configuration
+// NewV1 takes configuration options and returns a Bindplane configuration
 func NewV1(options ...Option) (*model.Configuration, error) {
 	const (
 		version     = "bindplane.observiq.com/v1"

@@ -1,13 +1,13 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  An Extension creates a BindPlane OP extension that can be attached
+  An Extension creates a Bindplane extension that can be attached
   to a Configuration's sources or destinations.
 ---
 
 # bindplane_extension
 
-The `bindplane_extension` resource creates a BindPlane extension from a BindPlane
+The `bindplane_extension` resource creates a Bindplane extension from a Bindplane
 extension-type. The extension can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

@@ -1,19 +1,19 @@
 # Governance
 
-The governance model adopted in BindPlane Terraform Provideris influenced by many CNCF projects.
+The governance model adopted in Bindplane Terraform Provideris influenced by many CNCF projects.
 
 ## Principles
 
-- **Open**: BindPlane Terraform Provider is an open source community.
-- **Welcoming and respectful**: BindPlane Terraform Provider follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
+- **Open**: Bindplane Terraform Provider is an open source community.
+- **Welcoming and respectful**: Bindplane Terraform Provider follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
 - **Transparent and accessible**: Work and collaboration should be done in public.
 - **Merit**: Ideas and contributions are accepted according to their technical merit and alignment with project objectives, scope, and design principles.
 
 ## Project Maintainers
 
-Maintainers are the first and foremost contributors that are committed to the success of the BindPlane Terraform Provider project. Each maintainer should fulfill several of the following responsibilities:
+Maintainers are the first and foremost contributors that are committed to the success of the Bindplane Terraform Provider project. Each maintainer should fulfill several of the following responsibilities:
 
-* Strive to make BindPlane Terraform Provider widely while taking care not to unjustifiably inflate its scope.
+* Strive to make Bindplane Terraform Provider widely while taking care not to unjustifiably inflate its scope.
 * Carefully consider input from the community and seek consensus with amongst maintainers.
 * Create and classify GitHub issues and perform pull request reviews for other maintainers and the community.
 * Use ones best judgement to apply all applicable [labels](https://github.com/observiq/terraform-provider-bindplane/labels) to each new GitHub issue. 
@@ -37,7 +37,7 @@ Maintainers are the first and foremost contributors that are committed to the su
 
 Decisions are made based on consensus between maintainers. Proposals and ideas should be submitted as a github issue or PR.
 
-In general, we prefer that technical issues and maintainer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, then a third-party maintainer (e.g. a mutual contact with some background on the issue, but not involved in the conflict) to arbitrate and the final decision will be made. Decision making process should be transparent to adhere to the principles of the BindPlane Terraform Provider project.
+In general, we prefer that technical issues and maintainer membership are amicably worked out between the persons involved. If a dispute cannot be decided independently, then a third-party maintainer (e.g. a mutual contact with some background on the issue, but not involved in the conflict) to arbitrate and the final decision will be made. Decision making process should be transparent to adhere to the principles of the Bindplane Terraform Provider project.
 
 ## Credits
 
