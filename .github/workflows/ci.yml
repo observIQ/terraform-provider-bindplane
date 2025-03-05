@@ -286,8 +286,8 @@ jobs:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
-      # https://observiq.com/download
-      - name: Start BindPlane
+      # https://bindplane.com/download
+      - name: Start Bindplane
         run: |
           cat <<EOF > docker-compose.yml
           version: "3"
@@ -342,7 +342,7 @@ jobs:
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
           VERSION: ${{ matrix.bindplane_version }}
 
-      - name: Init BindPlane Organization
+      - name: Init Bindplane Organization
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 1

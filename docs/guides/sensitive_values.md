@@ -1,23 +1,23 @@
 ---
 page_title: "Sensitive Values"
 description: |-
-  BindPlane OP does not return sensitive values. Terraform practitioners should understand how the provider
+  Bindplane does not return sensitive values. Terraform practitioners should understand how the provider
   handles changes to sensitive values.
 ---
 
 # Sensitive Values
 
-Some BindPlane resources are configured with sensitive data, such as
+Some Bindplane resources are configured with sensitive data, such as
 passwords and API keys. 
 
 It is important to understand:
-- How BindPlane handles sensitive values
+- How Bindplane handles sensitive values
 - How Terraform configuration and Git handle sensitive values
 - How Terraform's state handles sensitive values
 
-## BindPlane Sensitive Value Drift
+## Bindplane Sensitive Value Drift
 
-BindPlane does not return the value for a sensitive parameter. This means
+Bindplane does not return the value for a sensitive parameter. This means
 that Terraform will not detect changes to that value. It is important to
 ensure that Terraform managed resources are not modified outside of Terraform
 in order to ensure a consistent experience.

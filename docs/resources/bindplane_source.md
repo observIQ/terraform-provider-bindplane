@@ -1,14 +1,14 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  A Source creates a BindPlane OP source that can be attached
+  A Source creates a Bindplane source that can be attached
   to a Configuration. Sources are used by agents to receive or
   scrape telemetry from a network or file.
 ---
 
 # bindplane_source
 
-The `bindplane_source` resource creates a BindPlane source from a BindPlane
+The `bindplane_source` resource creates a source from a Bindplane
 source-type. The source can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

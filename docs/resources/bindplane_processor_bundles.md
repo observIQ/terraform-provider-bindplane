@@ -1,13 +1,13 @@
 ---
 subcategory: "Pipeline"
 description: |-
-  A Processor Bundle creates a BindPlane OP processor bundle that can be attached
+  A Processor Bundle creates a Bindplane processor bundle that can be attached
   to a Configuration's sources or destinations.
 ---
 
 # bindplane_processor
 
-The `bindplane_processor_bundle` resource creates a [BindPlane Processor Bundle](https://bindplane.com/docs/feature-guides/processor-bundles)
+The `bindplane_processor_bundle` resource creates a [Bindplane Processor Bundle](https://bindplane.com/docs/feature-guides/processor-bundles)
 The processor bundle can be used by multiple [configurations](./bindplane_configuration.md).
 
 ## Options

@@ -2,18 +2,18 @@
 subcategory: "Pipeline"
 description: |-
   A Configuration is a combination of sources, processors, and destinations
-  used by BindPlane OP to generate an agent configuration.
+  used by Bindplane to generate an agent configuration.
 
-  Configuration V2 is the latest iteration of the BindPlane Configuration resource.
+  Configuration V2 is the latest iteration of the Bindplane Configuration resource.
   It supports advanced routing and OpenTelemetry Connectors.
 ---
 
 > [!NOTE]
-> bindplane_configuration_v2 resources are supported by BindPlane OP version 1.85.0 and later.
+> bindplane_configuration_v2 resources are supported by Bindplane version 1.85.0 and later.
 
 # bindplane_configuration_v2
 
-The `bindplane_configuration_v2` resource creates a BindPlane configuration that can be applied
+The `bindplane_configuration_v2` resource creates a Bindplane configuration that can be applied
 to one or more managed agents. Configurations are a combination of [sources](./bindplane_source.md),
 [destinations](./bindplane_destination.md), [processors](./bindplane_processor.md), and [connectors](./bindplane_connector.md).
 Explicit routes can be defined between components to control how telemetry data flows through the configuration.

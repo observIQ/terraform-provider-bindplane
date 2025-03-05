@@ -74,7 +74,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:        schema.TypeMap,
 				Computed:    true,
 				ForceNew:    false,
-				Description: "Labels that BindPlane OP uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
+				Description: "Labels that Bindplane uses to determine which agents the configuration should apply to. This value is computed by Terraform and is not user configurable.",
 			},
 			"source": {
 				Type:     schema.TypeList,
@@ -140,13 +140,13 @@ func resourceConfiguration() *schema.Resource {
 					}
 					return
 				},
-				Description: "The interval at which the agent will push throughput measurements to BindPlane. Valid values include 10s, 1m, and 15m. Relaxing the interval will reduce BindPlane's measurement processing overhead at the expense of granularity. Generally, configurations with thousands of agents can justify using an interval of 1m or 15m.",
+				Description: "The interval at which the agent will push throughput measurements to Bindplane. Valid values include 10s, 1m, and 15m. Relaxing the interval will reduce BindPlane's measurement processing overhead at the expense of granularity. Generally, configurations with thousands of agents can justify using an interval of 1m or 15m.",
 			},
 			"rollout": {
 				Type:        schema.TypeBool,
 				Required:    true,
 				ForceNew:    false,
-				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, BindPlane OP will automatically roll out the configuration change to managed agents.",
+				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
 			"rollout_options": {
 				Type:     schema.TypeList,

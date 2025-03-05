@@ -2,12 +2,12 @@
 subcategory: "Pipeline"
 description: |-
   A Configuration is a combination of sources, processors, and destinations
-  used by BindPlane OP to generate an agent configuration.
+  used by Bindplane to generate an agent configuration.
 ---
 
 # bindplane_configuration
 
-The `bindplane_configuration` resource creates a BindPlane configuration that can be applied
+The `bindplane_configuration` resource creates a Bindplane configuration that can be applied
 to one or more managed agents. Configurations are a combination of [sources](./bindplane_source.md),
 [destinations](./bindplane_destination.md), and [processors](./bindplane_processor.md).
 
