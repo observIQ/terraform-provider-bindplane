@@ -356,6 +356,19 @@ jobs:
               -u admin:password http://localhost:3001/v1/organizations \
               -X POST -d '{"organizationName": "init", "accountName": "project", "eulaAccepted":true}' -v
 
+      # Allow bindplane to seed the database by making a GET request
+      # and waiting 20 seconds.
+      - name: Trigger Seeding
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 1
+          polling_interval_seconds: 2
+          max_attempts: 3
+          shell: bash
+          command: |
+            curl -v -u admin:password https://localhost:3001/v1/source-types
+            sleep 20
+    
       - name: Get docker compose config (debug)
         if: always()
         run: cat docker-compose.yml | grep -v BINDPLANE_LICENSE

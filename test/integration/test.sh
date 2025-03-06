@@ -68,6 +68,17 @@ configure() {
             -X POST \
             -d '{"displayName": "init"}' | jq .
     fi
+
+    # Allow bindplane to seed the database by making a GET request
+    # and waiting 20 seconds.
+    curl -v \
+        --cacert ../../client/tls/bindplane-ca.crt \
+        --cert ../../client/tls/bindplane.crt \
+        --key ../../client/tls/bindplane.key \
+        -u tfu:tfp \
+        https://localhost:3100/v1/source-types \
+        -X GET
+    sleep 20
 }
 
 apply() {
