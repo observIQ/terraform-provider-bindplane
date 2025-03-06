@@ -21,7 +21,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -193,18 +192,29 @@ func bindplaneInit(endpoint url.URL, username, password string, version *hashive
 	if err != nil {
 		return fmt.Errorf("failed to make request: %w", err)
 	}
-	defer resp.Body.Close()
+	if err := resp.Body.Close(); err != nil {
+		return fmt.Errorf("failed to close response body: %w", err)
+	}
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	// Trigger seeding with GET request
+	endpoint.Path = "/v1/source-types"
+	req, err = http.NewRequest("GET", endpoint.String(), nil)
 	if err != nil {
 		return err
 	}
+	req.SetBasicAuth(username, password)
+	resp, err = client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request to %s: %w", endpoint.String(), err)
+	}
 
-	var respBody map[string]interface{}
-	return json.Unmarshal(body, &respBody)
+	// Wait for the server to seed
+	time.Sleep(time.Second * 20)
+
+	return nil
 }
 
 func postgresContainer(t *testing.T, ctx context.Context, env map[string]string) (testcontainers.Container, string) {
