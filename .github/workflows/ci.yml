@@ -366,7 +366,7 @@ jobs:
           max_attempts: 3
           shell: bash
           command: |
-            curl -v -u admin:password https://localhost:3001/v1/source-types
+            curl -v -u admin:password http://localhost:3001/v1/source-types
             sleep 20
     
       - name: Get docker compose config (debug)
