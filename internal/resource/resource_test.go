@@ -110,53 +110,8 @@ func TestAnyResourceV1(t *testing.T) {
 				{
 					Name: "filter-b",
 				},
-				{
-					Name: "processor_bundle:bundle-a",
-					ParameterizedSpec: model.ParameterizedSpec{
-						Type: "processor_bundle",
-						Processors: []model.ResourceConfiguration{
-							{
-								Name: "sub-processor-a",
-								ParameterizedSpec: model.ParameterizedSpec{
-									Type: "parse_json",
-								},
-							},
-							{
-								Name: "sub-processor-b",
-								ParameterizedSpec: model.ParameterizedSpec{
-									Type: "parse_json",
-								},
-							},
-						},
-					},
-				},
 			},
 			"",
-		},
-		{
-			"invalid-bundle-processor",
-			"tf-invalid-bundle",
-			"my-invalid-bundle",
-			"processor_bundle",
-			model.KindProcessor,
-			nil,
-			[]model.ResourceConfiguration{
-				{
-					Name: "invalid-bundle",
-					ParameterizedSpec: model.ParameterizedSpec{
-						Type: "processor_bundle",
-						Processors: []model.ResourceConfiguration{
-							{
-								Name: "nested-bundle",
-								ParameterizedSpec: model.ParameterizedSpec{
-									Type: "processor_bundle",
-								},
-							},
-						},
-					},
-				},
-			},
-			"nested processor bundles are not supported: processor bundle 'invalid-bundle' contains another processor bundle 'nested-bundle' as a subprocessor",
 		},
 	}
 

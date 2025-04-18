@@ -13,7 +13,7 @@ Run:
 
 Run:
 
-- `make ci-local`
+- `make test-local`
 
 - in `test/local`:
 

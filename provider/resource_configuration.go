@@ -254,18 +254,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			processors := []string{}
 			if v := sourcesRaw["processors"].([]any); v != nil {
 				for _, v := range v {
-					processorName := v.(string)
-					proc, err := bindplane.Processor(processorName)
-					if err != nil {
-						return fmt.Errorf("failed to check processor type: %w", err)
-					}
-					if proc != nil && model.TrimVersion(proc.Spec.Type) == "processor_bundle" {
-						// If this is a bundle, check its subprocessors for any processor bundles
-						if err := checkForProcessorBundlesInSubprocessors(bindplane, processorName); err != nil {
-							return err
-						}
-					}
-					processors = append(processors, processorName)
+					processors = append(processors, v.(string))
 				}
 			}
 
@@ -287,19 +276,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 			processors := []string{}
 			if v := destinationRaw["processors"].([]any); v != nil {
 				for _, v := range v {
-					processorName := v.(string)
-					proc, err := bindplane.Processor(processorName)
-					if err != nil {
-						return fmt.Errorf("failed to check processor type: %w", err)
-					}
-
-					if proc != nil && proc.Spec.Type == "processor_bundle" {
-						// If this is a bundle, check its subprocessors for any processor bundles
-						if err := checkForProcessorBundlesInSubprocessors(bindplane, processorName); err != nil {
-							return err
-						}
-					}
-					processors = append(processors, processorName)
+					processors = append(processors, v.(string))
 				}
 			}
 
@@ -485,38 +462,6 @@ func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout mod
 
 	if err := d.Set("rollout_options", []interface{}{rolloutOptions}); err != nil {
 		return fmt.Errorf("error setting rollout options: %s", err)
-	}
-
-	return nil
-}
-
-func checkForProcessorBundlesInSubprocessors(bindplane *client.BindPlane, processorName string) error {
-	proc, err := bindplane.Processor(processorName)
-	if err != nil {
-		return fmt.Errorf("failed to check processor type: %w", err)
-	}
-
-	if proc == nil {
-		return nil
-	}
-
-	// If this is a processor bundle, check its subprocessors
-	if model.TrimVersion(proc.Spec.Type) == "processor_bundle" {
-		bundle, err := bindplane.Processor(processorName)
-		if err != nil {
-			return fmt.Errorf("failed to get processor bundle: %w", err)
-		}
-		// Check each subprocessor
-		for _, subProc := range bundle.Spec.Processors {
-			subProcessor, err := bindplane.Processor(subProc.Name)
-			if err != nil {
-				return fmt.Errorf("failed to get subprocessor information: %w", err)
-			}
-
-			if subProcessor != nil && model.TrimVersion(subProcessor.Spec.Type) == "processor_bundle" {
-				return fmt.Errorf("nested processor bundles are not supported: processor bundle '%s' contains another processor bundle '%s' as a subprocessor", processorName, subProc.Name)
-			}
-		}
 	}
 
 	return nil
