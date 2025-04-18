@@ -32,8 +32,15 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
 		proc := map[string]string{}
-
 		if p.Name != "" {
+			if model.TrimVersion(p.Type) == "processor_bundle" {
+				// If this is a bundle, check its subprocessors for any processor bundles
+				for _, subProc := range p.Processors {
+					if model.TrimVersion(subProc.Type) == "processor_bundle" {
+						return model.AnyResource{}, fmt.Errorf("nested processor bundles are not supported: processor bundle '%s' contains another processor bundle '%s' as a subprocessor", p.Name, subProc.Name)
+					}
+				}
+			}
 			proc["name"] = p.Name
 		}
 

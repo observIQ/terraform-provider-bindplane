@@ -106,6 +106,9 @@ resource "bindplane_configuration" "configuration" {
     name = bindplane_source.journald.name
     processors = [
       bindplane_processor_bundle.bundle.name,
+
+      # This processor bundle should give an error, as it contains a nested bundle.
+      # bindplane_processor_bundle.nested-bundle.name,
     ]
   }
 
@@ -222,6 +225,18 @@ resource "bindplane_processor_bundle" "bundle" {
     name = bindplane_processor.time-parse-http-datatime.name
   }
 }
+
+# This resource should fail because it contains nested processors
+/*
+resource "bindplane_processor_bundle" "nested-bundle" {
+  rollout = true
+  name = "nested-bundle"
+
+   processor {
+    name = bindplane_processor_bundle.bundle.name
+  }
+}
+*/
 
 resource "bindplane_connector" "routing" {
   rollout = true
@@ -396,6 +411,9 @@ resource "bindplane_configuration_v2" "configuration" {
     name = bindplane_source.journald.name
     processors = [
       bindplane_processor_bundle.bundle.name,
+
+      # This processor bundle should give an error, as it contains a nested bundle.
+      # bindplane_processor_bundle.nested-bundle.name,
     ]
 
     route {

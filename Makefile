@@ -120,6 +120,11 @@ test-local: provider
 	mkdir -p test/local/providers
 	find dist -type f -name 'terraform-provider-bindplane*' -exec cp {} test/local/providers/terraform-provider-bindplane_v0.0.0 \;
 
+.PHONY: test-local-apply
+test-local-apply:
+	make test-local && cd test/local && terraform destroy -auto-approve && terraform apply -auto-approve && cd ../../
+
+
 .PHONY: check-license
 check-license:
 	@ADDLICENSEOUT=`$(ADDLICENSE) -check $(ALL_SRC) 2>&1`; \
@@ -155,3 +160,4 @@ client/tls:
 .PHONY: clean-dev-tls
 clean-dev-tls:
 	rm -rf client/tls
+
