@@ -223,7 +223,6 @@ resource "bindplane_processor_bundle" "bundle" {
   }
 }
 
-
 resource "bindplane_connector" "routing" {
   rollout = true
   name = "log-router"
