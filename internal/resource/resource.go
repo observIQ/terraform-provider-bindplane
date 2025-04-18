@@ -32,6 +32,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
 		proc := map[string]string{}
+
 		if p.Name != "" {
 			proc["name"] = p.Name
 		}
