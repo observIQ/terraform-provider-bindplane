@@ -217,11 +217,72 @@ func TestNewV1(t *testing.T) {
 				},
 			},
 		},
+		{
+			"advanced-metrics",
+			func() Option {
+				return WithAdvancedParameters([]model.Parameter{
+					{Name: "telemetryPort", Value: 8080},
+					{Name: "telemetryLevel", Value: "detailed"},
+				})
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Parameters: []model.Parameter{
+						{Name: "telemetryPort", Value: 8080},
+						{Name: "telemetryLevel", Value: "detailed"},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := NewV1(tc.input)
+			require.NoError(t, err)
+			require.Equal(t, tc.expect, output)
+		})
+	}
+}
+
+func TestNewV2Beta(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  Option
+		expect *model.Configuration
+	}{
+		{
+			"advanced-metrics",
+			func() Option {
+				return WithAdvancedParameters([]model.Parameter{
+					{Name: "telemetryPort", Value: 8080},
+					{Name: "telemetryLevel", Value: "detailed"},
+				})
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2beta",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Parameters: []model.Parameter{
+						{Name: "telemetryPort", Value: 8080},
+						{Name: "telemetryLevel", Value: "detailed"},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			output, err := NewV2Beta(tc.input)
 			require.NoError(t, err)
 			require.Equal(t, tc.expect, output)
 		})

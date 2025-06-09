@@ -41,6 +41,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | `extensions`       | list(string)    | optional | One or more extension names to attach to the configuration.                 |
 | `rollout`          | bool            | required | Whether or not updates to the configuration should trigger an automatic rollout of the configuration. |
 | `rollout_options`  | block (single)  | optional | Options for configuring the rollout behavior of the configuration. See the [rollout options block](./bindplane_configuration.md#rollout-options-block) section. |
+| `advanced`         | block (single)  | optional | Advanced configuration options. See the [advanced section](#advanced) below. |
 
 ### Source Block
 
@@ -125,6 +126,19 @@ This table should be used as a reference for supported `platform` values.
 | Kubernetes Deployment  | `kubernetes-deployment` |
 | OpenShift DaemonSet    | `openshift-daemonset`   |
 | OpenShift Deployment   | `openshift-deployment`  |
+
+### Advanced
+
+| Option             | Type            | Default  | Description                                                                 |
+| ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
+| `metrics`          | block (single)  | optional | Metrics configuration options. See the [metrics section](#metrics) below.   |
+
+#### Metrics
+
+| Option             | Type            | Default  | Description                                                                 |
+| ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
+| `port`    | int             | optional | The port used for telemetry. Requires Bindplane v1.90.2 or newer.            |
+| `level`   | string          | optional | The level of detail for telemetry. Valid values are 'basic', 'detailed'. Requires Bindplane v1.92 or newer.    |
 
 ## Examples
 

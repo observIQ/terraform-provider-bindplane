@@ -256,6 +256,38 @@ func TestAnyResourceFromConfigurationV1(t *testing.T) {
 				},
 			},
 		},
+		{
+			"advanced-parameters",
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Parameters: []model.Parameter{
+						{Name: "telemetryPort", Value: 8080},
+						{Name: "telemetryLevel", Value: "detailed"},
+					},
+				},
+			},
+			model.AnyResource{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: map[string]any{
+					"contentType": "text/yaml",
+					"selector": model.AgentSelector{
+						MatchLabels: nil,
+					},
+					"parameters": model.Parameters{
+						{Name: "telemetryPort", Value: 8080},
+						{Name: "telemetryLevel", Value: "detailed"},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range cases {
