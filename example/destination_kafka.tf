@@ -1,7 +1,7 @@
 resource "bindplane_destination" "kafka" {
   rollout = true
   name    = "example-kafka"
-  type    = "kafka_otlp_destination"
+  type    = "kafka_otlp_destination_v2"
   parameters_json = jsonencode(
     [
       {
