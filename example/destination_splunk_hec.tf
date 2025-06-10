@@ -1,7 +1,7 @@
 resource "bindplane_destination" "splunk-hec" {
   rollout = true
   name    = "example-splunk-hec"
-  type    = "splunkhec"
+  type    = "splunkhec_v2"
   parameters_json = jsonencode(
     [
       {
