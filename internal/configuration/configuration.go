@@ -141,6 +141,15 @@ func WithMeasurementInterval(interval string) Option {
 	}
 }
 
+// WithAdvancedParameters is an Option that configures a configuration's
+// advanced parameters.
+func WithAdvancedParameters(parameters []model.Parameter) Option {
+	return func(c *model.Configuration) error {
+		c.Spec.Parameters = append(c.Spec.Parameters, parameters...)
+		return nil
+	}
+}
+
 // NewV1 takes configuration options and returns a Bindplane configuration
 func NewV1(options ...Option) (*model.Configuration, error) {
 	const (

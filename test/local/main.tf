@@ -72,6 +72,13 @@ resource "bindplane_configuration" "configuration" {
     create_before_destroy = true
   }
 
+  advanced {
+    metrics {
+      port = 8885
+      level = "normal"
+    }
+  }
+
   measurement_interval = "1m"
 
   rollout = true

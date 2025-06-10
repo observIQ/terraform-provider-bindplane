@@ -5,7 +5,7 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
 ifeq ($(BINDPLANE_VERSION), module)
-BINDPLANE_VERSION := $(shell go list -m all | grep github.com/observiq/bindplane-op-enterprise | awk '{print $$2}')
+BINDPLANE_VERSION := $(shell printf $$(cat go.mod | grep 'observiq/bindplane-op-enterprise' | awk '{print $$2}'))
 endif
 
 ifeq ($(GOOS), windows)

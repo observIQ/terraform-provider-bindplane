@@ -261,6 +261,7 @@ func resourceConfigurationV2() *schema.Resource {
 				},
 				Description: "Options for configuring the rollout behavior of the configuration.",
 			},
+			"advanced": advancedSchema,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -429,6 +430,12 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 
 	measurementInterval := d.Get("measurement_interval").(string)
 
+	// Extract advanced parameters
+	advancedParameters, err := extractAdvancedParameters(d)
+	if err != nil {
+		return fmt.Errorf("failed to extract advanced parameters: %w", err)
+	}
+
 	opts := []configuration.Option{
 		configuration.WithName(name),
 		configuration.WithLabels(labels),
@@ -440,6 +447,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		configuration.WithExtensionsByName(extensions),
 		configuration.WithRolloutOptions(rolloutOptions),
 		configuration.WithMeasurementInterval(measurementInterval),
+		configuration.WithAdvancedParameters(advancedParameters),
 	}
 
 	config, err := configuration.NewV2Beta(opts...)
@@ -632,6 +640,10 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 
 	measurementInterval := config.Spec.MeasurementInterval
 	if err := d.Set("measurement_interval", measurementInterval); err != nil {
+		return err
+	}
+
+	if err := setAdvancedMetricsInState(d, config); err != nil {
 		return err
 	}
 

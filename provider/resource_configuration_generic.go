@@ -15,9 +15,54 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op-enterprise/model"
 )
+
+var advancedSchema = &schema.Schema{
+	Type:     schema.TypeList,
+	Optional: true,
+	MaxItems: 1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"metrics": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"port": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+								port := val.(int)
+								if port < 1 || port > 65535 {
+									errs = append(errs, fmt.Errorf("%d is not a valid TCP port", port))
+								}
+								return
+							},
+							Description: "The advanced metrics port for the configuration.",
+						},
+						"level": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: func(val any, _ string) (warns []string, errs []error) {
+								level := val.(string)
+								if level != "normal" && level != "detailed" {
+									errs = append(errs, fmt.Errorf("%s is not a valid advanced metrics level", level))
+								}
+								return
+							},
+							Description: "The advanced metrics level for the configuration.",
+						},
+					},
+				},
+			},
+		},
+	},
+}
 
 // genericConfigurationDelete deletes configurations and raw configurations.
 func genericConfigurationDelete(d *schema.ResourceData, meta any) error {
@@ -88,4 +133,58 @@ func readRolloutOptions(d *schema.ResourceData) (model.ResourceConfiguration, er
 	}
 
 	return resourceConfig, nil
+}
+
+// extractAdvancedParameters extracts advanced parameters from the resource data.
+func extractAdvancedParameters(d *schema.ResourceData) ([]model.Parameter, error) {
+	advancedParameters := []model.Parameter{}
+	if adv, ok := d.GetOk("advanced"); ok {
+		advList := adv.([]any)
+		if len(advList) > 0 {
+			advMap := advList[0].(map[string]any)
+			if metrics, ok := advMap["metrics"]; ok {
+				metricsList := metrics.([]any)
+				if len(metricsList) > 0 {
+					metricsMap := metricsList[0].(map[string]any)
+					if port, ok := metricsMap["port"]; ok {
+						advancedParameters = append(advancedParameters, model.Parameter{Name: "telemetryPort", Value: port})
+					}
+					if level, ok := metricsMap["level"]; ok {
+						advancedParameters = append(advancedParameters, model.Parameter{Name: "telemetryLevel", Value: level})
+					}
+				}
+			}
+		}
+	}
+	return advancedParameters, nil
+}
+
+// setAdvancedMetricsInState extracts advanced metrics from spec.parameters and sets them in the state.
+func setAdvancedMetricsInState(d *schema.ResourceData, config *model.Configuration) error {
+	advancedMetrics := map[string]any{}
+	for _, param := range config.Spec.Parameters {
+		if param.Name == "telemetryPort" {
+			switch v := param.Value.(type) {
+			case int:
+				advancedMetrics["port"] = v
+			case int64:
+				advancedMetrics["port"] = int(v)
+			case float64:
+				advancedMetrics["port"] = int(v)
+			}
+		}
+		if param.Name == "telemetryLevel" {
+			if level, ok := param.Value.(string); ok {
+				advancedMetrics["level"] = level
+			}
+		}
+	}
+
+	// Set advanced metrics in state
+	if len(advancedMetrics) > 0 {
+		if err := d.Set("advanced", []any{map[string]any{"metrics": []any{advancedMetrics}}}); err != nil {
+			return fmt.Errorf("error setting advanced metrics: %s", err)
+		}
+	}
+	return nil
 }

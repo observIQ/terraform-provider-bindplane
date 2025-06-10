@@ -95,6 +95,10 @@ func AnyResourceFromConfigurationV1(c *model.Configuration) model.AnyResource {
 		a.Spec["connectors"] = c.Spec.Connectors
 	}
 
+	if len(c.Spec.Parameters) > 0 {
+		a.Spec["parameters"] = c.Spec.Parameters
+	}
+
 	return a
 }
 
