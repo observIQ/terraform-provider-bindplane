@@ -634,7 +634,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	if err := resourceConfigurationV2RolloutOptionsRead(d, config.Spec.Rollout); err != nil {
+	if err := resourceConfigurationRolloutOptionsRead(d, config.Spec.Rollout); err != nil {
 		return err
 	}
 
@@ -648,34 +648,5 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	}
 
 	d.SetId(config.ID())
-	return nil
-}
-
-// resourceConfigurationV2RolloutOptionsRead takes a configuration's rollout options
-// and sets them in the Terraform state. This will trigger a terraform apply if the
-// rollout options have changed outside of Terraform.
-func resourceConfigurationV2RolloutOptionsRead(d *schema.ResourceData, rollout model.ResourceConfiguration) error {
-	if len(rollout.Parameters) == 0 {
-		return nil
-	}
-
-	rolloutOptions := make(map[string]interface{})
-
-	rolloutOptions["type"] = rollout.Type
-
-	parameters := make([]interface{}, len(rollout.Parameters))
-	for i, param := range rollout.Parameters {
-		parameters[i] = map[string]interface{}{
-			"name":  param.Name,
-			"value": param.Value,
-		}
-	}
-
-	rolloutOptions["parameters"] = parameters
-
-	if err := d.Set("rollout_options", []interface{}{rolloutOptions}); err != nil {
-		return fmt.Errorf("error setting rollout options: %s", err)
-	}
-
 	return nil
 }

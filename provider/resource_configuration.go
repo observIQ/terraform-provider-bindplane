@@ -462,6 +462,11 @@ func resourceConfigurationRolloutOptionsRead(d *schema.ResourceData, rollout mod
 
 	rolloutOptions["type"] = rollout.Type
 
+	// Do not parse parameters when using standard rollout type
+	if rollout.Type == "standard" {
+		return nil
+	}
+
 	parameters := make([]interface{}, len(rollout.Parameters))
 	for i, param := range rollout.Parameters {
 		parameters[i] = map[string]interface{}{
