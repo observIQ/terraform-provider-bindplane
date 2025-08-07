@@ -38,7 +38,7 @@ func TestValidateConditionStatement(t *testing.T) {
 		{
 			name: "valid OR with two statements",
 			ui: OTTLConditionStatement{
-				Operator: "OR",
+				Operator: "or",
 				Statements: []OTTLConditionStatement{
 					{
 						Operator: "or",
@@ -57,9 +57,9 @@ func TestValidateConditionStatement(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "malformed OR with only one statement - should fail",
+			name: "malformed or with only one statement - should fail",
 			ui: OTTLConditionStatement{
-				Operator: "OR",
+				Operator: "or",
 				Statements: []OTTLConditionStatement{
 					{
 						Operator: "or",
@@ -70,12 +70,12 @@ func TestValidateConditionStatement(t *testing.T) {
 				},
 			},
 			wantErr: true,
-			errMsg:  "parent operator 'OR' must have at least 2 child statements, found 1",
+			errMsg:  "parent operator 'or' must have at least 2 child statements, found 1",
 		},
 		{
-			name: "nested malformed OR - should fail",
+			name: "nested malformed or - should fail",
 			ui: OTTLConditionStatement{
-				Operator: "OR",
+				Operator: "or",
 				Statements: []OTTLConditionStatement{
 					{
 						Operator: "Equals",
@@ -84,7 +84,7 @@ func TestValidateConditionStatement(t *testing.T) {
 						Value:    "example.link",
 					},
 					{
-						Operator: "OR",
+						Operator: "or",
 						Statements: []OTTLConditionStatement{
 							{
 								Operator: "Equals",
@@ -97,7 +97,7 @@ func TestValidateConditionStatement(t *testing.T) {
 				},
 			},
 			wantErr: true,
-			errMsg:  "child statement 1: parent operator 'OR' must have at least 2 child statements, found 1",
+			errMsg:  "child statement 1: parent operator 'or' must have at least 2 child statements, found 1",
 		},
 		{
 			name: "statement with operator but no key - should fail",

@@ -133,7 +133,7 @@ func resourceProcessorImportState(_ context.Context, d *schema.ResourceData, met
 }
 
 // validateParametersJSON validates the parameters_json field during plan phase
-func validateParametersJSON(v interface{}, k string) (ws []string, errors []error) {
+func validateParametersJSON(v any, _ string) (ws []string, errors []error) {
 	value, ok := v.(string)
 	if !ok {
 		errors = append(errors, fmt.Errorf("expected string, got %T", v))

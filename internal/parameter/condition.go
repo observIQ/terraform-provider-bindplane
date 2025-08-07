@@ -53,7 +53,7 @@ type OTTLConditionStatement struct {
 
 // ValidateOTTLConditionStatement validates that a condition UI block is properly formed and rejects malformed conditions
 func ValidateOTTLConditionStatement(ui OTTLConditionStatement) error {
-	if ui.Operator == "OR" || ui.Operator == "AND" {
+	if ui.Operator == "or" || ui.Operator == "and" {
 		if len(ui.Statements) < 2 {
 			return fmt.Errorf("parent operator '%s' must have at least 2 child statements, found %d", ui.Operator, len(ui.Statements))
 		}

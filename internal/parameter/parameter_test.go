@@ -295,7 +295,7 @@ func TestStringToParameter_WithConditions(t *testing.T) {
 					"value": {
 						"ottl": "(resource.attributes[\"service\"] == \"example.link\") or (resource.attributes[\"telemetry.type\"] == \"metric\") or (resource.attributes[\"telemetry.type\"] == \"trace\")",
 						"ui": {
-							"operator": "OR",
+							"operator": "or",
 							"statements": [
 								{
 									"operator": "or",
@@ -331,7 +331,7 @@ func TestStringToParameter_WithConditions(t *testing.T) {
 					"value": {
 						"ottl": "(resource.attributes[\"service\"] == \"example.link\") or (resource.attributes[\"telemetry.type\"] == \"metric\")",
 						"ui": {
-							"operator": "OR",
+							"operator": "or",
 							"statements": [
 								{
 									"operator": "Equals",
