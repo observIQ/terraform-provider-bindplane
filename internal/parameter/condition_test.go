@@ -36,7 +36,7 @@ func TestValidateConditionStatement(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "valid OR with two statements",
+			name: "valid or with two statements",
 			ui: OTTLConditionStatement{
 				Operator: "or",
 				Statements: []OTTLConditionStatement{
@@ -70,7 +70,7 @@ func TestValidateConditionStatement(t *testing.T) {
 				},
 			},
 			wantErr: true,
-			errMsg:  "parent operator 'or' must have at least 2 child statements, found 1",
+			errMsg:  "parent operator 'or' must not have only one child statement, found 1",
 		},
 		{
 			name: "nested malformed or - should fail",
@@ -87,7 +87,7 @@ func TestValidateConditionStatement(t *testing.T) {
 						Operator: "or",
 						Statements: []OTTLConditionStatement{
 							{
-								Operator: "Equals",
+								Operator: "and",
 								Key:      "telemetry.type",
 								Match:    "resource",
 								Value:    "metric",
@@ -97,27 +97,53 @@ func TestValidateConditionStatement(t *testing.T) {
 				},
 			},
 			wantErr: true,
-			errMsg:  "child statement 1: parent operator 'or' must have at least 2 child statements, found 1",
+			errMsg:  "child statement 1: parent operator 'or' must not have only one child statement, found 1",
 		},
 		{
 			name: "statement with operator but no key - should fail",
 			ui: OTTLConditionStatement{
-				Operator: "Equals",
+				Operator: "or",
 				Match:    "resource",
 				Value:    "prod",
 			},
 			wantErr: true,
-			errMsg:  "statement with operator 'Equals' must have a key",
+			errMsg:  "statement with operator 'or' must have a key",
 		},
 		{
 			name: "statement with operator but no match - should fail",
 			ui: OTTLConditionStatement{
-				Operator: "Equals",
+				Operator: "and",
 				Key:      "env",
 				Value:    "prod",
 			},
 			wantErr: true,
-			errMsg:  "statement with operator 'Equals' must have a match",
+			errMsg:  "statement with operator 'and' must have a match",
+		},
+		{
+			name: "nested statement with operator but no match or - should fail",
+			ui: OTTLConditionStatement{
+				Operator: "or",
+				Statements: []OTTLConditionStatement{
+					{
+						Operator: "Equals",
+						Key:      "service",
+						Match:    "resource",
+						Value:    "example.link",
+					},
+					{
+						Operator: "or",
+						Statements: []OTTLConditionStatement{
+							{
+								Operator: "and",
+								Key:      "telemetry.type",
+								Value:    "metric",
+							},
+						},
+					},
+				},
+			},
+			wantErr: true,
+			errMsg:  "child statement 1: parent operator 'or' must not have only one child statement, found 1",
 		},
 
 		{

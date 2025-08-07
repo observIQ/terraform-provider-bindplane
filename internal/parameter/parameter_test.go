@@ -313,7 +313,7 @@ func TestStringToParameter_WithConditions(t *testing.T) {
 					}
 				}
 			]`,
-			"parameter validation failed: parameter 2: invalid condition UI: parent operator 'OR' must have at least 2 child statements, found 1",
+			"parameter validation failed: parameter 2: invalid condition UI: parent operator 'or' must not have only one child statement, found 1",
 		},
 		{
 			"valid-condition",
