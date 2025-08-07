@@ -50,10 +50,11 @@ func resourceProcessor() *schema.Resource {
 				Description: "The processor type to use for processor creation.",
 			},
 			"parameters_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    false,
-				Description: "A JSON object with options used to configure the processor.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     false,
+				Description:  "A JSON object with options used to configure the processor.",
+				ValidateFunc: validateParametersJSON,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,
@@ -129,4 +130,24 @@ func resourceProcessorDelete(d *schema.ResourceData, meta any) error {
 
 func resourceProcessorImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	return genericResourceImport(model.KindProcessor, d, meta)
+}
+
+// validateParametersJSON validates the parameters_json field during plan phase
+func validateParametersJSON(v interface{}, k string) (ws []string, errors []error) {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected string, got %T", v))
+		return
+	}
+
+	if value == "" {
+		return
+	}
+
+	_, err := parameter.StringToParameter(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("invalid parameters_json: %w", err))
+	}
+
+	return
 }
