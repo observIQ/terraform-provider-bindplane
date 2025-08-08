@@ -272,3 +272,97 @@ func TestParametersToSring(t *testing.T) {
 		})
 	}
 }
+
+func TestStringToParameter_WithConditions(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		errMsg string
+	}{
+		{
+			"malformed-condition",
+			`[
+				{
+					"name": "telemetry_types",
+					"value": ["Logs"]
+				},
+				{
+					"name": "action",
+					"value": "exclude"
+				},
+				{
+					"name": "condition",
+					"value": {
+						"ottl": "(resource.attributes[\"service\"] == \"example.link\") or (resource.attributes[\"telemetry.type\"] == \"metric\") or (resource.attributes[\"telemetry.type\"] == \"trace\")",
+						"ui": {
+							"operator": "or",
+							"statements": [
+								{
+									"operator": "or",
+									"statements": [
+										{
+											"key": "service",
+											"match": "resource",
+											"operator": "Equals",
+											"value": "example.link"
+										}
+									]
+								}
+							]
+						}
+					}
+				}
+			]`,
+			"parameter validation failed: parameter 2: invalid condition UI: parent operator 'or' must not have only one child statement, found 1",
+		},
+		{
+			"valid-condition",
+			`[
+				{
+					"name": "telemetry_types",
+					"value": ["Logs"]
+				},
+				{
+					"name": "action",
+					"value": "exclude"
+				},
+				{
+					"name": "condition",
+					"value": {
+						"ottl": "(resource.attributes[\"service\"] == \"example.link\") or (resource.attributes[\"telemetry.type\"] == \"metric\")",
+						"ui": {
+							"operator": "or",
+							"statements": [
+								{
+									"operator": "Equals",
+									"key": "service",
+									"match": "resource",
+									"value": "example.link"
+								},
+								{
+									"operator": "Equals",
+									"key": "telemetry.type",
+									"match": "resource",
+									"value": "metric"
+								}
+							]
+						}
+					}
+				}
+			]`,
+			"",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := StringToParameter(tc.input)
+			if tc.errMsg != "" {
+				require.Error(t, err)
+				require.ErrorContains(t, err, tc.errMsg)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
