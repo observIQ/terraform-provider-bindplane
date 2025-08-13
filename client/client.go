@@ -33,7 +33,7 @@ import (
 // BindPlane is a shim layer between Terraform and the
 // BindPlane client interface
 type BindPlane struct {
-	Client client.BindPlane
+	Client client.Bindplane
 }
 
 // Apply creates or updates a single BindPlane resource and returns it's id.
