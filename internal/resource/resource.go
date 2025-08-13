@@ -27,8 +27,9 @@ import (
 // Supported resources are Sources, Destinations, and Processors. For
 // configurations, use AnyResourceFromConfigurationV1.
 //
-// rParameters and rProcessors can be nil.
-func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration) (model.AnyResource, error) {
+// rParameters and rProcessors can be nil. Options set additional
+// spec fields.
+func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration, opts ...Option) (model.AnyResource, error) {
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
 		proc := map[string]string{}
@@ -38,6 +39,15 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 		}
 
 		procs = append(procs, proc)
+	}
+
+	spec := map[string]any{
+		"type":       rType,
+		"parameters": rParameters,
+		"processors": procs,
+	}
+	for _, opt := range opts {
+		opt(spec)
 	}
 
 	switch rKind {
@@ -51,14 +61,25 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 					Name: rName,
 				},
 			},
-			Spec: map[string]any{
-				"type":       rType,
-				"parameters": rParameters,
-				"processors": procs,
-			},
+			Spec: spec,
 		}, nil
 	default:
 		return model.AnyResource{}, fmt.Errorf("unknown bindplane resource kind: %s", rKind)
+	}
+}
+
+// Option sets an optional field on the spec of a resource
+// returned by AnyResourceV1.
+type Option func(spec map[string]any)
+
+// WithRecommendation sets the spec's recommendation field to the
+// name of the recommendation type the resource satisfies. An empty
+// recommendation leaves the field unset.
+func WithRecommendation(recommendation string) Option {
+	return func(spec map[string]any) {
+		if recommendation != "" {
+			spec["recommendation"] = recommendation
+		}
 	}
 }
 

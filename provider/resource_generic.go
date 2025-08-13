@@ -28,12 +28,20 @@ import (
 // genericResourceRead can read source, destination, and processors
 // from the BindPlane API and set them.
 func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) error {
+	_, err := readGenericResource(rKind, d, meta)
+	return err
+}
+
+// readGenericResource reads a resource from the BindPlane API, sets its
+// name, type, and parameters_json, and returns it so callers can set
+// additional fields. The returned resource is nil when the state ID was unset.
+func readGenericResource(rKind model.Kind, d *schema.ResourceData, meta any) (*client.GenericResource, error) {
 	bindplane := meta.(*client.BindPlane)
 	resourceName := d.Get("name").(string)
 
 	g, err := bindplane.GenericResource(rKind, resourceName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// A nil return from GenericResource indicates that the resource
@@ -42,7 +50,7 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	// re-create the resource or confirm that it was deleted.
 	if g == nil {
 		d.SetId("")
-		return nil
+		return nil, nil
 	}
 
 	// If the state ID is set but differs from the ID returned by,
@@ -53,23 +61,23 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	// prevent Terraform from modifying resources created by other means.
 	if g.ID != d.Id() {
 		d.SetId("")
-		return nil
+		return nil, nil
 	}
 
 	if err := d.Set("name", g.Name); err != nil {
-		return err
+		return nil, err
 	}
 
 	rType := strings.Split(g.Spec.Type, ":")[0]
 	if err := d.Set("type", rType); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Parameters defined by the user, previously saved to state
 	stateParams := []model.Parameter{}
 	if s := d.Get("parameters_json").(string); s != "" {
 		if err := json.Unmarshal([]byte(s), &stateParams); err != nil {
-			return fmt.Errorf("failed to unmarshal state paramters: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal state paramters: %w", err)
 		}
 	}
 
@@ -98,10 +106,14 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 
 	paramStr, err := parameter.ParametersToString(incomingParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return d.Set("parameters_json", paramStr)
+	if err := d.Set("parameters_json", paramStr); err != nil {
+		return nil, err
+	}
+
+	return g, nil
 }
 
 // genericResourceDelete can delete configurations, sources,

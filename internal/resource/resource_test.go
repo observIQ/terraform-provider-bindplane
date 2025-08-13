@@ -297,3 +297,55 @@ func TestAnyResourceFromConfigurationV1(t *testing.T) {
 		})
 	}
 }
+
+func TestAnyResourceV1WithRecommendation(t *testing.T) {
+	cases := []struct {
+		name           string
+		opts           []Option
+		expectSet      bool
+		expectRecValue string
+	}{
+		{
+			name: "no options",
+		},
+		{
+			name: "empty recommendation",
+			opts: []Option{WithRecommendation("")},
+		},
+		{
+			name:           "recommendation",
+			opts:           []Option{WithRecommendation("google_secops_batch")},
+			expectSet:      true,
+			expectRecValue: "google_secops_batch",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r, err := AnyResourceV1("tf-processor", "my-batch", "batch", model.KindProcessor, nil, nil, tc.opts...)
+			require.NoError(t, err)
+
+			require.Equal(t, "batch", r.Spec["type"])
+			require.Equal(t, []model.Parameter(nil), r.Spec["parameters"])
+			require.Equal(t, []map[string]string{}, r.Spec["processors"])
+
+			rec, ok := r.Spec["recommendation"]
+			require.Equal(t, tc.expectSet, ok)
+			if tc.expectSet {
+				require.Equal(t, tc.expectRecValue, rec)
+			}
+		})
+	}
+}
+
+// TestAnyResourceV1RecommendationDecode ensures the recommendation field
+// decodes into the Bindplane processor spec.
+func TestAnyResourceV1RecommendationDecode(t *testing.T) {
+	r, err := AnyResourceV1("tf-processor", "my-batch", "batch", model.KindProcessor, nil, nil, WithRecommendation("google_secops_batch"))
+	require.NoError(t, err)
+
+	p, err := model.AsKind[*model.Processor](&r)
+	require.NoError(t, err)
+	require.Equal(t, "google_secops_batch", p.Spec.Recommendation)
+	require.Equal(t, "batch", p.Spec.Type)
+}

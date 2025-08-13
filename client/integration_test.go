@@ -320,15 +320,18 @@ func TestIntegration_http_config(t *testing.T) {
 			},
 		},
 		Spec: map[string]any{
-			"type": "batch",
+			"type":           "batch",
+			"recommendation": "google_secops_batch",
 		},
 	}
 	require.NoError(t, i.ApplyWithRetry(
 		context.Background(),
 		time.Duration(time.Minute*1),
 		&processorResource, false), "did not expect an error when creating processor")
-	_, err = i.GenericResource(model.KindProcessor, "my-processor")
+	processor, err := i.GenericResource(model.KindProcessor, "my-processor")
 	require.NoError(t, err)
+	require.NotNil(t, processor)
+	require.Equal(t, "google_secops_batch", processor.Spec.Recommendation)
 	require.NoError(t, i.Delete(model.KindProcessor, "my-processor"))
 
 	sourceResource := model.AnyResource{

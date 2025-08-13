@@ -200,12 +200,14 @@ resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
   type = "batch"
+  recommendation = "google_secops_batch"
 }
 
 resource "bindplane_processor" "batch-options" {
   rollout = true
   name = "my-batch-options"
   type = "batch"
+  recommendation = "google_cloud_storage_batch"
   parameters_json = jsonencode(
     [
       {

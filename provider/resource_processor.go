@@ -63,6 +63,12 @@ func resourceProcessor() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
+			"recommendation": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Name of the recommendation type this processor satisfies, such as `google_secops_batch`. Sets the processor's `spec.recommendation` field.",
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -78,6 +84,7 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 	processorType := d.Get("type").(string)
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
+	recommendation := d.Get("recommendation").(string)
 
 	// If id is unset, it means Terraform has not previously created
 	// this resource. Check to ensure a resource with this name does
@@ -107,7 +114,7 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil)
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil, resource.WithRecommendation(recommendation))
 	if err != nil {
 		return err
 	}
@@ -122,7 +129,11 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 }
 
 func resourceProcessorRead(d *schema.ResourceData, meta any) error {
-	return genericResourceRead(model.KindProcessor, d, meta)
+	g, err := readGenericResource(model.KindProcessor, d, meta)
+	if err != nil || g == nil {
+		return err
+	}
+	return d.Set("recommendation", g.Spec.Recommendation)
 }
 
 func resourceProcessorDelete(d *schema.ResourceData, meta any) error {

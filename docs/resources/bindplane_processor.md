@@ -18,6 +18,7 @@ processor-type. The processor can be used by multiple [configurations](./bindpla
 | `type`              | string | required | The processor type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the processor type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the processor should trigger an automatic rollout of any configuration that uses it. |
+| `recommendation`    | string | optional | Name of the recommendation type this processor satisfies, such as `google_secops_batch`. Sets the processor's `spec.recommendation` field. |
 
 ## Sensitive Values
 
@@ -130,6 +131,31 @@ resource "bindplane_processor" "batch" {
       {
         "name": "timeout",
         "value": "2s"
+      }
+    ]
+  )
+}
+```
+
+### Processor with Recommendation
+
+This example creates a batch processor that satisfies the `google_secops_batch` recommendation type.
+
+```hcl
+resource "bindplane_processor" "batch_with_recommendation" {
+  rollout = true
+  name = "my-batch-recommended"
+  type = "batch"
+  recommendation = "google_secops_batch"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "send_batch_size",
+        "value": 1000
+      },
+      {
+        "name": "timeout",
+        "value": "5s"
       }
     ]
   )

@@ -65,6 +65,7 @@ resource "bindplane_processor" "batch" {
   rollout = true
   name = "my-batch"
   type = "batch"
+  recommendation = "google_secops_batch"
 }
 
 resource "bindplane_configuration" "configuration" {
@@ -139,6 +140,7 @@ resource "bindplane_processor" "json-parse-body" {
   rollout = false
   name = "json-parse-body"
   type = "parse_json"
+  recommendation = "parse_json_log_body"
   parameters_json = jsonencode(
     [
       {
