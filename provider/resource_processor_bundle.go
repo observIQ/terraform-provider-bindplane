@@ -138,7 +138,7 @@ func resourceProcessorBundleCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors)
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors, nil)
 	if err != nil {
 		return err
 	}

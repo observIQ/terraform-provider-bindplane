@@ -105,7 +105,7 @@ func resourceConnectorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, connectorType, model.KindConnector, parameters, nil)
+	r, err := resource.AnyResourceV1(id, name, connectorType, model.KindConnector, parameters, nil, nil)
 	if err != nil {
 		return err
 	}

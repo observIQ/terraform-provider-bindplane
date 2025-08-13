@@ -62,6 +62,12 @@ func resourceProcessor() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
+			"recommendation": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "Set recommendation if you want this processor to satisfy and suppress a processor recommendation.",
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -77,6 +83,7 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 	processorType := d.Get("type").(string)
 	name := d.Get("name").(string)
 	rollout := d.Get("rollout").(bool)
+	recommendation := d.Get("recommendation").(string)
 
 	// If id is unset, it means Terraform has not previously created
 	// this resource. Check to ensure a resource with this name does
@@ -106,7 +113,14 @@ func resourceProcessorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil)
+	var extraSpecFields map[string]any
+	if recommendation != "" {
+		extraSpecFields = map[string]any{
+			"recommendation": recommendation,
+		}
+	}
+
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, parameters, nil, extraSpecFields)
 	if err != nil {
 		return err
 	}
