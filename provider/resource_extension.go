@@ -105,7 +105,7 @@ func resourceExtensionCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, extensionType, model.KindExtension, parameters, nil)
+	r, err := resource.AnyResourceV1(id, name, extensionType, model.KindExtension, parameters, nil, nil)
 	if err != nil {
 		return err
 	}

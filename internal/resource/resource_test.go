@@ -23,14 +23,15 @@ import (
 
 func TestAnyResourceV1(t *testing.T) {
 	cases := []struct {
-		name        string
-		id          string
-		rName       string
-		rType       string
-		rkind       model.Kind
-		rParameters []model.Parameter
-		rProcessors []model.ResourceConfiguration
-		expectErr   string
+		name            string
+		id              string
+		rName           string
+		rType           string
+		rkind           model.Kind
+		rParameters     []model.Parameter
+		rProcessors     []model.ResourceConfiguration
+		extraSpecFields map[string]any
+		expectErr       string
 	}{
 		{
 			"source",
@@ -49,6 +50,7 @@ func TestAnyResourceV1(t *testing.T) {
 				},
 			},
 			nil,
+			nil,
 			"",
 		},
 		{
@@ -64,6 +66,7 @@ func TestAnyResourceV1(t *testing.T) {
 				},
 			},
 			nil,
+			nil,
 			"",
 		},
 		{
@@ -72,6 +75,7 @@ func TestAnyResourceV1(t *testing.T) {
 			"my-filter",
 			"filter",
 			model.KindProcessor,
+			nil,
 			nil,
 			nil,
 			"",
@@ -84,6 +88,7 @@ func TestAnyResourceV1(t *testing.T) {
 			model.KindExtension,
 			nil,
 			nil,
+			nil,
 			"",
 		},
 		{
@@ -92,6 +97,7 @@ func TestAnyResourceV1(t *testing.T) {
 			"my-resource",
 			"resource",
 			model.KindAgent,
+			nil,
 			nil,
 			nil,
 			"unknown bindplane resource kind: Agent",
@@ -111,13 +117,49 @@ func TestAnyResourceV1(t *testing.T) {
 					Name: "filter-b",
 				},
 			},
+			nil,
+			"",
+		},
+		{
+			"processor-with-recommendation",
+			"tf-processor-rec",
+			"my-filter-rec",
+			"filter",
+			model.KindProcessor,
+			nil,
+			nil,
+			map[string]any{
+				"recommendation": "test-recommendation",
+			},
+			"",
+		},
+		{
+			"processor-with-nil-extra-fields",
+			"tf-processor-nil",
+			"my-filter-nil",
+			"filter",
+			model.KindProcessor,
+			nil,
+			nil,
+			nil,
+			"",
+		},
+		{
+			"processor-with-empty-recommendation",
+			"tf-processor-empty",
+			"my-filter-empty",
+			"filter",
+			model.KindProcessor,
+			nil,
+			nil,
+			nil, // Should be nil when recommendation is empty string
 			"",
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
+			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors, tc.extraSpecFields)
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
@@ -126,6 +168,89 @@ func TestAnyResourceV1(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestAnyResourceV1WithExtraSpecFields(t *testing.T) {
+	// Test that extra spec fields are properly included
+	resource, err := AnyResourceV1(
+		"test-id",
+		"test-processor",
+		"filter",
+		model.KindProcessor,
+		nil,
+		nil,
+		map[string]any{
+			"recommendation": "test-recommendation",
+		},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resource)
+
+	// Verify the recommendation field is in the spec
+	recommendation, exists := resource.Spec["recommendation"]
+	require.True(t, exists, "recommendation field should exist in spec")
+	require.Equal(t, "test-recommendation", recommendation)
+
+	// Verify other standard fields are still present
+	require.Equal(t, "filter", resource.Spec["type"])
+	require.Equal(t, []model.Parameter(nil), resource.Spec["parameters"])
+	require.Equal(t, []map[string]string{}, resource.Spec["processors"])
+}
+
+func TestAnyResourceV1WithNilExtraSpecFields(t *testing.T) {
+	// Test that nil extra spec fields don't cause issues
+	resource, err := AnyResourceV1(
+		"test-id",
+		"test-processor",
+		"filter",
+		model.KindProcessor,
+		nil,
+		nil,
+		nil,
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resource)
+
+	// Verify standard fields are present
+	require.Equal(t, "filter", resource.Spec["type"])
+	require.Equal(t, []model.Parameter(nil), resource.Spec["parameters"])
+	require.Equal(t, []map[string]string{}, resource.Spec["processors"])
+
+	// Verify no extra fields are added
+	_, exists := resource.Spec["recommendation"]
+	require.False(t, exists, "recommendation field should not exist when not provided")
+}
+
+func TestAnyResourceV1WithEmptyExtraSpecFields(t *testing.T) {
+	// Test that empty string values in extra spec fields are filtered out
+	resource, err := AnyResourceV1(
+		"test-id",
+		"test-processor",
+		"filter",
+		model.KindProcessor,
+		nil,
+		nil,
+		map[string]any{
+			"recommendation": "",
+			"other_field":    "non-empty-value",
+		},
+	)
+	require.NoError(t, err)
+	require.NotNil(t, resource)
+
+	// Verify empty string values are not included
+	_, exists := resource.Spec["recommendation"]
+	require.False(t, exists, "empty string values should not be included in spec")
+
+	// Verify non-empty values are included
+	otherField, exists := resource.Spec["other_field"]
+	require.True(t, exists, "non-empty values should be included in spec")
+	require.Equal(t, "non-empty-value", otherField)
+
+	// Verify standard fields are still present
+	require.Equal(t, "filter", resource.Spec["type"])
+	require.Equal(t, []model.Parameter(nil), resource.Spec["parameters"])
+	require.Equal(t, []map[string]string{}, resource.Spec["processors"])
 }
 
 func TestAnyResourceFromConfigurationV1(t *testing.T) {

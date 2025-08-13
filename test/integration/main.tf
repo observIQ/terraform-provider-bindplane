@@ -8,8 +8,8 @@ terraform {
 
 provider "bindplane" {
   remote_url = "https://localhost:3100"
-  username = "tfu"
-  password = "tfp"
+  username   = "tfu"
+  password   = "tfp"
 
   // server's certificate is signed by this CA
   tls_certificate_authority = "../../client/tls/bindplane-ca.crt"
@@ -51,7 +51,7 @@ resource "bindplane_configuration" "config" {
     }
   }
 
-  name = "testtf"
+  name     = "testtf"
   platform = "linux"
   labels = {
     purpose = "tf"
@@ -94,13 +94,13 @@ resource "bindplane_configuration" "config" {
 // on how to create a GCP destination.
 resource "bindplane_destination" "google_dest" {
   rollout = true
-  name = "google-test"
-  type = "googlecloud"
+  name    = "google-test"
+  type    = "googlecloud"
   parameters_json = jsonencode(
     [
       {
-        "name": "project",
-        "value": "abcd"
+        "name" : "project",
+        "value" : "abcd"
       },
     ]
   )
@@ -108,17 +108,17 @@ resource "bindplane_destination" "google_dest" {
 
 resource "bindplane_destination" "logging" {
   rollout = true
-  name = "logging"
-  type = "custom"
+  name    = "logging"
+  type    = "custom"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": ["Metrics", "Logs", "Traces"]
+        "name" : "telemetry_types",
+        "value" : ["Metrics", "Logs", "Traces"]
       },
       {
-        "name": "configuration",
-        "value": "logging:"
+        "name" : "configuration",
+        "value" : "logging:"
       }
     ]
   )
@@ -126,17 +126,17 @@ resource "bindplane_destination" "logging" {
 
 resource "bindplane_destination" "logging2" {
   rollout = true
-  name = "logging-2"
-  type = "custom"
+  name    = "logging-2"
+  type    = "custom"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": ["Metrics", "Logs", "Traces"]
+        "name" : "telemetry_types",
+        "value" : ["Metrics", "Logs", "Traces"]
       },
       {
-        "name": "configuration",
-        "value": "logging:"
+        "name" : "configuration",
+        "value" : "logging:"
       }
     ]
   )
@@ -144,29 +144,29 @@ resource "bindplane_destination" "logging2" {
 
 resource "bindplane_destination" "prometheus" {
   rollout = true
-  name = "prometheus"
-  type = "prometheus"
+  name    = "prometheus"
+  type    = "prometheus"
 }
 
 resource "bindplane_source" "otlp" {
   rollout = true
-  name = "otlp-default"
-  type = "otlp"
+  name    = "otlp-default"
+  type    = "otlp"
 }
 
 resource "bindplane_source" "otlp-custom" {
   rollout = true
-  name = "otlp-custom"
-  type = "otlp"
+  name    = "otlp-custom"
+  type    = "otlp"
   parameters_json = jsonencode(
     [
       {
-        "name": "http_port",
-        "value": 44314
+        "name" : "http_port",
+        "value" : 44314
       },
       {
-        "name": "grpc_port",
-        "value": 0
+        "name" : "grpc_port",
+        "value" : 0
       }
     ]
   )
@@ -174,21 +174,21 @@ resource "bindplane_source" "otlp-custom" {
 
 resource "bindplane_source" "host" {
   rollout = true
-  name = "my-host"
-  type = "host"
+  name    = "my-host"
+  type    = "host"
   parameters_json = jsonencode(
     [
       {
-        "name": "collection_interval",
-        "value": 20
+        "name" : "collection_interval",
+        "value" : 20
       },
       {
-        "name": "enable_process",
-        "value": false
+        "name" : "enable_process",
+        "value" : false
       },
       {
-        "name": "metric_filtering",
-        "value": [
+        "name" : "metric_filtering",
+        "value" : [
           "system.disk.operation_time"
         ]
       }
@@ -197,28 +197,30 @@ resource "bindplane_source" "host" {
 }
 
 resource "bindplane_processor" "batch" {
-  rollout = true
-  name = "my-batch"
-  type = "batch"
+  rollout        = true
+  name           = "my-batch"
+  type           = "batch"
+  recommendation = "batch-processor-recommendation"
 }
 
 resource "bindplane_processor" "batch-options" {
-  rollout = true
-  name = "my-batch-options"
-  type = "batch"
+  rollout        = true
+  name           = "my-batch-options"
+  type           = "batch"
+  recommendation = "batch-options-processor-recommendation"
   parameters_json = jsonencode(
     [
       {
-        "name": "send_batch_size",
-        "value": 200
+        "name" : "send_batch_size",
+        "value" : 200
       },
       {
-        "name": "send_batch_max_size",
-        "value": 400
+        "name" : "send_batch_max_size",
+        "value" : 400
       },
       {
-        "name": "timeout",
-        "value": "2s"
+        "name" : "timeout",
+        "value" : "2s"
       }
     ]
   )
@@ -226,17 +228,17 @@ resource "bindplane_processor" "batch-options" {
 
 resource "bindplane_extension" "custom" {
   rollout = true
-  name = "my-custom"
-  type = "custom"
+  name    = "my-custom"
+  type    = "custom"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": ["Metrics", "Logs", "Traces"]
+        "name" : "telemetry_types",
+        "value" : ["Metrics", "Logs", "Traces"]
       },
       {
-        "name": "configuration",
-        "value": "health_check:"
+        "name" : "configuration",
+        "value" : "health_check:"
       }
     ]
   )
@@ -244,7 +246,7 @@ resource "bindplane_extension" "custom" {
 
 resource "bindplane_processor_bundle" "bundle" {
   rollout = true
-  name = "my-bundle"
+  name    = "my-bundle"
 
   processor {
     name = bindplane_processor.batch-options.name
@@ -275,19 +277,19 @@ resource "bindplane_processor" "json_parser" {
 
 resource "bindplane_processor" "severity_parser_v2" {
   rollout = false
-  name = "Parse-Severity-HTTP-Status-v2"
-  type = "parse_severity_v2"
+  name    = "Parse-Severity-HTTP-Status-v2"
+  type    = "parse_severity_v2"
   parameters_json = jsonencode(
-  [
-    {
-      "name": "match",
-      "value": "Body"
-    },
-    {
-      "name": "body_severity_field",
-      "value": "level"
-    },
-  ]
+    [
+      {
+        "name" : "match",
+        "value" : "Body"
+      },
+      {
+        "name" : "body_severity_field",
+        "value" : "level"
+      },
+    ]
   )
 }
 
@@ -298,26 +300,26 @@ resource "bindplane_processor" "time_parser" {
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Logs"
         ]
       },
       {
-        "name": "log_field_type",
-        "value": "Body"
+        "name" : "log_field_type",
+        "value" : "Body"
       },
       {
-        "name": "log_source_field",
-        "value": "datetime"
+        "name" : "log_source_field",
+        "value" : "datetime"
       },
       {
-        "name": "log_time_format",
-        "value": "Manual"
+        "name" : "log_time_format",
+        "value" : "Manual"
       },
       {
-        "name": "log_manual_timestamp_layout",
-        "value": "%d/%b/%Y:%H:%M:%S %z"
+        "name" : "log_manual_timestamp_layout",
+        "value" : "%d/%b/%Y:%H:%M:%S %z"
       },
     ]
   )
@@ -330,12 +332,12 @@ resource "bindplane_processor" "cleanup_promoted" {
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": ["Logs"]
+        "name" : "telemetry_types",
+        "value" : ["Logs"]
       },
       {
-        "name": "resource_attributes",
-        "value": ["level","datetime"]
+        "name" : "resource_attributes",
+        "value" : ["level", "datetime"]
       },
     ]
   )
@@ -343,7 +345,7 @@ resource "bindplane_processor" "cleanup_promoted" {
 
 resource "bindplane_processor_bundle" "parser" {
   rollout = true
-  name = "generic-parse-bundle"
+  name    = "generic-parse-bundle"
 
   processor {
     name = bindplane_processor.json_parser.name
@@ -406,17 +408,17 @@ resource "bindplane_configuration" "fluent" {
 
 resource "bindplane_extension" "pprof" {
   rollout = true
-  name = "my-pprof"
-  type = "pprof"
+  name    = "my-pprof"
+  type    = "pprof"
   parameters_json = jsonencode(
     [
       {
-        "name": "listen_address",
-        "value": "0.0.0.0"
+        "name" : "listen_address",
+        "value" : "0.0.0.0"
       },
       {
-        "name": "tcp_port",
-        "value": 5000,
+        "name" : "tcp_port",
+        "value" : 5000,
       },
     ]
   )
@@ -424,35 +426,35 @@ resource "bindplane_extension" "pprof" {
 
 resource "bindplane_processor" "time-parse-http-datatime" {
   rollout = false
-  name = "time-parse-http-datatime"
-  type = "parse_timestamp"
+  name    = "time-parse-http-datatime"
+  type    = "parse_timestamp"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Logs",
         ]
       },
       {
-        "name": "log_field_type",
-        "value": "Body"
+        "name" : "log_field_type",
+        "value" : "Body"
       },
       {
-        "name": "log_source_field",
-        "value": "datetime"
+        "name" : "log_source_field",
+        "value" : "datetime"
       },
       {
-        "name": "log_time_format",
-        "value": "Manual"
+        "name" : "log_time_format",
+        "value" : "Manual"
       },
       {
-        "name": "log_epoch_layout",
-        "value": "s"
+        "name" : "log_epoch_layout",
+        "value" : "s"
       },
       {
-        "name": "log_manual_timestamp_layout",
-        "value": "%d/%b/%Y:%H:%M:%S %z"
+        "name" : "log_manual_timestamp_layout",
+        "value" : "%d/%b/%Y:%H:%M:%S %z"
       }
     ]
   )
@@ -460,27 +462,27 @@ resource "bindplane_processor" "time-parse-http-datatime" {
 
 resource "bindplane_processor" "json-parse-body" {
   rollout = false
-  name = "json-parse-body"
-  type = "parse_json"
+  name    = "json-parse-body"
+  type    = "parse_json"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Logs",
         ]
       },
       {
-        "name": "log_source_field_type",
-        "value": "Body"
+        "name" : "log_source_field_type",
+        "value" : "Body"
       },
       {
-        "name": "log_body_source_field",
-        "value": ""
+        "name" : "log_body_source_field",
+        "value" : ""
       },
       {
-        "name": "log_target_field_type",
-        "value": "Body"
+        "name" : "log_target_field_type",
+        "value" : "Body"
       }
     ]
   )
@@ -488,138 +490,138 @@ resource "bindplane_processor" "json-parse-body" {
 
 resource "bindplane_source" "journald" {
   rollout = true
-  name = "my-journald"
-  type = "journald"
+  name    = "my-journald"
+  type    = "journald"
 }
 
 resource "bindplane_connector" "routing" {
   rollout = true
-  name = "log-router"
-  type = "routing"
+  name    = "log-router"
+  type    = "routing"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Logs"
         ]
       },
       {
-        "name": "routes",
-        "value": [
+        "name" : "routes",
+        "value" : [
           {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"prod\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
+            "condition" : {
+              "ottl" : "(attributes[\"env\"] == \"prod\")",
+              "ottlContext" : "resource",
+              "ui" : {
+                "operator" : "",
+                "statements" : [
                   {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "prod"
+                    "key" : "env",
+                    "match" : "resource",
+                    "operator" : "Equals",
+                    "value" : "prod"
                   }
                 ]
               }
             },
-            "id": "datadog"
+            "id" : "datadog"
           },
           {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"dev\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
+            "condition" : {
+              "ottl" : "(attributes[\"env\"] == \"dev\")",
+              "ottlContext" : "resource",
+              "ui" : {
+                "operator" : "",
+                "statements" : [
                   {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "dev"
+                    "key" : "env",
+                    "match" : "resource",
+                    "operator" : "Equals",
+                    "value" : "dev"
                   }
                 ]
               }
             },
-            "id": "google"
+            "id" : "google"
           },
           {
-            "condition": {
-              "ottl": "",
-              "ui": {
-                "operator": "",
-                "statements": [
+            "condition" : {
+              "ottl" : "",
+              "ui" : {
+                "operator" : "",
+                "statements" : [
                   {
-                    "key": "",
-                    "match": "attributes",
-                    "operator": "Equals",
-                    "value": ""
+                    "key" : "",
+                    "match" : "attributes",
+                    "operator" : "Equals",
+                    "value" : ""
                   }
                 ]
               }
             },
-            "id": "fallback"
+            "id" : "fallback"
           }
         ]
       }
-    ] 
+    ]
   )
 }
 
 resource "bindplane_connector" "fluent_router" {
   rollout = true
-  name = "fluent-router"
-  type = "routing"
+  name    = "fluent-router"
+  type    = "routing"
   parameters_json = jsonencode(
     [
       {
-        "name": "telemetry_types",
-        "value": [
+        "name" : "telemetry_types",
+        "value" : [
           "Logs"
         ]
       },
       {
-        "name": "routes",
-        "value": [
+        "name" : "routes",
+        "value" : [
           {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"prod\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
+            "condition" : {
+              "ottl" : "(attributes[\"env\"] == \"prod\")",
+              "ottlContext" : "resource",
+              "ui" : {
+                "operator" : "",
+                "statements" : [
                   {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "prod"
+                    "key" : "env",
+                    "match" : "resource",
+                    "operator" : "Equals",
+                    "value" : "prod"
                   }
                 ]
               }
             },
-            "id": "parser"
+            "id" : "parser"
           },
           {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"dev\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
+            "condition" : {
+              "ottl" : "(attributes[\"env\"] == \"dev\")",
+              "ottlContext" : "resource",
+              "ui" : {
+                "operator" : "",
+                "statements" : [
                   {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "dev"
+                    "key" : "env",
+                    "match" : "resource",
+                    "operator" : "Equals",
+                    "value" : "dev"
                   }
                 ]
               }
             },
-            "id": "loki"
+            "id" : "loki"
           },
         ]
       }
-    ] 
+    ]
   )
 }
 
@@ -630,14 +632,14 @@ resource "bindplane_configuration_v2" "configuration" {
 
   rollout = true
 
-  name = "my-config-v2"
+  name     = "my-config-v2"
   platform = "linux"
 
   source {
     name = bindplane_source.otlp.name
 
     route {
-      route_id = "metric-batcher"
+      route_id       = "metric-batcher"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -645,7 +647,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      route_id = "log-parser"
+      route_id       = "log-parser"
       telemetry_type = "logs"
       components = [
         "processors/parser"
@@ -653,7 +655,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      route_id = "trace-batcher"
+      route_id       = "trace-batcher"
       telemetry_type = "traces"
       components = [
         "processors/batcher"
@@ -668,7 +670,7 @@ resource "bindplane_configuration_v2" "configuration" {
     ]
 
     route {
-      route_id = "log-parser"
+      route_id       = "log-parser"
       telemetry_type = "logs"
       components = [
         "processors/parser"
@@ -676,7 +678,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      route_id = "metric-batcher"
+      route_id       = "metric-batcher"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -684,7 +686,7 @@ resource "bindplane_configuration_v2" "configuration" {
     }
 
     route {
-      route_id = "trace-batcher"
+      route_id       = "trace-batcher"
       telemetry_type = "traces"
       components = [
         "processors/batcher"
@@ -695,7 +697,7 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.fluent.name
     route {
-      route_id = "fluent-router"
+      route_id       = "fluent-router"
       telemetry_type = "logs"
       components = [
         "connectors/fluent-router"
@@ -706,7 +708,7 @@ resource "bindplane_configuration_v2" "configuration" {
   source {
     name = bindplane_source.host.name
     route {
-      route_id = "batch-metrics"
+      route_id       = "batch-metrics"
       telemetry_type = "metrics"
       components = [
         "processors/batcher"
@@ -721,7 +723,7 @@ resource "bindplane_configuration_v2" "configuration" {
       bindplane_processor.time-parse-http-datatime.name
     ]
     route {
-      route_id = "log-batcher"
+      route_id       = "log-batcher"
       telemetry_type = "logs"
       components = [
         "processors/batcher"
@@ -735,14 +737,14 @@ resource "bindplane_configuration_v2" "configuration" {
       bindplane_processor.batch.name
     ]
     route {
-      route_id = "log-destinations"
+      route_id       = "log-destinations"
       telemetry_type = "logs"
       components = [
         "connectors/logging-router"
       ]
     }
     route {
-      route_id = "metric-destinations"
+      route_id       = "metric-destinations"
       telemetry_type = "metrics"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
@@ -751,7 +753,7 @@ resource "bindplane_configuration_v2" "configuration" {
       ]
     }
     route {
-      route_id = "trace-destinations"
+      route_id       = "trace-destinations"
       telemetry_type = "traces"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
@@ -763,23 +765,23 @@ resource "bindplane_configuration_v2" "configuration" {
 
   connector {
     route_id = "logging-router"
-    name = bindplane_connector.routing.name
+    name     = bindplane_connector.routing.name
     route {
-      route_id = "datadog"
+      route_id       = "datadog"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
       ]
     }
     route {
-      route_id = "google"
+      route_id       = "google"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.google.id}",
       ]
     }
     route {
-      route_id = "fallback"
+      route_id       = "fallback"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.loki.id}"
@@ -789,16 +791,16 @@ resource "bindplane_configuration_v2" "configuration" {
 
   connector {
     route_id = "fluent-router"
-    name = bindplane_connector.fluent_router.name
+    name     = bindplane_connector.fluent_router.name
     route {
-      route_id = "parser"
+      route_id       = "parser"
       telemetry_type = "logs"
       components = [
         "processors/parser"
       ]
     }
     route {
-      route_id = "loki"
+      route_id       = "loki"
       telemetry_type = "logs"
       components = [
         "destinations/${bindplane_destination.loki.id}"
@@ -807,8 +809,8 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   destination {
-    route_id   = bindplane_destination.google.id
-    name = bindplane_destination.google.name
+    route_id = bindplane_destination.google.id
+    name     = bindplane_destination.google.name
     processors = [
       bindplane_processor.batch.name,
       bindplane_processor.time-parse-http-datatime.name
@@ -817,12 +819,12 @@ resource "bindplane_configuration_v2" "configuration" {
 
   destination {
     route_id = bindplane_destination.datadog.id
-    name = bindplane_destination.datadog.name
+    name     = bindplane_destination.datadog.name
   }
 
   destination {
-    route_id   = bindplane_destination.loki.id
-    name = bindplane_destination.loki.name
+    route_id = bindplane_destination.loki.id
+    name     = bindplane_destination.loki.name
   }
 
   extensions = [

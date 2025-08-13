@@ -28,7 +28,8 @@ import (
 // configurations, use AnyResourceFromConfigurationV1.
 //
 // rParameters and rProcessors can be nil.
-func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration) (model.AnyResource, error) {
+// extraSpecFields can contain additional fields to add to the spec.
+func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration, extraSpecFields map[string]any) (model.AnyResource, error) {
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
 		proc := map[string]string{}
@@ -38,6 +39,22 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 		}
 
 		procs = append(procs, proc)
+	}
+
+	spec := map[string]any{
+		"type":       rType,
+		"parameters": rParameters,
+		"processors": procs,
+	}
+
+	// Add any extra spec fields
+	if extraSpecFields != nil {
+		for k, v := range extraSpecFields {
+			// Only add non-empty values
+			if v != nil && v != "" {
+				spec[k] = v
+			}
+		}
 	}
 
 	switch rKind {
@@ -51,11 +68,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 					Name: rName,
 				},
 			},
-			Spec: map[string]any{
-				"type":       rType,
-				"parameters": rParameters,
-				"processors": procs,
-			},
+			Spec: spec,
 		}, nil
 	default:
 		return model.AnyResource{}, fmt.Errorf("unknown bindplane resource kind: %s", rKind)
