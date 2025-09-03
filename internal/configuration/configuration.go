@@ -180,6 +180,17 @@ func NewV1(options ...Option) (*model.Configuration, error) {
 	return c, nil
 }
 
+// NewV2 wraps NewV2Beta and returns a BindPlane configuration
+// with API version bindplane.observiq.com/v2.
+func NewV2(options ...Option) (*model.Configuration, error) {
+	c, err := NewV2Beta(options...)
+	if err != nil {
+		return nil, err
+	}
+	c.ResourceMeta.APIVersion = "bindplane.observiq.com/v2"
+	return c, nil
+}
+
 // NewV2Beta takes a configuration options and returns a BindPlane configuration
 // with API version bindplane.observiq.com/v2beta
 func NewV2Beta(options ...Option) (*model.Configuration, error) {

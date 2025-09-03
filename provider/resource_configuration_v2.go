@@ -450,7 +450,7 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		configuration.WithAdvancedParameters(advancedParameters),
 	}
 
-	config, err := configuration.NewV2Beta(opts...)
+	config, err := configuration.NewV2(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to create new configuration: %w", err)
 	}
