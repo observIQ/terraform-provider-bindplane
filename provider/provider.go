@@ -22,7 +22,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	ossClient "github.com/observiq/bindplane-op-enterprise/client"
+	bpclient "github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"go.uber.org/zap"
@@ -179,7 +179,7 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		return nil, diag.FromErr(err)
 	}
 
-	c, err := ossClient.NewBindPlane(config, logger)
+	c, err := bpclient.NewBindplane(config, logger)
 	if err != nil {
 		err = fmt.Errorf("failed to initialize bindplane client: %w", err)
 		return nil, diag.FromErr(err)
