@@ -55,7 +55,7 @@ func newTestConfig(endpoint, user, pass, ca, crt, key string) (*BindPlane, error
 		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
 	}
 
-	i, err := client.NewBindPlane(config, logger)
+	i, err := client.NewBindplane(config, logger)
 	if err != nil {
 		return nil, err
 	}
