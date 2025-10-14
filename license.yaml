@@ -7,7 +7,7 @@ override:
     licenses: ["MIT"] # https://github.com/segmentio/backo-go/blob/master/LICENSE
   - path: "github.com/opencontainers/go-digest"
     versions: "v1.0.0"
-    licenses: ["Apache 2.0"] # https://github.com/opencontainers/go-digest?tab=License-1-ov-file#readme
+    licenses: ["Apache-2.0"] # https://github.com/opencontainers/go-digest?tab=License-1-ov-file#readme
 
 # all permitted licenses - if no list is specified, all licenses are assumed to be allowed
 allow:
