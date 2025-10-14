@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -53,7 +53,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -77,7 +77,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -108,7 +108,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -139,7 +139,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -170,7 +170,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -226,7 +226,7 @@ jobs:
           version: '2.7.0'
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -278,7 +278,7 @@ jobs:
           version: '2.7.0'
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
@@ -440,7 +440,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
 
