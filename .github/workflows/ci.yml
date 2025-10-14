@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -42,7 +42,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -66,7 +66,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -97,7 +97,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -128,7 +128,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -159,7 +159,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -211,7 +211,7 @@ jobs:
           - "v1.76.0"
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -263,7 +263,7 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -429,7 +429,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
