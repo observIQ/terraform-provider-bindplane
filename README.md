@@ -20,4 +20,4 @@ Bindplane Terraform Provider follows the [CNCF Code of Conduct](https://github.c
 
 # Other questions?
 
-Send us an [email](mailto:support@observiq.com), or open an issue with your question. We'd love to hear from you!
+Send us an [email](mailto:support@bindplane.com), or open an issue with your question. We'd love to hear from you!

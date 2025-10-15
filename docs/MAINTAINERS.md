@@ -5,5 +5,5 @@ This file lists the maintainers of the Bindplane Terraform Provider project. The
 ## Project Maintainers
 | Name | GitHub ID | Affiliation |
 | ---- | --------- | ----------- |
-| [Joe Sirianni](mailto:joe.sirianni@observiq.com) | [jsirianni](https://github.com/jsirianni) | Bindplane |
-| [Keith Schmitt](mailto:keith.schmitt@observiq.com) | [schmikei](https://github.com/schmikei) | Bindplane |
+| [Joe Sirianni](mailto:joe.sirianni@bindplane.com) | [jsirianni](https://github.com/jsirianni) | Bindplane |
+| [Keith Schmitt](mailto:keith.schmitt@bindplane.com) | [schmikei](https://github.com/schmikei) | Bindplane |
