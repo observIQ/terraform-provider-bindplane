@@ -28,7 +28,7 @@ of sensitive parameters, such as passwords and API keys.
 
 ### Go pprof w/ Default Options
 
-This example shows the [pprof](https://observiq.com/docs/agent-configuration/extensions/pprof) extension type
+This example shows the [pprof](https://docs.bindplane.com/configuration/bindplane-otel-collector/extensions/go-performance-profiler) extension type
 with default parameters.
 
 ```hcl
@@ -41,7 +41,7 @@ resource "bindplane_extension" "pprof" {
 
 ### Health Check w/ Custom Parameters
 
-This example shows the [health_check](https://observiq.com/docs/agent-configuration/extensions/health_check) extension type
+This example shows the [health_check](https://docs.bindplane.com/configuration/bindplane-otel-collector/extensions/health-check) extension type
 with custom parameters using the `parameters_json` option.
 
 ```hcl

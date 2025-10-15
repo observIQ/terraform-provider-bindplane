@@ -6,7 +6,7 @@ description: |-
 
 # Bindplane Provider
 
-The Bindplane provider is used to configure your [Bindplane](https://observiq.com/solutions/bindplane-op/) resources.
+The Bindplane provider is used to configure your [Bindplane](https://bindplane.com/solutions) resources.
 
 To learn the basics of Terraform using follow the hands-on
 [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/gcp-get-started/infrastructure-as-code).

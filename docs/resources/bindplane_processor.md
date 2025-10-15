@@ -28,7 +28,7 @@ of sensitive parameters, such as passwords and API keys.
 
 ### Prometheus w/ Default Options
 
-This example shows the [Batch](https://docs.bindplane.observiq.com/docs/batch) processor type
+This example shows the [Batch](https://docs.bindplane.com/integrations/processors/batch) processor type
 with default parameters.
 
 ```hcl

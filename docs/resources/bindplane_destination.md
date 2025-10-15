@@ -29,7 +29,7 @@ of sensitive parameters, such as passwords and API keys.
 
 ### Google Cloud w/ Default Options
 
-This example shows the [Google Cloud](https://docs.bindplane.observiq.com/docs/google-cloud) destination type
+This example shows the [Google Cloud](https://docs.bindplane.com/integrations/destinations/google-cloud) destination type
 with default parameters.
 
 ```hcl
@@ -42,7 +42,7 @@ resource "bindplane_destination" "googlecloud" {
 
 ### Prometheus w/ Custom Parameters
 
-This example shows the [Prometheus](https://docs.bindplane.observiq.com/docs/prometheus-1) destination type
+This example shows the [Prometheus](https://docs.bindplane.com/integrations/destinations/prometheus) destination type
 with custom parameters using the `parameters_json` option.
 
 ```hcl

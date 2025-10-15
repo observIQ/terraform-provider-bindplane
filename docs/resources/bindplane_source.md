@@ -29,7 +29,7 @@ of sensitive parameters, such as passwords and API keys.
 
 ### OTLP w/ Default Options
 
-This example shows the [Open Telemetry](https://docs.bindplane.observiq.com/docs/opentelemetry) source type
+This example shows the [Open Telemetry](https://docs.bindplane.com/integrations/sources/opentelemetry-otlp) source type
 with default parameters.
 
 ```hcl
@@ -42,7 +42,7 @@ resource "bindplane_source" "otlp" {
 
 ### OTLP w/ Custom Parameters
 
-This example shows the [Open Telemetry](https://docs.bindplane.observiq.com/docs/opentelemetry) source type
+This example shows the [Open Telemetry](https://docs.bindplane.com/integrations/sources/opentelemetry-otlp) source type
 with custom parameters using the `parameters_json` option.
 
 ```hcl
