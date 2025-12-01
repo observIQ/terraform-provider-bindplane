@@ -353,7 +353,7 @@ resource "bindplane_connector" "fluent_router" {
                 ]
               }
             },
-            "id": "loki"
+            "id": "parser"
           },
         ]
       }
@@ -533,13 +533,6 @@ resource "bindplane_configuration_v2" "configuration" {
       telemetry_type = "logs"
       components = [
         "processors/parser"
-      ]
-    }
-    route {
-      route_id = "loki"
-      telemetry_type = "logs"
-      components = [
-        "destinations/${bindplane_destination.loki.id}"
       ]
     }
   }
