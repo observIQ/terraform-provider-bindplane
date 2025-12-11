@@ -18,6 +18,7 @@
 package parameter
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -268,7 +269,22 @@ func TestParametersToSring(t *testing.T) {
 				require.ErrorContains(t, err, tc.expectErr)
 				return
 			}
-			require.Equal(t, expect, output)
+
+			// Empty string is a valid output for "no parameters" and is not JSON.
+			if expect == "" {
+				require.Equal(t, "", output)
+				return
+			}
+
+			// JSON object key ordering is not stable (and differs between json implementations).
+			// Compare semantically instead of via string equality.
+			var expectedParams []model.Parameter
+			require.NoError(t, json.Unmarshal([]byte(expect), &expectedParams))
+
+			var actualParams []model.Parameter
+			require.NoError(t, json.Unmarshal([]byte(output), &actualParams))
+
+			require.Equal(t, expectedParams, actualParams)
 		})
 	}
 }
@@ -279,6 +295,20 @@ func TestStringToParameter_WithConditions(t *testing.T) {
 		input  string
 		errMsg string
 	}{
+		{
+			"empty-condition-string",
+			`[
+				{
+					"name": "telemetry_types",
+					"value": ["Logs"]
+				},
+				{
+					"name": "condition",
+					"value": ""
+				}
+			]`,
+			"",
+		},
 		{
 			"malformed-condition",
 			`[
