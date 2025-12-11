@@ -337,24 +337,6 @@ resource "bindplane_connector" "fluent_router" {
             },
             "id": "parser"
           },
-          {
-            "condition": {
-              "ottl": "(attributes[\"env\"] == \"dev\")",
-              "ottlContext": "resource",
-              "ui": {
-                "operator": "",
-                "statements": [
-                  {
-                    "key": "env",
-                    "match": "resource",
-                    "operator": "Equals",
-                    "value": "dev"
-                  }
-                ]
-              }
-            },
-            "id": "loki"
-          },
         ]
       }
     ] 
@@ -485,7 +467,7 @@ resource "bindplane_configuration_v2" "configuration" {
       components = [
         "destinations/${bindplane_destination.datadog.id}",
         "destinations/${bindplane_destination.google.id}",
-        "destinations/${bindplane_destination.loki.id}"
+        "destinations/${bindplane_destination.google.id}"
       ]
     }
     route {
@@ -494,7 +476,7 @@ resource "bindplane_configuration_v2" "configuration" {
       components = [
         "destinations/${bindplane_destination.datadog.id}",
         "destinations/${bindplane_destination.google.id}",
-        "destinations/${bindplane_destination.loki.id}"
+        "destinations/${bindplane_destination.google.id}"
       ]
     }
   }
@@ -520,7 +502,7 @@ resource "bindplane_configuration_v2" "configuration" {
       route_id = "fallback"
       telemetry_type = "logs"
       components = [
-        "destinations/${bindplane_destination.loki.id}"
+        "destinations/${bindplane_destination.google.id}"
       ]
     }
   }
@@ -533,13 +515,6 @@ resource "bindplane_configuration_v2" "configuration" {
       telemetry_type = "logs"
       components = [
         "processors/parser"
-      ]
-    }
-    route {
-      route_id = "loki"
-      telemetry_type = "logs"
-      components = [
-        "destinations/${bindplane_destination.loki.id}"
       ]
     }
   }
@@ -556,11 +531,6 @@ resource "bindplane_configuration_v2" "configuration" {
   destination {
     route_id = bindplane_destination.datadog.id
     name = bindplane_destination.datadog.name
-  }
-
-  destination {
-    route_id   = bindplane_destination.loki.id
-    name = bindplane_destination.loki.name
   }
 
   extensions = [

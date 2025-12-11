@@ -16,9 +16,9 @@
 package parameter
 
 import (
-	"encoding/json"
 	"fmt"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
@@ -26,7 +26,7 @@ import (
 // to a list of Bindplane parameters.
 func StringToParameter(s string) ([]model.Parameter, error) {
 	parameters := []model.Parameter{}
-	if err := json.Unmarshal([]byte(s), &parameters); err != nil {
+	if err := jsoniter.Unmarshal([]byte(s), &parameters); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal parameters '%s': %w", s, err)
 	}
 
@@ -44,7 +44,7 @@ func ParametersToString(p []model.Parameter) (string, error) {
 		return "", nil
 	}
 
-	paramBytes, err := json.Marshal(p)
+	paramBytes, err := jsoniter.Marshal(p)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal parameters: %w", err)
 	}
@@ -70,13 +70,26 @@ func validateParameters(parameters []model.Parameter) error {
 
 // validateParametersForConditions validates parameters for malformed condition UI blocks
 func validateParametersForConditions(param model.Parameter, paramIndex int) error {
-	conditionBytes, err := json.Marshal(param.Value)
+	// Bindplane accepts condition values as either:
+	// - a string OTTL expression (including ""), or
+	// - an object containing ottl/ui fields.
+	//
+	// Terraform configs commonly set condition to "" to mean "no condition". Treat string
+	// and nil values as valid and skip UI validation.
+	if param.Value == nil {
+		return nil
+	}
+	if _, ok := param.Value.(string); ok {
+		return nil
+	}
+
+	conditionBytes, err := jsoniter.Marshal(param.Value)
 	if err != nil {
 		return fmt.Errorf("parameter %d: failed to marshal condition: %w", paramIndex, err)
 	}
 
 	var condition Condition
-	if err := json.Unmarshal(conditionBytes, &condition); err != nil {
+	if err := jsoniter.Unmarshal(conditionBytes, &condition); err != nil {
 		return fmt.Errorf("parameter %d: malformed condition structure: %w", paramIndex, err)
 	}
 
