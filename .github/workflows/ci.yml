@@ -30,7 +30,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -86,7 +86,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -117,7 +117,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -148,7 +148,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -179,7 +179,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -231,7 +231,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -283,7 +283,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -445,7 +445,7 @@ jobs:
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
