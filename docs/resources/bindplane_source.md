@@ -71,7 +71,6 @@ You can find available source types with the `bindplane get source-type` command
 ```bash
 NAME             DISPLAY          VERSION 
 aerospike        Aerospike        3      	
-apache_combined  Apache Combined  1      	
 apache_common    Apache Common    1      	
 apache_http      Apache HTTP      1   
 ...
