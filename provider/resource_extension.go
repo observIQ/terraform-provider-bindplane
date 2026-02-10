@@ -50,10 +50,11 @@ func resourceExtension() *schema.Resource {
 				Description: "The extension type to use for extension creation.",
 			},
 			"parameters_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    false,
-				Description: "A JSON object with options used to configure the extension.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				Description:      "A JSON object with options used to configure the extension.",
+				DiffSuppressFunc: suppressEquivalentJSONDiffs,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,

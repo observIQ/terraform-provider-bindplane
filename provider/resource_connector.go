@@ -50,10 +50,11 @@ func resourceConnector() *schema.Resource {
 				Description: "The connector type to use for connector creation.",
 			},
 			"parameters_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    false,
-				Description: "A JSON object with options used to configure the connector.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				Description:      "A JSON object with options used to configure the connector.",
+				DiffSuppressFunc: suppressEquivalentJSONDiffs,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,

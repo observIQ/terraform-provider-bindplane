@@ -50,11 +50,12 @@ func resourceProcessor() *schema.Resource {
 				Description: "The processor type to use for processor creation.",
 			},
 			"parameters_json": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     false,
-				Description:  "A JSON object with options used to configure the processor.",
-				ValidateFunc: validateParametersJSON,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				Description:      "A JSON object with options used to configure the processor.",
+				ValidateFunc:     validateParametersJSON,
+				DiffSuppressFunc: suppressEquivalentJSONDiffs,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,
