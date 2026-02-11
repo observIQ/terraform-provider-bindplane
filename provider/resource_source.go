@@ -51,10 +51,11 @@ func resourceSource() *schema.Resource {
 				Description: "The destination type to use for source creation.",
 			},
 			"parameters_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    false,
-				Description: "A JSON object with options used to configure the source.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				Description:      "A JSON object with options used to configure the source.",
+				DiffSuppressFunc: suppressEquivalentJSONDiffs,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,

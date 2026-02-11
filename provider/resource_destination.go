@@ -50,10 +50,11 @@ func resourceDestination() *schema.Resource {
 				Description: "The destination type to use for destination creation.",
 			},
 			"parameters_json": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    false,
-				Description: "A JSON object with options used to configure the destination.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         false,
+				Description:      "A JSON object with options used to configure the destination.",
+				DiffSuppressFunc: suppressEquivalentJSONDiffs,
 			},
 			"rollout": {
 				Type:        schema.TypeBool,
