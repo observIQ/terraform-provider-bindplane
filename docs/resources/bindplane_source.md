@@ -19,6 +19,8 @@ source-type. The source can be used by multiple [configurations](./bindplane_con
 | `type`              | string | required | The source type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the source type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the source should trigger an automatic rollout of any configuration that uses it. |
+| `display_name`      | string | optional | The display name which will be set on the resources `metadata.displayName` field. |
+| `description`       | string | optional | The description which will be set on the resources `metadata.description` field.  |
 
 ## Sensitive Values
 

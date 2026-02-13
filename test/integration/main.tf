@@ -96,6 +96,8 @@ resource "bindplane_destination" "google_dest" {
   rollout = true
   name = "google-test"
   type = "googlecloud"
+  display_name = "my host"
+  description = "my terraform description"
   parameters_json = jsonencode(
     [
       {

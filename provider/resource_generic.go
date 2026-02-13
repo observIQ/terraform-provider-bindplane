@@ -60,6 +60,18 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
+	if g.Metadata.DisplayName != "" {
+		if err := d.Set("display_name", g.Metadata.DisplayName); err != nil {
+			return err
+		}
+	}
+
+	if g.Metadata.Description != "" {
+		if err := d.Set("description", g.Metadata.Description); err != nil {
+			return err
+		}
+	}
+
 	rType := strings.Split(g.Spec.Type, ":")[0]
 	if err := d.Set("type", rType); err != nil {
 		return err
@@ -138,4 +150,22 @@ func genericResourceImport(rKind model.Kind, d *schema.ResourceData, meta any) (
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func genericSchemaDisplayName() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    false,
+		Description: "The display name of the component.",
+	}
+}
+
+func genericSchemaDescription() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    false,
+		Description: "The description of the component.",
+	}
 }
