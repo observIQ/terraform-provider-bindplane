@@ -132,6 +132,10 @@ func genericResourceImport(rKind model.Kind, d *schema.ResourceData, meta any) (
 		return nil, fmt.Errorf("%s with name '%s' does not exist", rKind, name)
 	}
 
+	// Set the state ID to BindPlane's resource ID so that the next Read
+	// does not clear the ID (genericResourceRead requires g.ID == d.Id()).
+	d.SetId(g.ID)
+
 	// Add the name to state, which will cause the import to succeed.
 	if err := d.Set("name", g.Name); err != nil {
 		return nil, fmt.Errorf("failed to set resource name in state for imported %s '%s': %v", rKind, name, err)

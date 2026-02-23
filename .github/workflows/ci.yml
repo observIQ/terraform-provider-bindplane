@@ -380,6 +380,12 @@ jobs:
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
         working-directory: test/local
 
+      - name: run import tests
+        env:
+          TF_CLI_CONFIG_FILE: ./dev.tfrc
+        run: chmod +x test-import.sh && ./test-import.sh
+        working-directory: test/local
+
       - name: cleanup local tests
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: test/local
