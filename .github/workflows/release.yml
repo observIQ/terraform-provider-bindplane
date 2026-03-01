@@ -41,7 +41,7 @@ jobs:
           PASSPHRASE: ${{ secrets.GPG_PRIVATE_KEY_PASSPHRASE }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: v2.1.0
           args: release --config release/goreleaser.yml
