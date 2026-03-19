@@ -425,6 +425,176 @@ jobs:
         if: always()
         run: docker logs bindplane-postgres
 
+  test-local-tls:
+    runs-on: "ubuntu-22.04"
+    needs:
+      - setup-environment
+    strategy:
+      matrix:
+        bindplane_version:
+          - "latest"
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v6
+
+      - name: Configure GIT SSH
+        run: git config --global url.git@github.com:.insteadOf https://github.com/
+
+      - name: Configure SSH Key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+            ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
+
+      - uses: KengoTODA/actions-setup-docker-compose@main
+        with:
+          version: '2.7.0'
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Cache Tools
+        id: tool-cache
+        uses: actions/cache@v5
+        with:
+          path: /home/runner/go/bin
+          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
+
+      - name: Generate self-signed TLS certificate
+        run: |
+          openssl req -x509 -nodes -newkey rsa:2048 \
+            -keyout /tmp/bindplane.key -out /tmp/bindplane.crt \
+            -days 365 -subj "/CN=localhost" \
+            -addext "subjectAltName=IP:127.0.0.1,DNS:localhost"
+          chmod 644 /tmp/bindplane.key /tmp/bindplane.crt
+
+      # https://bindplane.com/download
+      - name: Start Bindplane
+        run: |
+          cat <<EOF > docker-compose.yml
+          version: "3"
+          volumes:
+            bindplane:
+          services:
+            transform:
+              container_name: bindplane-transform-agent
+              restart: always
+              image: ghcr.io/observiq/bindplane-transform-agent:latest
+              ports:
+                - "4568:4568"
+            bindplane:
+              container_name: bindplane-server
+              restart: always
+              image: ghcr.io/observiq/bindplane-ee:${VERSION}
+              ports:
+                - "3001:3001"
+              environment:
+                - BINDPLANE_USERNAME=admin
+                - BINDPLANE_PASSWORD=password
+                - BINDPLANE_REMOTE_URL=https://localhost:3001
+                - BINDPLANE_SESSION_SECRET=2c23c9d3-850f-4062-a5c8-3f9b814ae144
+                - BINDPLANE_LOG_OUTPUT=stdout
+                - BINDPLANE_ACCEPT_EULA=true
+                - BINDPLANE_TRANSFORM_AGENT_ENABLE_REMOTE=true
+                - BINDPLANE_TRANSFORM_AGENT_REMOTE_AGENTS=transform:4568
+                - BINDPLANE_LICENSE=${BINDPLANE_LICENSE}
+                - BINDPLANE_POSTGRES_HOST=bindplane-postgres
+                - BINDPLANE_POSTGRES_PORT=5432
+                - BINDPLANE_POSTGRES_DATABASE=bindplane
+                - BINDPLANE_POSTGRES_USERNAME=bindplane
+                - BINDPLANE_POSTGRES_PASSWORD=password
+                - BINDPLANE_TLS_CERT=/bindplane.crt
+                - BINDPLANE_TLS_KEY=/bindplane.key
+              volumes:
+                - bindplane:/data
+                - /tmp/bindplane.crt:/bindplane.crt:ro
+                - /tmp/bindplane.key:/bindplane.key:ro
+              depends_on:
+                - transform
+                - postgres
+            postgres:
+              container_name: bindplane-postgres
+              restart: always
+              image: postgres:16
+              ports:
+                - "5432:5432"
+              environment:
+                - POSTGRES_DB=bindplane
+                - POSTGRES_PASSWORD=password
+                - POSTGRES_USER=bindplane
+          EOF
+          docker-compose up -d
+        env:
+          BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
+          VERSION: ${{ matrix.bindplane_version }}
+
+      - name: Init Bindplane Organization
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 1
+          polling_interval_seconds: 2
+          max_attempts: 3
+          shell: bash
+          command: |
+            curl -k \
+              -u admin:password https://localhost:3001/v1/organizations \
+              -X POST -d '{"organizationName": "init", "accountName": "project", "eulaAccepted":true}' -v
+
+      # Allow bindplane to seed the database by making a GET request
+      # and waiting 20 seconds.
+      - name: Trigger Seeding
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 1
+          polling_interval_seconds: 2
+          max_attempts: 3
+          shell: bash
+          command: |
+            curl -k -v -u admin:password https://localhost:3001/v1/source-types
+            sleep 20
+
+      - name: Get docker compose config (debug)
+        if: always()
+        run: cat docker-compose.yml | grep -v BINDPLANE_LICENSE
+
+      - name: Build provider for local testing
+        run: make test-local
+
+      - name: Copy provider to local-tls directory
+        run: cp -r test/local/providers test/local-tls/providers
+
+      - name: run local-tls tests
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve
+        working-directory: test/local-tls
+
+      - name: cleanup local-tls tests
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
+        working-directory: test/local-tls
+
+      - run: goreleaser --version
+        if: always()
+
+      - run: tree dist/
+        if: always()
+
+      - name: list images (debug)
+        if: always()
+        run: docker images
+
+      - name: list containers (debug)
+        if: always()
+        run: docker ps
+
+      - name: bindplane logs (debug)
+        if: always()
+        run: docker logs bindplane-server
+
+      - name: postgres logs (debug)
+        if: always()
+        run: docker logs bindplane-postgres
+
   build:
     # Skip build for dependabot. It takes long and requires our GPG
     # key. The `test-end-to-end` job will test building the binary.

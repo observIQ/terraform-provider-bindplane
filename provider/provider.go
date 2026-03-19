@@ -35,7 +35,8 @@ const (
 	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
 	envTLSCa     = "BINDPLANE_TF_TLS_CA"
 	envTLSCrt    = "BINDPLANE_TF_TLS_CERT"
-	envTLSKey    = "BINDPLANE_TF_TLS_KEY"
+	envTLSKey         = "BINDPLANE_TF_TLS_KEY"
+	envTLSSkipVerify  = "BINDPLANE_TF_TLS_SKIP_VERIFY"
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5
@@ -112,6 +113,14 @@ func Configure() *schema.Provider {
 				}, nil),
 				Description: "File path to the x509 PEM client private key, required when the Bindplane instance is configured for mutual TLS.",
 			},
+			"tls_skip_verify": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					envTLSSkipVerify,
+				}, nil),
+				Description: "Disables TLS certificate verification. Should only be used for testing.",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"bindplane_connector":        resourceConnector(),
@@ -172,6 +181,10 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 			config.Network.TLS.Certificate = crt
 			config.Network.TLS.PrivateKey = key
 		}
+	}
+
+	if v, ok := d.Get("tls_skip_verify").(bool); ok && v {
+		config.Network.TLS.InsecureSkipVerify = v
 	}
 
 	logger, err := NewLogger()
