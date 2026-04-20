@@ -327,3 +327,124 @@ func TestNewV2(t *testing.T) {
 		})
 	}
 }
+
+// TestWithConnectorsByName_InlineTypeAndParameters verifies that an inline
+// connector's Type and Parameters flow through into the resulting
+// model.ResourceConfiguration's ParameterizedSpec, so the Bindplane SaaS UI
+// can resolve inline routing connectors after terraform apply.
+func TestWithConnectorsByName_InlineTypeAndParameters(t *testing.T) {
+	params := []model.Parameter{
+		{Name: "telemetry_types", Value: []interface{}{"Logs"}},
+		{Name: "routes", Value: []interface{}{
+			map[string]interface{}{"id": "Default"},
+		}},
+	}
+
+	rc := []ResourceConfig{
+		{
+			RouteID:    "route-1",
+			Name:       "connector-routing-1",
+			Type:       "routing:3",
+			Parameters: params,
+		},
+	}
+
+	cfg, err := NewV2(WithConnectorsByName(rc))
+	require.NoError(t, err)
+	require.Len(t, cfg.Spec.Connectors, 1)
+
+	c := cfg.Spec.Connectors[0]
+	require.Equal(t, "connector-routing-1", c.Name)
+	require.Equal(t, "routing:3", c.ParameterizedSpec.Type)
+	require.Equal(t, params, c.ParameterizedSpec.Parameters)
+}
+
+// TestWithProcessorGroups_Parameters verifies that a processor group's
+// Parameters flow through into the resulting model.ResourceConfiguration's
+// ParameterizedSpec. This carries fields such as telemetry_types, which
+// the SaaS UI needs to place the group under the correct telemetry section.
+func TestWithProcessorGroups_Parameters(t *testing.T) {
+	params := []model.Parameter{
+		{Name: "telemetry_types", Value: []interface{}{"Logs"}},
+	}
+
+	rc := []ResourceConfig{
+		{
+			RouteID:    "pg-1",
+			Parameters: params,
+		},
+	}
+
+	cfg, err := NewV2(WithProcessorGroups(rc))
+	require.NoError(t, err)
+	require.Len(t, cfg.Spec.Processors, 1)
+
+	pg := cfg.Spec.Processors[0]
+	require.Equal(t, params, pg.ParameterizedSpec.Parameters)
+}
+
+// TestWithProcessorGroups_InlineProcessorRefs verifies that inner processors
+// specified via ProcessorRefs carry their Type and Parameters through into
+// the resulting model.ResourceConfiguration's inner processor list. Without
+// this, inline batch and other typed processors embedded on a processor
+// group are stripped on apply and the SaaS UI cannot render them.
+func TestWithProcessorGroups_InlineProcessorRefs(t *testing.T) {
+	refs := []ProcessorRef{
+		{
+			Name: "batch-inline",
+			Type: "batch:3",
+			Parameters: []model.Parameter{
+				{Name: "send_batch_size", Value: 100},
+			},
+		},
+	}
+
+	rc := []ResourceConfig{
+		{
+			RouteID:       "pg-1",
+			ProcessorRefs: refs,
+		},
+	}
+
+	cfg, err := NewV2(WithProcessorGroups(rc))
+	require.NoError(t, err)
+	require.Len(t, cfg.Spec.Processors, 1)
+
+	pg := cfg.Spec.Processors[0]
+	require.Len(t, pg.ParameterizedSpec.Processors, 1)
+
+	inner := pg.ParameterizedSpec.Processors[0]
+	require.Equal(t, "batch-inline", inner.Name)
+	require.Equal(t, "batch:3", inner.ParameterizedSpec.Type)
+	require.Equal(t, refs[0].Parameters, inner.ParameterizedSpec.Parameters)
+}
+
+// TestWithProcessorGroups_MixedProcessorsAndRefs verifies that both
+// name-only processors and richer processor refs can coexist on the same
+// processor group. The final inner processor list should contain both
+// forms in the order: Processors first, then ProcessorRefs.
+func TestWithProcessorGroups_MixedProcessorsAndRefs(t *testing.T) {
+	rc := []ResourceConfig{
+		{
+			RouteID:    "pg-1",
+			Processors: []string{"library-filter"},
+			ProcessorRefs: []ProcessorRef{
+				{
+					Name: "batch-inline",
+					Type: "batch:3",
+				},
+			},
+		},
+	}
+
+	cfg, err := NewV2(WithProcessorGroups(rc))
+	require.NoError(t, err)
+	require.Len(t, cfg.Spec.Processors, 1)
+
+	pg := cfg.Spec.Processors[0]
+	require.Len(t, pg.ParameterizedSpec.Processors, 2)
+	require.Equal(t, "library-filter", pg.ParameterizedSpec.Processors[0].Name)
+	require.Equal(t, "", pg.ParameterizedSpec.Processors[0].ParameterizedSpec.Type)
+	require.Equal(t, "batch-inline", pg.ParameterizedSpec.Processors[1].Name)
+	require.Equal(t, "batch:3", pg.ParameterizedSpec.Processors[1].ParameterizedSpec.Type)
+}

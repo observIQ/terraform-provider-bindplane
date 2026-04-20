@@ -36,6 +36,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
 | `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
 | `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
+| `connector`        | block           | optional | One or more connector blocks. See the [connector block](#connector-block) section. |
 | `processor_group`  | block           | optional | One or more processor group blocks. See the [processor group block](./bindplane_configuration.md#processor-group-block) section. |
 | `destination`      | block           | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section. |
 | `extensions`       | list(string)    | optional | One or more extension names to attach to the configuration.                 |
@@ -53,11 +54,41 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 
 ### Processor Group Block
 
+Inner processors can be attached in two forms and both can be used together:
+
+- **`processors`** name list: for library-referenced processors whose `type` and parameters live on a separate `bindplane_processor` resource.
+- **`processor`** block: for inline processors that carry their `type` and `parameters_json` directly on the configuration spec. Useful for processors like `batch:3` whose metadata is embedded rather than kept as a reusable library resource.
+
 | Option              | Type         | Default  | Description                  |
 | ------------------- | ------------ | -------- | ---------------------------- |
 | `route_id`          | string       | required | An arbitrary string that can be used to configure routes to this processor group. |
 | `processors`        | list(string) | optional | One or more processor names to attach to the processor group. |
+| `processor`         | block        | optional | One or more [processor blocks](#processor-block-inside-processor_group) for inline processors with `type` and `parameters_json`. |
+| `parameters_json`   | string       | optional | A JSON object with parameters used to configure the processor group, for example `telemetry_types`. |
 | `route`             | string       | optional | One or more routes to attach to the processor group. See the [route block](./bindplane_configuration.md#route-block) section. |
+
+#### Processor Block (inside processor_group)
+
+| Option              | Type         | Default  | Description                  |
+| ------------------- | ------------ | -------- | ---------------------------- |
+| `name`              | string       | required | Name of the processor to attach. |
+| `type`              | string       | optional | Component type for an inline processor, for example `batch:3`. Leave empty for library-referenced processors. |
+| `parameters_json`   | string       | optional | A JSON object with parameters used to configure the inline processor. |
+
+### Connector Block
+
+The `connector` block attaches a connector to the configuration. Connectors can be used in two ways:
+
+- **Library-referenced**: set `name` to a separately defined `bindplane_connector` resource. Type and parameters are carried on that referenced resource.
+- **Inline**: set `type` and `parameters_json` directly on the block. Useful for routing connectors (`routing:3`) whose OTTL conditions live on the configuration spec rather than on a separate resource.
+
+| Option              | Type         | Default  | Description                  |
+| ------------------- | ------------ | -------- | ---------------------------- |
+| `route_id`          | string       | required | An arbitrary string that can be used to configure routes to this connector. |
+| `name`              | string       | required | Name of the connector to attach. For an inline connector this is a name you assign; for a library-referenced connector it matches the `bindplane_connector` resource name. |
+| `type`              | string       | optional | Component type for an inline connector, for example `routing:3`. Leave empty for library-referenced connectors. |
+| `parameters_json`   | string       | optional | A JSON object with parameters used to configure an inline connector, for example routing conditions. |
+| `route`             | string       | optional | One or more routes to attach to the connector. See the [route block](./bindplane_configuration.md#route-block) section. |
 
 ### Destination Block
 
@@ -270,6 +301,141 @@ resource "bindplane_configuration_v2" "configuration" {
         name = "production"
       }
     }
+  }
+}
+```
+
+### Example: Inline Routing Connector
+
+This example demonstrates an inline routing connector that fans logs out to two processor groups based on an OTTL condition. Both the connector's `type` and its routing `parameters_json` are carried inline on the configuration spec rather than on a separate `bindplane_connector` resource.
+
+The `type` value should match the versioned component type Bindplane uses internally for the routing connector (for example `routing:3`). The `parameters_json` shape below follows what Bindplane's routing connector expects: a `telemetry_types` parameter and a `routes` parameter whose `value` is an ordered list of `{condition, id}` entries, with a final `{id: "Default"}` catch-all.
+
+```hcl
+resource "bindplane_source" "otlp" {
+  rollout = true
+  name    = "my-otlp"
+  type    = "otlp"
+}
+
+resource "bindplane_destination" "primary" {
+  rollout = true
+  name    = "primary-dest"
+  type    = "googlecloud"
+}
+
+resource "bindplane_destination" "secondary" {
+  rollout = true
+  name    = "secondary-dest"
+  type    = "googlecloud"
+}
+
+resource "bindplane_configuration_v2" "example" {
+  rollout  = true
+  name     = "inline-routing-example"
+  platform = "linux"
+
+  source {
+    name = bindplane_source.otlp.name
+    route {
+      route_id       = "otlp-to-router"
+      telemetry_type = "logs"
+      components     = ["connectors/router"]
+    }
+  }
+
+  # Inline routing connector. Type and parameters_json are carried on
+  # the configuration spec so the SaaS UI can resolve the connector
+  # and render the routing edges correctly.
+  connector {
+    route_id = "router"
+    name     = "router"
+    type     = "routing:3"
+    parameters_json = jsonencode([
+      {
+        name  = "telemetry_types"
+        value = ["Logs"]
+      },
+      {
+        name = "routes"
+        value = [
+          {
+            id = "prod"
+            condition = {
+              ottl = "attributes[\"env\"] == \"prod\""
+            }
+          },
+          {
+            id = "Default"
+          },
+        ]
+      },
+    ])
+    route {
+      route_id       = "prod"
+      telemetry_type = "logs"
+      components     = ["processor_groups/prod-group"]
+    }
+    route {
+      route_id       = "Default"
+      telemetry_type = "logs"
+      components     = ["processor_groups/default-group"]
+    }
+  }
+
+  # Inline processor group. telemetry_types is carried on parameters_json;
+  # an inline batch processor lives on a processor block with its own
+  # type and parameters_json so the whole group round-trips through
+  # terraform apply without losing identity.
+  processor_group {
+    route_id = "prod-group"
+    parameters_json = jsonencode([
+      {
+        name  = "telemetry_types"
+        value = ["Logs"]
+      },
+    ])
+    processor {
+      name = "batch-prod"
+      type = "batch:3"
+      parameters_json = jsonencode([
+        {
+          name  = "send_batch_size"
+          value = 200
+        },
+      ])
+    }
+    route {
+      route_id       = "prod-to-primary"
+      telemetry_type = "logs"
+      components     = ["destinations/${bindplane_destination.primary.id}"]
+    }
+  }
+
+  processor_group {
+    route_id   = "default-group"
+    processors = []
+    parameters_json = jsonencode([
+      {
+        name  = "telemetry_types"
+        value = ["Logs"]
+      },
+    ])
+    route {
+      route_id       = "default-to-secondary"
+      telemetry_type = "logs"
+      components     = ["destinations/${bindplane_destination.secondary.id}"]
+    }
+  }
+
+  destination {
+    name     = bindplane_destination.primary.name
+    route_id = bindplane_destination.primary.id
+  }
+
+  destination {
+    name     = bindplane_destination.secondary.name
+    route_id = bindplane_destination.secondary.id
   }
 }
 ```

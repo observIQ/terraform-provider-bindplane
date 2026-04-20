@@ -26,6 +26,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
+	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 	v2 "github.com/observiq/terraform-provider-bindplane/provider/resource/configuration/v2"
 
@@ -120,6 +121,19 @@ func resourceConfigurationV2() *schema.Resource {
 							ForceNew:    false,
 							Description: "Name of the connector to attach.",
 						},
+						"type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "Component type for an inline connector (for example \"routing:3\"). Leave empty for library-referenced connectors whose type is carried on the referenced bindplane_connector resource.",
+						},
+						"parameters_json": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         false,
+							Description:      "A JSON object with parameters used to configure an inline connector (for example routing conditions).",
+							DiffSuppressFunc: suppressEquivalentJSONDiffs,
+						},
 						"route": v2.RouteSchema,
 					},
 				},
@@ -139,10 +153,46 @@ func resourceConfigurationV2() *schema.Resource {
 						},
 						"processors": {
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of processor names to attach to the processor group.",
+							Description: "List of processor names to attach to the processor group. Use for library-referenced processors without inline metadata. For processors that need inline type or parameters, use the processor block instead. Both forms can be combined.",
+						},
+						"processor": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: false,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										ForceNew:    false,
+										Description: "Name of the processor to attach.",
+									},
+									"type": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										ForceNew:    false,
+										Description: "Component type for an inline processor (for example \"batch:3\"). Leave empty for library-referenced processors whose type is carried on the referenced bindplane_processor resource.",
+									},
+									"parameters_json": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         false,
+										Description:      "A JSON object with parameters used to configure an inline processor.",
+										DiffSuppressFunc: suppressEquivalentJSONDiffs,
+									},
+								},
+							},
+							Description: "Processor to attach with optional inline type and parameters. Can be specified one or many times. Use alongside or instead of the processors name list.",
+						},
+						"parameters_json": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         false,
+							Description:      "A JSON object with parameters used to configure the processor group (for example telemetry_types).",
+							DiffSuppressFunc: suppressEquivalentJSONDiffs,
 						},
 						"route": v2.RouteSchema,
 					},
@@ -348,10 +398,23 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 				routes = r
 			}
 
+			parameters := []model.Parameter{}
+			if s, _ := connectorRaw["parameters_json"].(string); s != "" {
+				params, err := parameter.StringToParameter(s)
+				if err != nil {
+					return fmt.Errorf("connector parameters_json: %w", err)
+				}
+				parameters = params
+			}
+
+			connectorType, _ := connectorRaw["type"].(string)
+
 			connectorConf := configuration.ResourceConfig{
-				RouteID: connectorRaw["route_id"].(string),
-				Name:    connectorRaw["name"].(string),
-				Routes:  routes,
+				RouteID:    connectorRaw["route_id"].(string),
+				Name:       connectorRaw["name"].(string),
+				Type:       connectorType,
+				Parameters: parameters,
+				Routes:     routes,
 			}
 			connectors = append(connectors, connectorConf)
 		}
@@ -370,6 +433,30 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 				}
 			}
 
+			processorRefs := []configuration.ProcessorRef{}
+			if blocks, ok := processorGroupRaw["processor"].([]any); ok {
+				for _, blk := range blocks {
+					b := blk.(map[string]any)
+
+					refParams := []model.Parameter{}
+					if s, _ := b["parameters_json"].(string); s != "" {
+						params, err := parameter.StringToParameter(s)
+						if err != nil {
+							return fmt.Errorf("processor_group.processor parameters_json: %w", err)
+						}
+						refParams = params
+					}
+
+					refType, _ := b["type"].(string)
+
+					processorRefs = append(processorRefs, configuration.ProcessorRef{
+						Name:       b["name"].(string),
+						Type:       refType,
+						Parameters: refParams,
+					})
+				}
+			}
+
 			routes := &model.Routes{}
 			if rawRoutes := processorGroupRaw["route"].(*schema.Set).List(); v != nil {
 				r, err := component.ParseRoutes(rawRoutes)
@@ -379,10 +466,21 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 				routes = r
 			}
 
+			parameters := []model.Parameter{}
+			if s, _ := processorGroupRaw["parameters_json"].(string); s != "" {
+				params, err := parameter.StringToParameter(s)
+				if err != nil {
+					return fmt.Errorf("processor_group parameters_json: %w", err)
+				}
+				parameters = params
+			}
+
 			processorGroupConf := configuration.ResourceConfig{
-				RouteID:    processorGroupRaw["route_id"].(string),
-				Processors: processors,
-				Routes:     routes,
+				RouteID:       processorGroupRaw["route_id"].(string),
+				Processors:    processors,
+				ProcessorRefs: processorRefs,
+				Parameters:    parameters,
+				Routes:        routes,
 			}
 			processorGroups = append(processorGroups, processorGroupConf)
 		}
@@ -547,6 +645,25 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		connector["route_id"] = c.ID
 		connector["name"] = strings.Split(c.Name, ":")[0]
 
+		// Only round-trip type and parameters_json for inline connectors
+		// (those with non-empty Parameters). For library-referenced
+		// connectors the server may populate Type from the library
+		// resource even though the user did not declare it; echoing
+		// that back to state would cause spurious drift on every
+		// refresh.
+		connectorType := ""
+		paramsJSON := ""
+		if len(c.ParameterizedSpec.Parameters) > 0 {
+			s, err := parameter.ParametersToString(c.ParameterizedSpec.Parameters)
+			if err != nil {
+				return fmt.Errorf("connector parameters to json: %w", err)
+			}
+			paramsJSON = s
+			connectorType = c.ParameterizedSpec.Type
+		}
+		connector["type"] = connectorType
+		connector["parameters_json"] = paramsJSON
+
 		stateRoutes, err := component.RoutesToState(c.Routes)
 		if err != nil {
 			return fmt.Errorf("routes to state: %w", err)
@@ -567,11 +684,40 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	for _, pg := range config.Spec.Processors {
 		processorGroup := map[string]any{}
 
-		processors := []string{}
+		// Classify inner processors. Those with inline Parameters
+		// round-trip through the structured processor block; those
+		// without round-trip through the processors name list. Using
+		// Parameters rather than Type as the discriminator avoids
+		// spurious drift: the server often populates Type on library-
+		// referenced processors without the user setting it, and those
+		// should still round-trip as a bare name in state.
+		nameOnly := []string{}
+		richBlocks := []map[string]any{}
 		for _, p := range pg.Processors {
-			processors = append(processors, strings.Split(p.Name, ":")[0])
+			shortName := strings.Split(p.Name, ":")[0]
+			if len(p.ParameterizedSpec.Parameters) == 0 {
+				nameOnly = append(nameOnly, shortName)
+				continue
+			}
+
+			innerJSON, err := parameter.ParametersToString(p.ParameterizedSpec.Parameters)
+			if err != nil {
+				return fmt.Errorf("processor parameters to json: %w", err)
+			}
+			richBlocks = append(richBlocks, map[string]any{
+				"name":            shortName,
+				"type":            p.ParameterizedSpec.Type,
+				"parameters_json": innerJSON,
+			})
 		}
-		processorGroup["processors"] = processors
+		processorGroup["processors"] = nameOnly
+		processorGroup["processor"] = richBlocks
+
+		paramsJSON, err := parameter.ParametersToString(pg.ParameterizedSpec.Parameters)
+		if err != nil {
+			return fmt.Errorf("processor_group parameters to json: %w", err)
+		}
+		processorGroup["parameters_json"] = paramsJSON
 
 		stateRoutes, err := component.RoutesToState(pg.Routes)
 		if err != nil {
