@@ -29,14 +29,55 @@ type ResourceConfig struct {
 	// attached to the configuration
 	Name string
 
-	// A list of processor names to attach to the resource
+	// A list of processor names to attach to the resource. Used for
+	// library-referenced processors whose type and parameters live on
+	// a separate bindplane_processor resource.
 	Processors []string
+
+	// ProcessorRefs is a richer representation of attached processors.
+	// In addition to a name, each ref can carry Type and Parameters for
+	// inline processors whose metadata lives on the configuration spec
+	// rather than on a separate bindplane_processor resource. Both
+	// Processors and ProcessorRefs are merged into the final attached
+	// processor list on apply.
+	ProcessorRefs []ProcessorRef
 
 	// RouteID is the ID to use when routing to this resource
 	RouteID string
 
 	// Routes to attach to the resource
 	Routes *model.Routes
+
+	// Type is the component type carried inline on the configuration
+	// spec, for example "routing:3" on an inline routing connector.
+	// Empty for library-referenced components, whose type is carried
+	// on the referenced resource rather than the configuration spec.
+	Type string
+
+	// Parameters are component parameters carried inline on the
+	// configuration spec. Used by inline connectors for routing
+	// conditions and by processor groups for fields such as
+	// telemetry_types.
+	Parameters []model.Parameter
+}
+
+// ProcessorRef represents a processor attached to a source, processor
+// group, or destination. Unlike the bare Processors name list it can
+// carry Type and Parameters for inline processors whose metadata lives
+// on the configuration spec rather than on a separate
+// bindplane_processor resource.
+type ProcessorRef struct {
+	// Name is the name of the processor to attach.
+	Name string
+
+	// Type is the component type for an inline processor, for example
+	// "batch:3". Empty for library-referenced processors whose type is
+	// carried on the referenced bindplane_processor resource.
+	Type string
+
+	// Parameters are component parameters carried inline on the
+	// configuration spec.
+	Parameters []model.Parameter
 }
 
 // Option is a function that configures a
@@ -236,6 +277,16 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 			}
 			processorResources = append(processorResources, processor)
 		}
+		// richer processor refs with optional inline Type / Parameters
+		for _, ref := range r.ProcessorRefs {
+			processorResources = append(processorResources, model.ResourceConfiguration{
+				Name: ref.Name,
+				ParameterizedSpec: model.ParameterizedSpec{
+					Type:       ref.Type,
+					Parameters: ref.Parameters,
+				},
+			})
+		}
 
 		routeID := r.RouteID
 
@@ -244,6 +295,8 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 		r := model.ResourceConfiguration{
 			Name: r.Name,
 			ParameterizedSpec: model.ParameterizedSpec{
+				Type:       r.Type,
+				Parameters: r.Parameters,
 				Processors: processorResources,
 			},
 			Routes: r.Routes,
