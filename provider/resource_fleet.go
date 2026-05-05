@@ -210,11 +210,7 @@ func resourceFleetRead(d *schema.ResourceData, meta any) error {
 
 	// Set selector
 	selector := buildSelectorSchema(fleet.FleetSpec.Selector)
-	if err := d.Set("selector", selector); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("selector", selector)
 }
 
 func resourceFleetDelete(d *schema.ResourceData, meta any) error {
@@ -264,10 +260,9 @@ func buildSelectorSchema(selector model.AgentSelector) []interface{} {
 	return []interface{}{selectorMap}
 }
 
-func resourceFleetImportState(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceFleetImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	bindplane := meta.(*client.BindPlane)
 
-	// When importing, the name is passed as the ID
 	name := d.Id()
 
 	fleet, err := bindplane.Fleet(name)
@@ -275,15 +270,12 @@ func resourceFleetImportState(ctx context.Context, d *schema.ResourceData, meta 
 		return nil, err
 	}
 
-	// Fleet must exist for import
 	if fleet == nil {
 		return nil, fmt.Errorf("fleet with name '%s' does not exist", name)
 	}
 
-	// Set the state ID to BindPlane's resource ID
 	d.SetId(fleet.ID())
 
-	// Add the name to state
 	if err := d.Set("name", fleet.Name()); err != nil {
 		return nil, fmt.Errorf("failed to set fleet name: %w", err)
 	}
