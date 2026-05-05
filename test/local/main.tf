@@ -166,7 +166,7 @@ resource "bindplane_processor" "json-parse-body" {
 resource "bindplane_processor" "time-parse-http-datatime" {
   rollout = false
   name = "time-parse-http-datatime"
-  type = "parse_timestamp_v2"
+  type = "parse_timestamp"
   parameters_json = jsonencode(
     [
       {
