@@ -127,10 +127,11 @@ func Configure() *schema.Provider {
 			"bindplane_configuration":    resourceConfiguration(),
 			"bindplane_configuration_v2": resourceConfigurationV2(),
 			"bindplane_destination":      resourceDestination(),
-			"bindplane_source":           resourceSource(),
+			"bindplane_extension":        resourceExtension(),
+			"bindplane_fleet":            resourceFleet(),
 			"bindplane_processor":        resourceProcessor(),
 			"bindplane_processor_bundle": resourceProcessorBundle(),
-			"bindplane_extension":        resourceExtension(),
+			"bindplane_source":           resourceSource(),
 		},
 	}
 }
