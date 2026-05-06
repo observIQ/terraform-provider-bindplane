@@ -55,7 +55,7 @@ resource "bindplane_processor" "severity_parser_v2" {
 resource "bindplane_processor" "time_parser" {
   rollout = false
   name    = "Parse-Timestamp"
-  type    = "parse_timestamp"
+  type    = "parse_timestamp_v2"
   parameters_json = jsonencode(
     [
       {

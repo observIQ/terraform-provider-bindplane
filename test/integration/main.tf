@@ -294,7 +294,7 @@ resource "bindplane_processor" "severity_parser_v2" {
 resource "bindplane_processor" "time_parser" {
   rollout = false
   name    = "Parse-Timestamp"
-  type    = "parse_timestamp"
+  type    = "parse_timestamp_v2"
   parameters_json = jsonencode(
     [
       {
@@ -425,7 +425,7 @@ resource "bindplane_extension" "pprof" {
 resource "bindplane_processor" "time-parse-http-datatime" {
   rollout = false
   name = "time-parse-http-datatime"
-  type = "parse_timestamp"
+  type = "parse_timestamp_v2"
   parameters_json = jsonencode(
     [
       {
