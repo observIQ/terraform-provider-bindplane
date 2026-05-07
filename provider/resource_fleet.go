@@ -48,12 +48,14 @@ func resourceFleet() *schema.Resource {
 			},
 			"agent_type": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
+				ForceNew:    true,
 				Description: "The agent type (collector type) for agents in this fleet.",
 			},
 			"platform": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
+				ForceNew:    true,
 				Description: "The platform for agents in this fleet.",
 			},
 			"configuration": {
