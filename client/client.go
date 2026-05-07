@@ -250,6 +250,36 @@ func (i *BindPlane) DeleteExtension(name string) error {
 	return nil
 }
 
+// Fleet takes a name and returns the matching fleet
+func (i *BindPlane) Fleet(name string) (*model.Fleet, error) {
+	r, err := i.Client.Resource(context.Background(), model.KindFleet, name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get fleet with name %s: %w", name, err)
+	}
+
+	switch f := r.(type) {
+	case *model.Fleet:
+		return f, nil
+	default:
+		return nil, fmt.Errorf("unexpected response from bindplane, expected fleet, got %T, this is a bug that should be reported", f)
+	}
+}
+
+// DeleteFleet will delete a BindPlane fleet
+func (i *BindPlane) DeleteFleet(name string) error {
+	err := i.Client.DeleteResource(context.Background(), model.KindFleet, name)
+	if err != nil {
+		return fmt.Errorf("error while deleting fleet with name %s: %w", name, err)
+	}
+	return nil
+}
+
 // Delete will delete a Bindplane resource
 func (i *BindPlane) Delete(k model.Kind, name string) error {
 	switch k {
@@ -265,6 +295,8 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 		return i.DeleteExtension(name)
 	case model.KindConnector:
 		return i.DeleteConnector(name)
+	case model.KindFleet:
+		return i.DeleteFleet(name)
 	default:
 		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
 	}
