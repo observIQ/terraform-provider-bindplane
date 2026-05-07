@@ -16,8 +16,8 @@ and uses a selector to match agents to the fleet based on labels.
 | --------------- | ------ | -------- | ------------------------------------------------------------------------------------------ |
 | `name`          | string | required | The resource name for the fleet. Used internally and cannot be changed after creation.     |
 | `display_name`  | string | optional | A user-friendly name for the fleet. Can be changed anytime.                               |
-| `agent_type`    | string | optional | The collector agent type for agents in this fleet.                                        |
-| `platform`      | string | optional | The platform (OS/architecture) for agents in this fleet.                                  |
+| `agent_type`    | string | required | The collector agent type for agents in this fleet. Cannot be changed after creation.       |
+| `platform`      | string | required | The platform (OS/architecture) for agents in this fleet. Cannot be changed after creation. |
 | `configuration` | string | optional | Name of the configuration assigned to the fleet.                                          |
 
 ## Examples
@@ -58,12 +58,13 @@ resource "bindplane_fleet" "staging" {
 
 ### Minimal Fleet
 
-This example creates a fleet with minimal required fields.
+This example creates a fleet with minimal required fields (no configuration assigned).
 
 ```hcl
 resource "bindplane_fleet" "development" {
-  name         = "development-fleet"
-  display_name = "Development"
+  name       = "development-fleet"
+  agent_type = "observiq-otel-collector"
+  platform   = "linux"
 }
 ```
 
@@ -80,6 +81,8 @@ and returns an error if it doesn't:
 # This will fail if "missing-config" doesn't exist
 resource "bindplane_fleet" "example" {
   name          = "my-fleet"
+  agent_type    = "observiq-otel-collector"
+  platform      = "linux"
   configuration = "missing-config"  # ← Error: configuration 'missing-config' does not exist
 }
 ```
