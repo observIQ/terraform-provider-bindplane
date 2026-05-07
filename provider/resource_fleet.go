@@ -23,7 +23,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
-	"github.com/observiq/terraform-provider-bindplane/internal/component"
 )
 
 func resourceFleet() *schema.Resource {
@@ -40,39 +39,27 @@ func resourceFleet() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the fleet.",
+				Description: "The resource name for the fleet. This is used internally and cannot be changed after creation.",
 			},
-			"description": {
+			"display_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Description of the fleet.",
+				Description: "A user-friendly name for the fleet that can be changed anytime.",
 			},
-			"labels": {
-				Type:        schema.TypeMap,
+			"agent_type": {
+				Type:        schema.TypeString,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Labels of the fleet.",
+				Description: "The agent type (collector type) for agents in this fleet.",
+			},
+			"platform": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The platform for agents in this fleet.",
 			},
 			"configuration": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Name of the configuration assigned to the fleet.",
-			},
-			"selector": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				MaxItems:    1,
-				Description: "Agent selector for matching agents to this fleet.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"match_labels": {
-							Type:        schema.TypeMap,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Labels for matching agents.",
-						},
-					},
-				},
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -88,8 +75,14 @@ func resourceFleetCreate(d *schema.ResourceData, meta any) error {
 	bindplane := meta.(*client.BindPlane)
 
 	name := d.Get("name").(string)
-	description := d.Get("description").(string)
+	displayName := d.Get("display_name").(string)
 	configuration := d.Get("configuration").(string)
+	agentType := d.Get("agent_type").(string)
+	platform := d.Get("platform").(string)
+
+	if name == "" {
+		return fmt.Errorf("a fleet name is required in order to create")
+	}
 
 	// Validate that configuration exists if provided
 	if configuration != "" {
@@ -112,14 +105,31 @@ func resourceFleetCreate(d *schema.ResourceData, meta any) error {
 			return fmt.Errorf("fleet with name '%s' already exists", name)
 		}
 
-		// Generate a new ID
-		d.SetId(component.NewResourceID())
+		// Use name as ID (not a random UUID)
+		d.SetId(name)
+	}
+
+	// Build labels with auto-generated agent-type and platform
+	labelsMapStr := make(map[string]string)
+	if agentType != "" {
+		labelsMapStr["agent-type"] = agentType
+	}
+	if platform != "" {
+		labelsMapStr["platform"] = platform
+	}
+	labels := model.LabelsFromValidatedMap(labelsMapStr)
+
+	// Auto-generate selector matching the fleet name
+	selector := model.AgentSelector{
+		MatchLabels: map[string]string{
+			"fleet": name,
+		},
 	}
 
 	// Build FleetSpec from schema
 	fleetSpec := model.FleetSpec{
 		Configuration: configuration,
-		Selector:      buildAgentSelector(d),
+		Selector:      selector,
 	}
 
 	// Convert FleetSpec to map[string]any
@@ -128,26 +138,15 @@ func resourceFleetCreate(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("failed to encode fleet spec: %w", err)
 	}
 
-	// Build labels
-	var labels model.Labels
-	if labelsData, ok := d.GetOk("labels"); ok {
-		labelsMap := labelsData.(map[string]interface{})
-		labelsMapStr := make(map[string]string)
-		for k, v := range labelsMap {
-			labelsMapStr[k] = v.(string)
-		}
-		labels = model.LabelsFromValidatedMap(labelsMapStr)
-	}
-
 	// Create AnyResource
 	anyResource := &model.AnyResource{
 		ResourceMeta: model.ResourceMeta{
 			APIVersion: "bindplane.observiq.com/v1",
 			Kind:       model.KindFleet,
 			Metadata: model.Metadata{
-				ID:          d.Id(),
+				ID:          name,
 				Name:        name,
-				Description: description,
+				DisplayName: displayName,
 				Labels:      labels,
 			},
 		},
@@ -189,28 +188,28 @@ func resourceFleetRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	if err := d.Set("description", fleet.Description()); err != nil {
-		return err
+	// Set display name if available
+	if fleet.Metadata.DisplayName != "" {
+		if err := d.Set("display_name", fleet.Metadata.DisplayName); err != nil {
+			return err
+		}
 	}
 
-	// Set labels
+	// Set agent-type and platform from labels
 	labelsMap := fleet.GetLabels()
-	labelsSetMap := make(map[string]string)
-	for k, v := range labelsMap.Set {
-		labelsSetMap[k] = v
+	if agentType, ok := labelsMap.Set["agent-type"]; ok {
+		if err := d.Set("agent_type", agentType); err != nil {
+			return err
+		}
 	}
-	if err := d.Set("labels", labelsSetMap); err != nil {
-		return err
+	if platform, ok := labelsMap.Set["platform"]; ok {
+		if err := d.Set("platform", platform); err != nil {
+			return err
+		}
 	}
 
 	// Set configuration
-	if err := d.Set("configuration", fleet.FleetSpec.Configuration); err != nil {
-		return err
-	}
-
-	// Set selector
-	selector := buildSelectorSchema(fleet.FleetSpec.Selector)
-	return d.Set("selector", selector)
+	return d.Set("configuration", fleet.FleetSpec.Configuration)
 }
 
 func resourceFleetDelete(d *schema.ResourceData, meta any) error {
@@ -223,41 +222,6 @@ func resourceFleetDelete(d *schema.ResourceData, meta any) error {
 
 	d.SetId("")
 	return nil
-}
-
-// buildAgentSelector creates an AgentSelector from terraform schema data
-func buildAgentSelector(d *schema.ResourceData) model.AgentSelector {
-	selector := model.AgentSelector{}
-
-	if selectorData, ok := d.GetOk("selector"); ok {
-		selectorList := selectorData.([]interface{})
-		if len(selectorList) > 0 && selectorList[0] != nil {
-			selectorMap := selectorList[0].(map[string]interface{})
-
-			if matchLabels, ok := selectorMap["match_labels"]; ok {
-				matchLabelsMap := matchLabels.(map[string]interface{})
-				selector.MatchLabels = make(map[string]string)
-				for k, v := range matchLabelsMap {
-					selector.MatchLabels[k] = v.(string)
-				}
-			}
-		}
-	}
-
-	return selector
-}
-
-// buildSelectorSchema converts a model.AgentSelector to terraform schema
-func buildSelectorSchema(selector model.AgentSelector) []interface{} {
-	if len(selector.MatchLabels) == 0 {
-		return nil
-	}
-
-	selectorMap := map[string]interface{}{
-		"match_labels": selector.MatchLabels,
-	}
-
-	return []interface{}{selectorMap}
 }
 
 func resourceFleetImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {

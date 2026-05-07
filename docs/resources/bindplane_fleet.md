@@ -12,27 +12,19 @@ and uses a selector to match agents to the fleet based on labels.
 
 ## Options
 
-| Option          | Type   | Default  | Description                                                       |
-| --------------- | ------ | -------- | ----------------------------------------------------------------- |
-| `name`          | string | required | The fleet name.                                                   |
-| `description`   | string | optional | The fleet description.                                            |
-| `configuration` | string | optional | Name of the configuration assigned to the fleet.                  |
-| `labels`        | map    | optional | Labels to assign to the fleet for organization and filtering.     |
-| `selector`      | object | optional | Agent selector for matching agents to this fleet.                 |
-
-### Selector
-
-The `selector` block matches agents to the fleet based on labels.
-
-| Option         | Type   | Default  | Description                                      |
-| -------------- | ------ | -------- | ------------------------------------------------ |
-| `match_labels` | map    | optional | Map of label key-value pairs to match agents.    |
+| Option          | Type   | Default  | Description                                                                                |
+| --------------- | ------ | -------- | ------------------------------------------------------------------------------------------ |
+| `name`          | string | required | The resource name for the fleet. Used internally and cannot be changed after creation.     |
+| `display_name`  | string | optional | A user-friendly name for the fleet. Can be changed anytime.                               |
+| `agent_type`    | string | optional | The collector agent type for agents in this fleet.                                        |
+| `platform`      | string | optional | The platform (OS/architecture) for agents in this fleet.                                  |
+| `configuration` | string | optional | Name of the configuration assigned to the fleet.                                          |
 
 ## Examples
 
-### Basic Fleet
+### Basic Fleet with Agent Type and Platform
 
-This example creates a fleet that assigns a configuration to agents with matching labels.
+This example creates a fleet with collector type and platform. The selector is automatically generated to match agents with the fleet name label.
 
 ```hcl
 resource "bindplane_configuration" "example" {
@@ -42,61 +34,36 @@ resource "bindplane_configuration" "example" {
 }
 
 resource "bindplane_fleet" "production" {
-  name          = "production-fleet"
-  description   = "Fleet for production agents"
+  name          = "us-east"
+  display_name  = "US East"
+  agent_type    = "observiq-otel-collector"
+  platform      = "linux"
   configuration = bindplane_configuration.example.name
-
-  labels = {
-    environment = "production"
-    team        = "platform"
-  }
-
-  selector {
-    match_labels = {
-      fleet = "production-fleet"
-      env   = "prod"
-    }
-  }
 }
 ```
 
-### Fleet with v2 Configuration
+### Fleet with Configuration
 
-This example uses a v2 configuration with the fleet.
+This example creates a fleet and assigns a configuration to it.
 
 ```hcl
 resource "bindplane_fleet" "staging" {
   name          = "staging-fleet"
-  description   = "Fleet for staging agents"
-  configuration = bindplane_configuration_v2.example.name
-
-  labels = {
-    environment = "staging"
-    team        = "platform"
-  }
-
-  selector {
-    match_labels = {
-      fleet = "staging-fleet"
-      env   = "staging"
-    }
-  }
+  display_name  = "Staging Fleet"
+  agent_type    = "observiq-otel-collector"
+  platform      = "linux"
+  configuration = "my-existing-config"
 }
 ```
 
-### Fleet without Selector
+### Minimal Fleet
 
-This example creates a fleet without a selector, which will not match any agents.
+This example creates a fleet with minimal required fields.
 
 ```hcl
 resource "bindplane_fleet" "development" {
-  name          = "development-fleet"
-  description   = "Fleet for development agents"
-  configuration = bindplane_configuration.example.name
-
-  labels = {
-    environment = "development"
-  }
+  name         = "development-fleet"
+  display_name = "Development"
 }
 ```
 
@@ -126,24 +93,23 @@ bindplane get fleet
 ```
 
 ```yaml
-# bindplane get fleet production-fleet -o yaml
+# bindplane get fleet us-east -o yaml
 apiVersion: bindplane.observiq.com/v1
 kind: Fleet
 metadata:
-    id: 01HQNNG5JFCY74WQ4MAEVD61H7
-    name: production-fleet
-    description: Fleet for production agents
+    id: us-east
+    name: us-east
+    displayName: US East
     labels:
-        environment: production
-        team: platform
+        agent-type: observiq-otel-collector
+        platform: linux
     version: 1
     dateModified: 2024-05-05T10:30:00Z
 spec:
     configuration: my-config
     selector:
         matchLabels:
-            fleet: production-fleet
-            env: prod
+            fleet: us-east
 ```
 
 ## Import
