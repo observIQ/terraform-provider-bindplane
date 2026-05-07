@@ -11,7 +11,7 @@ resource "bindplane_fleet" "staging" {
   display_name  = "Staging Fleet"
   agent_type    = "observiq-otel-collector"
   platform      = "linux"
-  configuration = "my-config-v2"
+  configuration = bindplane_configuration_v2.configuration.name
 }
 
 resource "bindplane_fleet" "development" {
