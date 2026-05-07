@@ -45,8 +45,6 @@ import (
 )
 
 const (
-	bindplaneExtPort = 3100
-
 	username = "int-test-user"
 	password = "int-test-password"
 
@@ -103,8 +101,7 @@ func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string
 		Env:    env,
 		Name:   bindplaneName,
 		Mounts: []testcontainers.ContainerMount{mount},
-		// TODO(jsirianni): dynamic port?
-		ExposedPorts: []string{fmt.Sprintf("%d:%d", bindplaneExtPort, 3001)},
+		ExposedPorts: []string{"3001/tcp"},
 		WaitingFor:   wait.ForListeningPort("3001"),
 	}
 
@@ -227,7 +224,7 @@ func postgresContainer(t *testing.T, ctx context.Context, env map[string]string)
 			Name:         postgresName,
 			Image:        "postgres:16",
 			Env:          env,
-			ExposedPorts: []string{"5432:5432"},
+			ExposedPorts: []string{"5432/tcp"},
 			WaitingFor:   wait.ForListeningPort("5432"),
 			Networks:     []string{networkName},
 			NetworkAliases: map[string][]string{
@@ -294,9 +291,11 @@ func TestIntegration_http_config(t *testing.T) {
 
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
+	mappedPort, err := container.MappedPort(context.Background(), "3001/tcp")
+	require.NoError(t, err)
 
 	endpoint := url.URL{
-		Host:   net.JoinHostPort(hostname, fmt.Sprintf("%d", bindplaneExtPort)),
+		Host:   net.JoinHostPort(hostname, mappedPort.Port()),
 		Scheme: "http",
 	}
 
@@ -495,9 +494,11 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 	}()
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
+	mappedPort, err := container.MappedPort(context.Background(), "3001/tcp")
+	require.NoError(t, err)
 
 	endpoint := url.URL{
-		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Host:   net.JoinHostPort(hostname, mappedPort.Port()),
 		Scheme: "https",
 	}
 
@@ -564,9 +565,11 @@ func TestIntegration_https(t *testing.T) {
 	}()
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
+	mappedPort, err := container.MappedPort(context.Background(), "3001/tcp")
+	require.NoError(t, err)
 
 	endpoint := url.URL{
-		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Host:   net.JoinHostPort(hostname, mappedPort.Port()),
 		Scheme: "https",
 	}
 
@@ -633,9 +636,11 @@ func TestIntegration_mtls(t *testing.T) {
 	}()
 	hostname, err := container.Host(context.Background())
 	require.NoError(t, err)
+	mappedPort, err := container.MappedPort(context.Background(), "3001/tcp")
+	require.NoError(t, err)
 
 	endpoint := url.URL{
-		Host:   fmt.Sprintf("%s:%d", hostname, bindplaneExtPort),
+		Host:   net.JoinHostPort(hostname, mappedPort.Port()),
 		Scheme: "https",
 	}
 
