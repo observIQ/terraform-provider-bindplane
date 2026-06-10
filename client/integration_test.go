@@ -97,10 +97,10 @@ func bindplaneContainer(t *testing.T, ctx context.Context, env map[string]string
 	}
 
 	req := testcontainers.ContainerRequest{
-		Image:  image,
-		Env:    env,
-		Name:   bindplaneName,
-		Mounts: []testcontainers.ContainerMount{mount},
+		Image:        image,
+		Env:          env,
+		Name:         bindplaneName,
+		Mounts:       []testcontainers.ContainerMount{mount},
 		ExposedPorts: []string{"3001/tcp"},
 		WaitingFor:   wait.ForListeningPort("3001"),
 	}
