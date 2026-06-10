@@ -29,14 +29,14 @@ import (
 )
 
 const (
-	envAPIKey    = "BINDPLANE_TF_API_KEY" // #nosec G101 this is not a credential
-	envRemoteURL = "BINDPLANE_TF_REMOTE_URL"
-	envUsername  = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
-	envPassword  = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
-	envTLSCa     = "BINDPLANE_TF_TLS_CA"
-	envTLSCrt    = "BINDPLANE_TF_TLS_CERT"
-	envTLSKey         = "BINDPLANE_TF_TLS_KEY"
-	envTLSSkipVerify  = "BINDPLANE_TF_TLS_SKIP_VERIFY"
+	envAPIKey        = "BINDPLANE_TF_API_KEY" // #nosec G101 this is not a credential
+	envRemoteURL     = "BINDPLANE_TF_REMOTE_URL"
+	envUsername      = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
+	envPassword      = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
+	envTLSCa         = "BINDPLANE_TF_TLS_CA"
+	envTLSCrt        = "BINDPLANE_TF_TLS_CERT"
+	envTLSKey        = "BINDPLANE_TF_TLS_KEY"
+	envTLSSkipVerify = "BINDPLANE_TF_TLS_SKIP_VERIFY"
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5

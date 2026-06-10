@@ -25,14 +25,14 @@ import (
 // ignoring whitespace and formatting differences. This prevents Terraform
 // from detecting spurious changes when the API returns JSON with different
 // formatting than what was stored in state.
-func suppressEquivalentJSONDiffs(_, old, new string, _ *schema.ResourceData) bool {
+func suppressEquivalentJSONDiffs(_, old, newVal string, _ *schema.ResourceData) bool {
 	// If both values are empty, consider them equivalent
-	if old == "" && new == "" {
+	if old == "" && newVal == "" {
 		return true
 	}
 
 	// If only one is empty, they are different
-	if old == "" || new == "" {
+	if old == "" || newVal == "" {
 		return false
 	}
 
@@ -41,12 +41,12 @@ func suppressEquivalentJSONDiffs(_, old, new string, _ *schema.ResourceData) boo
 
 	if err := json.Unmarshal([]byte(old), &oldData); err != nil {
 		// If old value is not valid JSON, fall back to string comparison
-		return old == new
+		return old == newVal
 	}
 
-	if err := json.Unmarshal([]byte(new), &newData); err != nil {
+	if err := json.Unmarshal([]byte(newVal), &newData); err != nil {
 		// If new value is not valid JSON, fall back to string comparison
-		return old == new
+		return old == newVal
 	}
 
 	// Compare the unmarshaled data structures

@@ -69,6 +69,22 @@ ci-check: lint misspell check-fmt gosec vet test check-license
 lint:
 	revive -config .revive.toml -formatter friendly -set_exit_status ./...
 
+.PHONY: check-fmt
+check-fmt:
+	@FMTOUT=`gofmt -l ./`; \
+		if [ "$$FMTOUT" ]; then \
+			echo "gofmt FAILED => the following files need formatting:"; \
+			echo "$$FMTOUT"; \
+			echo "Run 'gofmt -w .' to fix."; \
+			exit 1; \
+		else \
+			echo "gofmt check passed"; \
+		fi
+
+.PHONY: fmt
+fmt:
+	gofmt -w ./
+
 .PHONY: misspell
 misspell:
 	misspell $(ALLDOC)
