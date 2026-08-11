@@ -1,9 +1,3 @@
-resource "bindplane_source" "udp-default" {
-  rollout = true
-  name    = "example-udp-default"
-  type    = "udp"
-}
-
 resource "bindplane_source" "udp-custom" {
   rollout = true
   name    = "example-udp-custom"

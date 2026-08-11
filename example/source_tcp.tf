@@ -1,9 +1,3 @@
-resource "bindplane_source" "tcp-default" {
-  rollout = true
-  name    = "example-tcp-default"
-  type    = "tcp"
-}
-
 resource "bindplane_source" "tcp-custom" {
   rollout = true
   name    = "example-tcp-custom"

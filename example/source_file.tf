@@ -1,9 +1,3 @@
-resource "bindplane_source" "file-default" {
-  rollout = true
-  name    = "example-file-default"
-  type    = "file_v2"
-}
-
 resource "bindplane_source" "file-custom" {
   rollout = true
   name    = "example-file-custom"

@@ -358,6 +358,12 @@ func TestIntegration_http_config(t *testing.T) {
 		},
 		Spec: map[string]any{
 			"type": "custom",
+			"parameters": []map[string]any{
+				{
+					"name":  "configuration",
+					"value": "logging:",
+				},
+			},
 		},
 	}
 	require.NoError(t, i.Apply(&destResource, false), "did not expect error when creating destination")
@@ -447,6 +453,12 @@ func TestIntegration_http_config(t *testing.T) {
 		},
 		Spec: map[string]any{
 			"type": "custom",
+			"parameters": []map[string]any{
+				{
+					"name":  "configuration",
+					"value": "pprof:",
+				},
+			},
 		},
 	}
 
