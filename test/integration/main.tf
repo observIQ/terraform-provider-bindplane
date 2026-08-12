@@ -271,6 +271,18 @@ resource "bindplane_processor" "json_parser" {
   rollout = false
   name    = "Parse-JSON-Body"
   type    = "parse_json"
+  parameters_json = jsonencode(
+    [
+      {
+        "name": "telemetry_types",
+        "value": ["Logs"]
+      },
+      {
+        "name": "log_source_field_type",
+        "value": "Body"
+      },
+    ]
+  )
 }
 
 resource "bindplane_processor" "severity_parser_v2" {

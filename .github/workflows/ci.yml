@@ -21,16 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -45,7 +45,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -56,7 +56,7 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
@@ -69,7 +69,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -80,13 +80,13 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -100,7 +100,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -111,13 +111,13 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -131,7 +131,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -142,13 +142,13 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -162,7 +162,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -173,13 +173,13 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -210,7 +210,7 @@ jobs:
           - "v1.76.0"
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -225,13 +225,13 @@ jobs:
           version: '2.7.0'
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -262,7 +262,7 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -277,13 +277,13 @@ jobs:
           version: '2.7.0'
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -436,7 +436,7 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -451,13 +451,13 @@ jobs:
           version: '2.7.0'
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
@@ -604,7 +604,7 @@ jobs:
       - setup-environment
     steps:
       - name: Check out source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GIT SSH
         run: git config --global url.git@github.com:.insteadOf https://github.com/
@@ -615,13 +615,13 @@ jobs:
             ssh-private-key: ${{ secrets.BINDPLANE_ENTERPRISE_SSH_PRIVATE_KEY }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
       - name: Cache Tools
         id: tool-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /home/runner/go/bin
           key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
