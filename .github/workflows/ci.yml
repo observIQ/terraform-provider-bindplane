@@ -197,12 +197,10 @@ jobs:
         bindplane_version:
           - "latest"
           - "module" # Use the current Go module version
+          - "v1.102.0"
           - "v1.96.0"
           - "v1.93.0"
           - "v1.89.3"
-          - "v1.88.1"
-          - "v1.85.0" # v2 config released as beta
-          - "v1.79.0" # v1.77.0 and v1.78.0 were never released
 
           #  v1.70.0 introduced v2 config and routes behind a feature flag
           # There were some growing pains and bugs. v1.76.0 is consider the
