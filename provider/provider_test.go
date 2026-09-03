@@ -40,3 +40,25 @@ func TestProvider_providerConfigure(t *testing.T) {
 	require.True(t, ok, "expected providerConfigure func to return type *bindplane.BindPlane")
 	require.IsType(t, &client.BindPlane{}, i)
 }
+
+func TestProvider_providerConfigure_scopedKey(t *testing.T) {
+	newData := func(raw map[string]any) *schema.ResourceData {
+		return schema.TestResourceDataRaw(t, Configure().Schema, raw)
+	}
+
+	_, diags := providerConfigure(newData(map[string]any{"api_key": "bps_abc.def"}), nil)
+	require.True(t, diags.HasError())
+	require.Contains(t, diags[0].Summary, "account_id")
+
+	_, diags = providerConfigure(newData(map[string]any{"api_key": "bps_abc.def", "account_id": "01ABC"}), nil)
+	require.False(t, diags.HasError())
+
+	_, diags = providerConfigure(newData(map[string]any{"api_key": "legacy-key"}), nil)
+	require.False(t, diags.HasError())
+
+	_, diags = providerConfigure(newData(map[string]any{"api_key": "legacy-key", "account_id": "01ABC"}), nil)
+	require.True(t, diags.HasError())
+
+	_, diags = providerConfigure(newData(map[string]any{"username": "u", "password": "p", "account_id": "01ABC"}), nil)
+	require.True(t, diags.HasError())
+}
