@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	bpclient "github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/config"
+	"github.com/observiq/bindplane-op-enterprise/model/auth"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"go.uber.org/zap"
 )
@@ -168,6 +169,10 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 
 	if v, ok := d.Get("account_id").(string); ok && v != "" {
 		config.Accounts.Account = v
+	}
+
+	if auth.IsScopedKeyString(config.Auth.APIKey) && config.Accounts.Account == "" {
+		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, auth.ScopedAPIKeyPrefix)
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
