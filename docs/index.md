@@ -19,6 +19,7 @@ The provider can be configured with options and environment variables.
 | --------------------------- | ------------------------- | ---------------------------- |
 | `remote_url`                | `BINDPLANE_TF_REMOTE_URL` | The URL for the Bindplane server.  |
 | `api_key`                   | `BINDPLANE_TF_API_KEY`    | The API key to use for authentication as an alternative to `username` and `password`. |
+| `account_id`                | `BINDPLANE_TF_ACCOUNT_ID` | The account ID sent as `X-Bindplane-Account-ID`. Required when `api_key` is a scoped (`bps_`) key. |
 | `username`                  | `BINDPLANE_TF_USERNAME`   | The Bindplane basic auth username. |
 | `password`                  | `BINDPLANE_TF_PASSWORD`   | The Bindplane basic auth password. |
 | `tls_certificate_authority` | `BINDPLANE_TF_TLS_CA`     | Path to x509 PEM encoded certificate authority to trust when connecting to Bindplane. |
@@ -98,6 +99,7 @@ terraform {
 provider "bindplane" {
   remote_url = "http://192.168.1.10:3001"
   api_key    = "xxx-xxx-xxx-xxx"
+  account_id = "01ABC..."
 }
 ```
 

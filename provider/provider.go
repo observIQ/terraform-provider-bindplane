@@ -30,6 +30,7 @@ import (
 
 const (
 	envAPIKey        = "BINDPLANE_TF_API_KEY" // #nosec G101 this is not a credential
+	envAccountID     = "BINDPLANE_TF_ACCOUNT_ID"
 	envRemoteURL     = "BINDPLANE_TF_REMOTE_URL"
 	envUsername      = "BINDPLANE_TF_USERNAME" // #nosec, credentials are not hardcoded
 	envPassword      = "BINDPLANE_TF_PASSWORD" // #nosec, credentials are not hardcoded
@@ -72,6 +73,14 @@ func Configure() *schema.Provider {
 					envAPIKey,
 				}, nil),
 				Description: "The API used to connect to the Bindplane instance.",
+			},
+			"account_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					envAccountID,
+				}, nil),
+				Description: "The account ID sent as the X-Bindplane-Account-ID header. Required when using a scoped API key.",
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -155,6 +164,10 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 
 	if v, ok := d.Get("api_key").(string); ok && v != "" {
 		config.Auth.APIKey = v
+	}
+
+	if v, ok := d.Get("account_id").(string); ok && v != "" {
+		config.Accounts.Account = v
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
