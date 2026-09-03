@@ -55,4 +55,10 @@ func TestProvider_providerConfigure_scopedKey(t *testing.T) {
 
 	_, diags = providerConfigure(newData(map[string]any{"api_key": "legacy-key"}), nil)
 	require.False(t, diags.HasError())
+
+	_, diags = providerConfigure(newData(map[string]any{"api_key": "legacy-key", "account_id": "01ABC"}), nil)
+	require.True(t, diags.HasError())
+
+	_, diags = providerConfigure(newData(map[string]any{"username": "u", "password": "p", "account_id": "01ABC"}), nil)
+	require.True(t, diags.HasError())
 }

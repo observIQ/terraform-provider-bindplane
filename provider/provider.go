@@ -81,7 +81,7 @@ func Configure() *schema.Provider {
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					envAccountID,
 				}, nil),
-				Description: "The account ID sent as the X-Bindplane-Account-ID header. Required when using a scoped API key.",
+				Description: "The account ID sent as the X-Bindplane-Account-ID header. Required when using a scoped API key, and not allowed otherwise.",
 			},
 			"username": {
 				Type:     schema.TypeString,
@@ -171,8 +171,12 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		config.Accounts.Account = v
 	}
 
-	if auth.IsScopedKeyString(config.Auth.APIKey) && config.Accounts.Account == "" {
+	scoped := auth.IsScopedKeyString(config.Auth.APIKey)
+	if scoped && config.Accounts.Account == "" {
 		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, auth.ScopedAPIKeyPrefix)
+	}
+	if !scoped && config.Accounts.Account != "" {
+		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", auth.ScopedAPIKeyPrefix)
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
