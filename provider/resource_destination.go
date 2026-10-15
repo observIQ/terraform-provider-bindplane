@@ -62,6 +62,8 @@ func resourceDestination() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
+			"display_name": genericSchemaDisplayName(),
+			"description":  genericSchemaDescription(),
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -106,7 +108,17 @@ func resourceDestinationCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	r, err := resource.AnyResourceV1(id, name, destType, model.KindDestination, parameters, nil)
+	displayName := ""
+	if v := d.Get("display_name").(string); v != "" {
+		displayName = v
+	}
+
+	description := ""
+	if v := d.Get("description").(string); v != "" {
+		description = v
+	}
+
+	r, err := resource.AnyResourceV1(id, name, destType, model.KindDestination, parameters, nil, displayName, description)
 	if err != nil {
 		return err
 	}
