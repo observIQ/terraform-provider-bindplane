@@ -1,6 +1,6 @@
 module github.com/observiq/terraform-provider-bindplane
 
-go 1.26.7
+go 1.26.10
 
 require (
 	github.com/hashicorp/go-version v1.9.0
