@@ -74,27 +74,7 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	}
 
 	// Parameters returned by BindPlane API
-	incomingParams := g.Spec.Parameters
-
-	// Update all sensitive parameters with the values from state
-	// instead of saving "(sensitive value)" to state.
-	for i, incomingParam := range incomingParams {
-		if incomingParam.Sensitive {
-			for _, stateParam := range stateParams {
-				if stateParam.Name == incomingParams[i].Name {
-					// Set the value to the value provided by the user in order to
-					// prevent terraform from attempting to update the value.
-					incomingParams[i].Value = stateParam.Value
-
-					// Preserve the sensitive value to whatever the user configured, which
-					// could be true, false, or nothing.
-					incomingParams[i].Sensitive = stateParam.Sensitive
-
-					break
-				}
-			}
-		}
-	}
+	incomingParams := reconcileParameters(stateParams, g.Spec.Parameters)
 
 	paramStr, err := parameter.ParametersToString(incomingParams)
 	if err != nil {
@@ -102,6 +82,63 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 	}
 
 	return d.Set("parameters_json", paramStr)
+}
+
+// reconcileParameters returns the parameters that should be saved to state
+// after reading a resource from the Bindplane API.
+//
+// Bindplane returns every parameter supported by the resource type, with
+// defaults resolved. Only parameters that were previously saved to state,
+// which mirror the user's configuration, are kept. This prevents parameters
+// the user never configured from showing as a permanent diff. Parameters are
+// returned in the same order as state so that the JSON comparison done by
+// suppressEquivalentJSONDiffs is not affected by API ordering. Parameters in
+// state that are missing from the API response are dropped, which surfaces
+// them as drift.
+func reconcileParameters(stateParams, incomingParams []model.Parameter) []model.Parameter {
+	incomingByName := make(map[string]model.Parameter, len(incomingParams))
+	for _, p := range incomingParams {
+		incomingByName[p.Name] = p
+	}
+
+	params := make([]model.Parameter, 0, len(stateParams))
+	for _, stateParam := range stateParams {
+		incomingParam, ok := incomingByName[stateParam.Name]
+		if !ok {
+			continue
+		}
+
+		// Update sensitive parameters with the values from state
+		// instead of saving "(sensitive value)" to state.
+		if incomingParam.Sensitive {
+			// Set the value to the value provided by the user in order to
+			// prevent terraform from attempting to update the value.
+			incomingParam.Value = stateParam.Value
+
+			// Preserve the sensitive value to whatever the user configured, which
+			// could be true, false, or nothing.
+			incomingParam.Sensitive = stateParam.Sensitive
+		}
+
+		params = append(params, incomingParam)
+	}
+
+	return params
+}
+
+// importParameters returns the parameters that should be saved to state
+// when importing a resource. All parameters are kept so that the imported
+// state reflects the resource as it exists in Bindplane, except sensitive
+// parameters, which Bindplane returns masked. The mask is not a usable value.
+func importParameters(incomingParams []model.Parameter) []model.Parameter {
+	params := make([]model.Parameter, 0, len(incomingParams))
+	for _, p := range incomingParams {
+		if p.Sensitive {
+			continue
+		}
+		params = append(params, p)
+	}
+	return params
 }
 
 // genericResourceDelete can delete configurations, sources,
@@ -139,6 +176,17 @@ func genericResourceImport(rKind model.Kind, d *schema.ResourceData, meta any) (
 	// Add the name to state, which will cause the import to succeed.
 	if err := d.Set("name", g.Name); err != nil {
 		return nil, fmt.Errorf("failed to set resource name in state for imported %s '%s': %v", rKind, name, err)
+	}
+
+	// Seed state with the resource's parameters. The following Read only keeps
+	// parameters that exist in state, so without this an import would save no
+	// parameters at all.
+	paramStr, err := parameter.ParametersToString(importParameters(g.Spec.Parameters))
+	if err != nil {
+		return nil, err
+	}
+	if err := d.Set("parameters_json", paramStr); err != nil {
+		return nil, fmt.Errorf("failed to set parameters in state for imported %s '%s': %v", rKind, name, err)
 	}
 
 	return []*schema.ResourceData{d}, nil
