@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	bpclient "github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/config"
+	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/bindplane-op-enterprise/model/auth"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"go.uber.org/zap"
@@ -52,7 +53,23 @@ func Provider() *schema.Provider {
 		return providerConfigure(d, provider)
 	}
 
+	// Suppressing parameters_json diffs that only remove default parameters
+	// requires the Bindplane client, which DiffSuppressFunc is not passed.
+	for name, kind := range parameterizedResources {
+		provider.ResourcesMap[name].Schema["parameters_json"].DiffSuppressFunc = suppressDefaultParameterDiffs(kind, provider.Meta)
+	}
+
 	return provider
+}
+
+// parameterizedResources maps resources configured with parameters_json
+// to their Bindplane kind.
+var parameterizedResources = map[string]model.Kind{
+	"bindplane_connector":   model.KindConnector,
+	"bindplane_destination": model.KindDestination,
+	"bindplane_extension":   model.KindExtension,
+	"bindplane_processor":   model.KindProcessor,
+	"bindplane_source":      model.KindSource,
 }
 
 // Configure returns a configured provider with a schema.

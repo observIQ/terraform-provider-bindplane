@@ -395,6 +395,23 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 	return g, nil
 }
 
+// ResourceTypeParameters returns the parameter definitions of the Bindplane
+// resource type with the given kind and name, such as KindSourceType and
+// "host". The name can include a version, such as "host:1".
+func (i *BindPlane) ResourceTypeParameters(k model.Kind, name string) ([]model.ParameterDefinition, error) {
+	r, err := i.Client.Resource(context.Background(), k, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %s with name %s: %w", k, name, err)
+	}
+
+	rt, ok := r.(model.ParameterizedResourceType)
+	if !ok {
+		return nil, fmt.Errorf("%s with name %s does not have parameter definitions", k, name)
+	}
+
+	return rt.GetResourceType().Spec.Parameters, nil
+}
+
 // TODO(jsirianni): Bindplane should probably have error types so we can check
 // error.Is.
 func isNotFoundError(err error) bool {
