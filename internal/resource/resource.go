@@ -22,12 +22,14 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/model"
 )
 
-// AnyResourceV1 requires a BindPlane resource name, kind, type, and parameters. Optionally
-// takes a display name and description. Returns a bindplane.observiq.com/v1.AnyResource.
-// Supported resources are Sources, Destinations, and Processors. For configurations, use
-// AnyResourceFromConfigurationV1.
+// AnyResourceV1 takes a Bindplane resource name, kind, type, parameters,
+// processors, display name, and description and returns a
+// bindplane.observiq.com/v1.AnyResource. Supported resources are Sources,
+// Destinations, Processors, Extensions, and Connectors. For configurations,
+// use AnyResourceFromConfigurationV1.
 //
-// rParameters and rProcessors can be nil.
+// rParameters and rProcessors can be nil. displayName and description
+// can be empty.
 func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []model.Parameter, rProcessors []model.ResourceConfiguration, displayName, description string) (model.AnyResource, error) {
 	procs := []map[string]string{}
 	for _, p := range rProcessors {
@@ -42,13 +44,15 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 
 	switch rKind {
 	case model.KindSource, model.KindDestination, model.KindProcessor, model.KindExtension, model.KindConnector:
-		r := model.AnyResource{
+		return model.AnyResource{
 			ResourceMeta: model.ResourceMeta{
 				APIVersion: "bindplane.observiq.com/v1",
 				Kind:       rKind,
 				Metadata: model.Metadata{
-					ID:   id,
-					Name: rName,
+					ID:          id,
+					Name:        rName,
+					DisplayName: displayName,
+					Description: description,
 				},
 			},
 			Spec: map[string]any{
@@ -56,17 +60,7 @@ func AnyResourceV1(id, rName, rType string, rKind model.Kind, rParameters []mode
 				"parameters": rParameters,
 				"processors": procs,
 			},
-		}
-
-		if displayName != "" {
-			r.Metadata.DisplayName = displayName
-		}
-
-		if description != "" {
-			r.Metadata.Description = description
-		}
-
-		return r, nil
+		}, nil
 	default:
 		return model.AnyResource{}, fmt.Errorf("unknown bindplane resource kind: %s", rKind)
 	}

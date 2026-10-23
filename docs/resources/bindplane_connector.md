@@ -21,6 +21,8 @@ connector-type. The connector can be used by multiple [configurations](./bindpla
 | `type`              | string | required | The connector type.             |
 | `parameters_json`   | string | optional | The serialized JSON representation of the connector type's parameters. |
 | `rollout`           | bool   | required | Whether or not updates to the connector should trigger an automatic rollout of any configuration that uses it. |
+| `display_name`      | string | optional | The friendly name displayed in the Bindplane UI in place of the name. Sets the resource's `metadata.displayName` field. |
+| `description`       | string | optional | The description of the resource. Sets the resource's `metadata.description` field. |
 
 ## Examples
 

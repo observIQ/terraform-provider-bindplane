@@ -108,15 +108,8 @@ func resourceConnectorCreate(d *schema.ResourceData, meta any) error {
 		parameters = params
 	}
 
-	displayName := ""
-	if v := d.Get("display_name").(string); v != "" {
-		displayName = v
-	}
-
-	description := ""
-	if v := d.Get("description").(string); v != "" {
-		description = v
-	}
+	displayName := d.Get("display_name").(string)
+	description := d.Get("description").(string)
 
 	r, err := resource.AnyResourceV1(id, name, connectorType, model.KindConnector, parameters, nil, displayName, description)
 	if err != nil {

@@ -385,6 +385,7 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 
 		g.ID = r.ID()
 		g.Name = r.Name()
+		g.Metadata = r.Metadata
 		g.Spec = r.Spec
 	default:
 		return nil, fmt.Errorf("GenericResource does not support bindplane kind '%s'", k)
