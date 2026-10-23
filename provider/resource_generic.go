@@ -60,16 +60,8 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	if g.Metadata.DisplayName != "" {
-		if err := d.Set("display_name", g.Metadata.DisplayName); err != nil {
-			return err
-		}
-	}
-
-	if g.Metadata.Description != "" {
-		if err := d.Set("description", g.Metadata.Description); err != nil {
-			return err
-		}
+	if err := setResourceMetadata(d, g.Metadata); err != nil {
+		return err
 	}
 
 	rType := strings.Split(g.Spec.Type, ":")[0]
@@ -156,12 +148,22 @@ func genericResourceImport(rKind model.Kind, d *schema.ResourceData, meta any) (
 	return []*schema.ResourceData{d}, nil
 }
 
+// setResourceMetadata saves the resource's display name and description
+// to state. Empty values are saved as well, so that a display name or
+// description removed outside of Terraform is detected as drift.
+func setResourceMetadata(d *schema.ResourceData, metadata model.Metadata) error {
+	if err := d.Set("display_name", metadata.DisplayName); err != nil {
+		return err
+	}
+	return d.Set("description", metadata.Description)
+}
+
 func genericSchemaDisplayName() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    false,
-		Description: "The display name of the component.",
+		Description: "The friendly name of the component, displayed in the Bindplane UI in place of the name. Sets the resource's metadata.displayName field.",
 	}
 }
 
@@ -170,6 +172,6 @@ func genericSchemaDescription() *schema.Schema {
 		Type:        schema.TypeString,
 		Optional:    true,
 		ForceNew:    false,
-		Description: "The description of the component.",
+		Description: "The description of the component. Sets the resource's metadata.description field.",
 	}
 }
