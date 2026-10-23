@@ -212,9 +212,8 @@ func TestGenericResourceRead(t *testing.T) {
 		require.JSONEq(t, `[
 			{"name": "password", "value": "hunter2", "sensitive": true},
 			{"name": "token", "value": "xyz"},
-			{"name": "host", "value": "localhost"},
-			{"name": "api_key", "value": "abc", "credential": true}
-		]`, d.Get("parameters_json").(string))
+			{"name": "host", "value": "localhost"}
+		]`, d.Get("parameters_json").(string), "parameters not in state should not be saved")
 	})
 
 	t.Run("id mismatch", func(t *testing.T) {
