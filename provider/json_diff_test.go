@@ -80,6 +80,36 @@ func TestSuppressEquivalentJSONDiffs(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:     "empty string and empty list",
+			old:      "",
+			new:      `[]`,
+			expected: true,
+		},
+		{
+			name:     "empty list and empty string",
+			old:      `[ ]`,
+			new:      "",
+			expected: true,
+		},
+		{
+			name:     "empty string and non-empty list",
+			old:      "",
+			new:      `[{"name":"test","value":"123"}]`,
+			expected: false,
+		},
+		{
+			name:     "empty string and null",
+			old:      "",
+			new:      `null`,
+			expected: false,
+		},
+		{
+			name:     "empty string and empty object",
+			old:      "",
+			new:      `{}`,
+			expected: false,
+		},
+		{
 			name:     "invalid json old",
 			old:      `{invalid}`,
 			new:      `{"key":"value"}`,

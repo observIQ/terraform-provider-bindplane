@@ -26,6 +26,15 @@ import (
 // from detecting spurious changes when the API returns JSON with different
 // formatting than what was stored in state.
 func suppressEquivalentJSONDiffs(_, old, newVal string, _ *schema.ResourceData) bool {
+	// No parameters are saved to state as an empty string, and can be
+	// configured as an empty list.
+	if isEmptyJSONList(old) {
+		old = ""
+	}
+	if isEmptyJSONList(newVal) {
+		newVal = ""
+	}
+
 	// If both values are empty, consider them equivalent
 	if old == "" && newVal == "" {
 		return true
@@ -51,4 +60,13 @@ func suppressEquivalentJSONDiffs(_, old, newVal string, _ *schema.ResourceData) 
 
 	// Compare the unmarshaled data structures
 	return reflect.DeepEqual(oldData, newData)
+}
+
+// isEmptyJSONList returns true if s is a JSON list with no elements.
+func isEmptyJSONList(s string) bool {
+	var list []any
+	if err := json.Unmarshal([]byte(s), &list); err != nil {
+		return false
+	}
+	return list != nil && len(list) == 0
 }
