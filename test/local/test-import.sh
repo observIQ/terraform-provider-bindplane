@@ -34,6 +34,7 @@ import_tests=(
   "bindplane_destination.custom:example-custom"
   "bindplane_connector.routing:log-router"
   "bindplane_extension.pprof:my-pprof"
+  "bindplane_gateway.gateway:my-gateway"
 )
 
 echo "=== Removing import-test resources from state and re-importing by name ==="

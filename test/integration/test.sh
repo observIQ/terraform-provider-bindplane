@@ -95,6 +95,45 @@ test_resources() {
 
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
+
+    if [[ $GATEWAY == "true" ]]; then
+        test_gateway
+    fi
+}
+
+# bindplane_api performs a GET request against the Bindplane API.
+bindplane_api() {
+    curl -sf \
+        --cacert ../../client/tls/bindplane-ca.crt \
+        --cert ../../client/tls/bindplane.crt \
+        --key ../../client/tls/bindplane.key \
+        -u tfu:tfp \
+        "https://localhost:3100/v1/$1"
+}
+
+fail() {
+    echo "FAIL: $*"
+    return 1
+}
+
+# test_gateway fails the test when the gateway or its configuration
+# were not applied as expected. Apply errors do not fail the test, so
+# this check is what makes the gateway test required.
+test_gateway() {
+    echo "testing gateway"
+
+    gateway=$(bindplane_api resources/Gateway/my-gateway) || fail "gateway my-gateway not found"
+    echo "$gateway" | jq .
+    echo "$gateway" | jq -e '.resource.spec.configuration == "my-gateway-config"' > /dev/null \
+        || fail "gateway configuration is not my-gateway-config"
+    echo "$gateway" | jq -e '.resource.spec.loadBalancerHostname == "gateway.example.com"' > /dev/null \
+        || fail "gateway loadBalancerHostname is not gateway.example.com"
+
+    config=$(bindplane_api configurations/my-gateway-config) || fail "configuration my-gateway-config not found"
+    echo "$config" | jq -e '.configuration.metadata.labels.role == "gateway"' > /dev/null \
+        || fail "configuration my-gateway-config does not have label role=gateway"
+
+    echo "gateway test passed"
 }
 
 destroy () {
@@ -128,6 +167,21 @@ if [[ $(printf '%s\n' "$BINDPLANE_VERSION" "1.58.0" | sort -V | head -n1) == "1.
 elif [[ "$BINDPLANE_VERSION" == "latest" ]]; then
     export ORGS=true
 fi
+
+# Gateways require Bindplane v1.103.0 or newer. They are tested on
+# latest and on every version from v1.103.0, and skipped on older versions.
+GATEWAY_MIN_VERSION="1.103.0"
+export GATEWAY=false
+if [[ "$BINDPLANE_VERSION" == "latest" ]]; then
+    export GATEWAY=true
+    echo "gateway tests enabled: BINDPLANE_VERSION is latest"
+elif [[ $(printf '%s\n' "$GATEWAY_MIN_VERSION" "$BINDPLANE_VERSION" | sort -V | head -n1) == "$GATEWAY_MIN_VERSION" ]]; then
+    export GATEWAY=true
+    echo "gateway tests enabled: ${BINDPLANE_VERSION} is ${GATEWAY_MIN_VERSION} or newer"
+else
+    echo "gateway tests skipped: ${BINDPLANE_VERSION} is older than ${GATEWAY_MIN_VERSION}"
+fi
+export TF_VAR_enable_gateway=$GATEWAY
 
 echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
