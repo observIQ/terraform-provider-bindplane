@@ -173,7 +173,7 @@ expect_resource() {
 
     # The CLI can print its own JSON log lines to stdout, so only
     # objects with metadata (the resource) are checked.
-    out=$(eval docker exec integration-bindplane-1 /bindplane get "$kind" "$name" -o json "$args" 2>&1) || true
+    out=$(eval docker exec integration-bindplane-1 /bindplane get "$kind" "$name" -o json "$args") || true
     if ! echo "$out" | jq -e "select(.metadata != null) | $filter" > /dev/null; then
         echo "FAIL: $kind $name does not match: $filter"
         echo "$out"
