@@ -33,7 +33,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
@@ -308,7 +307,7 @@ func TestIntegration_http_config(t *testing.T) {
 		"", "", "",
 	)
 	require.NoError(t, err)
-	_, err = i.Client.Version(context.Background())
+	_, err = i.Configuration("does-not-exist")
 	require.NoError(t, err)
 
 	processorResource := model.AnyResource{
@@ -527,8 +526,8 @@ func TestIntegration_invalidProtocol(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, err = i.Client.Version(context.Background())
-	require.Error(t, err, "http: server gave HTTP response to HTTPS client")
+	_, err = i.Configuration("does-not-exist")
+	require.ErrorContains(t, err, "http: server gave HTTP response to HTTPS client")
 }
 
 func TestIntegration_https(t *testing.T) {
@@ -595,11 +594,9 @@ func TestIntegration_https(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, err = i.Client.Version(context.Background())
+	config, err := i.Configuration("does-not-exist")
 	require.NoError(t, err)
-
-	_, err = i.Client.Agents(context.Background(), client.QueryOptions{})
-	require.NoError(t, err)
+	require.Nil(t, config)
 }
 
 func TestIntegration_mtls(t *testing.T) {
@@ -668,6 +665,7 @@ func TestIntegration_mtls(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, err = i.Client.Version(context.Background())
+	config, err := i.Configuration("does-not-exist")
 	require.NoError(t, err)
+	require.Nil(t, config)
 }
