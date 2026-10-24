@@ -1,0 +1,85 @@
+{
+  "resources": [
+    {
+      "apiVersion": "bindplane.observiq.com/v1",
+      "kind": "Configuration",
+      "metadata": {
+        "id": "",
+        "labels": {
+          "env": "test",
+          "platform": "linux"
+        },
+        "name": "my-config"
+      },
+      "spec": {
+        "contentType": "text/yaml",
+        "destinations": [
+          {
+            "name": "my-dest",
+            "processors": [
+              {
+                "name": "my-filter"
+              }
+            ]
+          }
+        ],
+        "extensions": [
+          {
+            "name": "my-pprof"
+          }
+        ],
+        "measurementInterval": "1m",
+        "parameters": [
+          {
+            "name": "telemetryPort",
+            "value": 8888
+          },
+          {
+            "name": "telemetryLevel",
+            "value": "detailed"
+          }
+        ],
+        "rollout": {
+          "parameters": [
+            {
+              "name": "stages",
+              "value": [
+                {
+                  "labels": {
+                    "env": "stage"
+                  },
+                  "name": "stage"
+                },
+                {
+                  "labels": {
+                    "env": "production"
+                  },
+                  "name": "production"
+                }
+              ]
+            }
+          ],
+          "type": "progressive"
+        },
+        "selector": {
+          "matchLabels": {
+            "configuration": "my-config"
+          }
+        },
+        "sources": [
+          {
+            "name": "my-source",
+            "processors": [
+              {
+                "name": "my-batch"
+              },
+              {
+                "name": "my-filter"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
