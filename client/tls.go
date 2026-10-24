@@ -1,0 +1,57 @@
+// Copyright  observIQ, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package client
+
+import (
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
+	"os"
+)
+
+// newTLSConfig returns the TLS configuration used to connect to Bindplane.
+// It matches the Bindplane client: TLS 1.3 is the minimum version, and a
+// configured certificate authority replaces the system's trusted roots.
+func newTLSConfig(cfg Config) (*tls.Config, error) {
+	// #nosec G402 skip verify is opt in, and documented as only for testing
+	tlsConfig := &tls.Config{
+		MinVersion:         tls.VersionTLS13,
+		InsecureSkipVerify: cfg.TLSSkipVerify,
+	}
+
+	if cfg.TLSCertificateAuthority != "" {
+		ca, err := os.ReadFile(cfg.TLSCertificateAuthority) // #nosec G304 user defines the ca file path
+		if err != nil {
+			return nil, fmt.Errorf("failed to read certificate authority file: %w", err)
+		}
+
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(ca) {
+			return nil, errors.New("failed to append certificate authority to root ca pool")
+		}
+		tlsConfig.RootCAs = pool
+	}
+
+	if cfg.TLSCertificate != "" && cfg.TLSPrivateKey != "" {
+		keypair, err := tls.LoadX509KeyPair(cfg.TLSCertificate, cfg.TLSPrivateKey)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load tls certificate: %w", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{keypair}
+	}
+
+	return tlsConfig, nil
+}

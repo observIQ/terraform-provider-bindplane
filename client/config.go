@@ -16,10 +16,8 @@ package client
 
 import (
 	"fmt"
-
-	"github.com/observiq/bindplane-op-enterprise/client"
-	"github.com/observiq/bindplane-op-enterprise/config"
-	"go.uber.org/zap"
+	"net/http"
+	"strings"
 )
 
 // Config is the configuration used to connect to Bindplane.
@@ -54,41 +52,20 @@ type Config struct {
 
 // New returns a BindPlane client configured with cfg.
 func New(cfg Config) (*BindPlane, error) {
-	c := &config.Config{}
-	c.Network.RemoteURL = cfg.RemoteURL
-	c.Auth.APIKey = cfg.APIKey
-	c.Accounts.Account = cfg.AccountID
-	c.Auth.Username = cfg.Username
-	c.Auth.Password = cfg.Password
-
-	// System auth type must be set when using user / pass. When using API
-	// key, auth type does not need to be set client side.
-	if cfg.Username != "" && cfg.Password != "" {
-		c.Auth.Type = "system"
-	}
-
-	if cfg.TLSCertificateAuthority != "" {
-		c.Network.TLS.CertificateAuthority = []string{cfg.TLSCertificateAuthority}
-	}
-
-	if cfg.TLSCertificate != "" && cfg.TLSPrivateKey != "" {
-		c.Network.TLS.Certificate = cfg.TLSCertificate
-		c.Network.TLS.PrivateKey = cfg.TLSPrivateKey
-	}
-
-	c.Network.TLS.InsecureSkipVerify = cfg.TLSSkipVerify
-
-	loggerConf := zap.NewProductionConfig()
-	loggerConf.OutputPaths = []string{"stdout"}
-	logger, err := loggerConf.Build()
+	tlsConfig, err := newTLSConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
+		return nil, fmt.Errorf("configure TLS client: %w", err)
 	}
 
-	bp, err := client.NewBindplane(c, logger)
-	if err != nil {
-		return nil, err
-	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = tlsConfig
 
-	return &BindPlane{Client: bp}, nil
+	return &BindPlane{
+		client: &http.Client{
+			Timeout:   defaultTimeout,
+			Transport: transport,
+		},
+		baseURL: strings.TrimSuffix(cfg.RemoteURL, "/") + "/v1",
+		config:  cfg,
+	}, nil
 }
