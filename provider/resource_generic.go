@@ -20,8 +20,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 )
 

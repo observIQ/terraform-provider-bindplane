@@ -33,8 +33,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 
 	hashiversion "github.com/hashicorp/go-version"

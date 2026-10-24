@@ -196,7 +196,6 @@ jobs:
       matrix:
         bindplane_version:
           - "latest"
-          - "module" # Use the current Go module version
           - "v1.104.0"
           - "v1.96.0"
           - "v1.93.0"

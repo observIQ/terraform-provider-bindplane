@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -194,7 +194,7 @@ func TestResourceGatewayCreateErrors(t *testing.T) {
 
 	t.Run("apply fails", func(t *testing.T) {
 		f := newFakeBindplane(t)
-		f.applyStatus = model.StatusInvalid
+		f.applyStatus = model.UpdateStatus("invalid")
 
 		d := newGatewayData(t, map[string]any{"name": "my-gateway"})
 		err := resourceGatewayCreate(d, f.client())

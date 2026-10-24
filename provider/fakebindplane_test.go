@@ -24,8 +24,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,6 +59,11 @@ type fakeFailure struct {
 // tests can assert on exactly which fields were sent.
 type fakeApplyPayload struct {
 	Resources []json.RawMessage `json:"resources"`
+}
+
+// fakeApplyResponse is the body of the response to POST /v1/apply.
+type fakeApplyResponse struct {
+	Updates []*model.AnyResourceStatus `json:"updates"`
 }
 
 // fakeResourceResponse is the body of GET /v1/resources/:kind/:name.
@@ -195,7 +200,7 @@ func (f *fakeBindplane) handleApply(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	f.writeJSON(w, model.ApplyResponseClientSide{Updates: updates})
+	f.writeJSON(w, fakeApplyResponse{Updates: updates})
 }
 
 func (f *fakeBindplane) handleResource(w http.ResponseWriter, r *http.Request, kind model.Kind, name string) {

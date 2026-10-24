@@ -19,7 +19,7 @@ package component
 import (
 	"fmt"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 )
 
 // NewResourceID wraps model.NewResourceID and returns
