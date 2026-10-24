@@ -95,6 +95,34 @@ test_resources() {
 
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
+
+    # terraform apply errors are not fatal (see apply), so fail here
+    # unless Bindplane returns the values set in main.tf.
+    expect_resource configuration testtf \
+        '.metadata.description == "my terraform configuration description"'
+    expect_resource configuration my-config-v2 \
+        '.metadata.description == "my terraform configuration v2 description"'
+    expect_resource destination google-test \
+        '.metadata.displayName == "Google Test" and .metadata.description == "my terraform description"'
+}
+
+# expect_resource <kind> <name> <jq filter> fails unless the resource
+# returned by the Bindplane CLI matches the jq filter.
+expect_resource() {
+    local kind=$1
+    local name=$2
+    local filter=$3
+    local out
+
+    # The CLI can print its own JSON log lines to stdout, so only
+    # objects with metadata (the resource) are checked.
+    out=$(eval docker exec integration-bindplane-1 /bindplane get "$kind" "$name" -o json "$args")
+    if ! echo "$out" | jq -e "select(.metadata != null) | $filter" > /dev/null; then
+        echo "FAIL: $kind $name does not match: $filter"
+        echo "$out"
+        return 1
+    fi
+    echo "OK: $kind $name matches: $filter"
 }
 
 destroy () {
