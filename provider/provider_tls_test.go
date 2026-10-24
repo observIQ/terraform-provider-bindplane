@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"github.com/stretchr/testify/require"
 )
@@ -120,11 +119,11 @@ func TestProvider_tlsMinVersion_validate(t *testing.T) {
 func TestParseTLSMinVersion(t *testing.T) {
 	v, err := parseTLSMinVersion("1.2")
 	require.NoError(t, err)
-	require.Equal(t, config.TLSVersion12, v)
+	require.Equal(t, client.TLSVersion12, v)
 
 	v, err = parseTLSMinVersion("1.3")
 	require.NoError(t, err)
-	require.Equal(t, config.TLSVersion13, v)
+	require.Equal(t, client.TLSVersion13, v)
 
 	for _, in := range append([]string{""}, invalidTLSMinVersions...) {
 		_, err := parseTLSMinVersion(in)

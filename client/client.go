@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package client provides a client wrapper for bindplane-op/client.NewBindPlane.
-// It provides wrapper functions suitable for Terraform use. For example, when
-// BindPlane server returns a 404, this wrapper package will gracefully handle it
+// Package client provides a client for the Bindplane REST API, with
+// functions suitable for Terraform use. For example, when BindPlane
+// server returns a 404, this package will gracefully handle it
 // instead of returning an error.
 package client
 
@@ -22,32 +22,39 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/model"
 )
 
 // BindPlane is a shim layer between Terraform and the
-// BindPlane client interface
+// BindPlane REST API
 type BindPlane struct {
-	Client client.Bindplane
+	client  *http.Client
+	baseURL string
+	config  Config
 }
 
 // Apply creates or updates a single BindPlane resource and returns it's id.
 // If rollout is true, any configuration which is updated by the Apply
 // opteration will have a rollout started.
 func (i *BindPlane) Apply(r *model.AnyResource, rollout bool) error {
-	status, err := i.Client.Apply(context.Background(), []*model.AnyResource{r})
+	payload := applyRequest{Resources: []*model.AnyResource{r}}
+	var resp applyResponse
+	query := url.Values{"acceptInvalid": {"false"}}
+
+	err := i.do(context.Background(), http.MethodPost, "/apply", query, payload, &resp, "unable to apply resources")
 	if err != nil {
 		return fmt.Errorf("failed to apply BindPlane resources: %w", err)
 	}
 
 	var errs error
 
-	for _, status := range status {
+	for _, status := range resp.Updates {
 		resource := status.Resource
 
 		// Apply expects the resource to be unchanged, configured, or
@@ -94,36 +101,24 @@ func (i *BindPlane) ApplyWithRetry(ctx context.Context, timeout time.Duration, r
 // Rollout starts a rollout against a named config
 // TODO(jsirianni): Should Rollout block until it has finished or failed?
 func (i *BindPlane) Rollout(name string) error {
-	_, err := i.Client.StartRollout(context.Background(), name, nil)
-	return err
+	return i.do(context.Background(), http.MethodPost, resourcePath("rollouts", name)+"/start", nil, startRolloutRequest{}, nil, "unable to start")
 }
 
 // Connector takes a name and returns the matching connector
 func (i *BindPlane) Connector(name string) (*model.Connector, error) {
-	r, err := i.Client.Resource(context.Background(), model.KindConnector, name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp connectorResponse
+	if err := i.get(resourcePath("resources/Connector", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get connector with name %s: %w", name, err)
 	}
-
-	// Bindplane should always return a connector but we should handle it
-	// anyway considering we need to type assert it.
-	switch c := r.(type) {
-	case *model.Connector:
-		return c, nil
-	default:
-		return nil, fmt.Errorf("unexpected response from bindplane, expected connector, got %T, this is a bug that should be reported", c)
-	}
+	return resp.Resource, nil
 }
 
 // DeleteConnector will delete a BindPlane connector
 func (i *BindPlane) DeleteConnector(name string) error {
-	err := i.Client.DeleteResource(context.Background(), model.KindConnector, name)
+	err := i.delete(resourcePath("resources/Connector", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting connector with name %s: %w", name, err)
 	}
@@ -132,22 +127,19 @@ func (i *BindPlane) DeleteConnector(name string) error {
 
 // Configuration takes a name and returns the matching configuration
 func (i *BindPlane) Configuration(name string) (*model.Configuration, error) {
-	c, err := i.Client.Configuration(context.Background(), name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp configurationResponse
+	if err := i.get(resourcePath("configurations", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get configuration with name %s: %w", name, err)
 	}
-	return c, nil
+	return resp.Configuration, nil
 }
 
 // DeleteConfiguration will delete a BindPlane configuration
 func (i *BindPlane) DeleteConfiguration(name string) error {
-	err := i.Client.DeleteConfiguration(context.Background(), name)
+	err := i.delete(resourcePath("configurations", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting configuration with name %s: %w", name, err)
 	}
@@ -156,22 +148,19 @@ func (i *BindPlane) DeleteConfiguration(name string) error {
 
 // Destination takes a name and returns the matching destination
 func (i *BindPlane) Destination(name string) (*model.Destination, error) {
-	r, err := i.Client.Destination(context.Background(), name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp destinationResponse
+	if err := i.get(resourcePath("destinations", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get destination with name %s: %w", name, err)
 	}
-	return r, nil
+	return resp.Destination, nil
 }
 
 // DeleteDestination will delete a BindPlane destination
 func (i *BindPlane) DeleteDestination(name string) error {
-	err := i.Client.DeleteDestination(context.Background(), name)
+	err := i.delete(resourcePath("destinations", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting destination with name %s: %w", name, err)
 	}
@@ -180,22 +169,19 @@ func (i *BindPlane) DeleteDestination(name string) error {
 
 // Source takes a name and returns the matching source
 func (i *BindPlane) Source(name string) (*model.Source, error) {
-	r, err := i.Client.Source(context.Background(), name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp sourceResponse
+	if err := i.get(resourcePath("sources", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get source with name %s: %w", name, err)
 	}
-	return r, nil
+	return resp.Source, nil
 }
 
 // DeleteSource will delete a BindPlane source
 func (i *BindPlane) DeleteSource(name string) error {
-	err := i.Client.DeleteSource(context.Background(), name)
+	err := i.delete(resourcePath("sources", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting source with name %s: %w", name, err)
 	}
@@ -204,22 +190,19 @@ func (i *BindPlane) DeleteSource(name string) error {
 
 // Processor takes a name and returns the matching processor
 func (i *BindPlane) Processor(name string) (*model.Processor, error) {
-	r, err := i.Client.Processor(context.Background(), name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp processorResponse
+	if err := i.get(resourcePath("processors", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get processor with name %s: %w", name, err)
 	}
-	return r, nil
+	return resp.Processor, nil
 }
 
 // DeleteProcessor will delete a BindPlane processor
 func (i *BindPlane) DeleteProcessor(name string) error {
-	err := i.Client.DeleteProcessor(context.Background(), name)
+	err := i.delete(resourcePath("processors", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting processor with name %s: %w", name, err)
 	}
@@ -228,22 +211,19 @@ func (i *BindPlane) DeleteProcessor(name string) error {
 
 // Extension takes a name and returns the matching extension
 func (i *BindPlane) Extension(name string) (*model.Extension, error) {
-	r, err := i.Client.Extension(context.Background(), name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp extensionResponse
+	if err := i.get(resourcePath("extensions", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get extension with name %s: %w", name, err)
 	}
-	return r, nil
+	return resp.Extension, nil
 }
 
 // DeleteExtension will delete a Bindplane extension
 func (i *BindPlane) DeleteExtension(name string) error {
-	err := i.Client.DeleteExtension(context.Background(), name)
+	err := i.delete(resourcePath("extensions", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting extension with name %s: %w", name, err)
 	}
@@ -252,28 +232,19 @@ func (i *BindPlane) DeleteExtension(name string) error {
 
 // Fleet takes a name and returns the matching fleet
 func (i *BindPlane) Fleet(name string) (*model.Fleet, error) {
-	r, err := i.Client.Resource(context.Background(), model.KindFleet, name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp fleetResponse
+	if err := i.get(resourcePath("resources/Fleet", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get fleet with name %s: %w", name, err)
 	}
-
-	switch f := r.(type) {
-	case *model.Fleet:
-		return f, nil
-	default:
-		return nil, fmt.Errorf("unexpected response from bindplane, expected fleet, got %T, this is a bug that should be reported", f)
-	}
+	return resp.Resource, nil
 }
 
 // DeleteFleet will delete a BindPlane fleet
 func (i *BindPlane) DeleteFleet(name string) error {
-	err := i.Client.DeleteResource(context.Background(), model.KindFleet, name)
+	err := i.delete(resourcePath("resources/Fleet", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting fleet with name %s: %w", name, err)
 	}
@@ -283,28 +254,23 @@ func (i *BindPlane) DeleteFleet(name string) error {
 // Gateway takes a name and returns the matching gateway. It returns nil
 // when the gateway does not exist.
 func (i *BindPlane) Gateway(name string) (*model.Gateway, error) {
-	r, err := i.Client.Resource(context.Background(), model.KindGateway, name)
-	if err != nil {
-		// Do not return an error if the resource is not found. Terraform
-		// will understand that the resource does not exist when it receives
-		// a nil value, and will instead offer to create the resource.
-		if isNotFoundError(err) {
-			return nil, nil
-		}
+	// Do not return an error if the resource is not found. Terraform
+	// will understand that the resource does not exist when it receives
+	// a nil value, and will instead offer to create the resource.
+	var resp gatewayResponse
+	if err := i.get(resourcePath("resources/Gateway", name), &resp); err != nil {
 		return nil, fmt.Errorf("failed to get gateway with name %s: %w", name, GatewayUnsupportedError(err))
 	}
 
-	switch g := r.(type) {
-	case *model.Gateway:
-		return g, nil
-	default:
-		return nil, fmt.Errorf("unexpected response from bindplane, expected gateway, got %T, this is a bug that should be reported", g)
+	if g := resp.Resource; g != nil && g.Kind != model.KindGateway {
+		return nil, fmt.Errorf("unexpected response from bindplane, expected gateway, got %s, this is a bug that should be reported", g.Kind)
 	}
+	return resp.Resource, nil
 }
 
 // DeleteGateway will delete a Bindplane gateway
 func (i *BindPlane) DeleteGateway(name string) error {
-	err := i.Client.DeleteResource(context.Background(), model.KindGateway, name)
+	err := i.delete(resourcePath("resources/Gateway", name))
 	if err != nil {
 		return fmt.Errorf("error while deleting gateway with name %s: %w", name, GatewayUnsupportedError(err))
 	}

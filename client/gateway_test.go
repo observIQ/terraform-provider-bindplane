@@ -109,7 +109,7 @@ func TestGateway(t *testing.T) {
 		i := newGatewayTestClient(t, s)
 
 		g, err := i.Gateway("my-gateway")
-		require.ErrorContains(t, err, "expected gateway, got *model.Fleet")
+		require.ErrorContains(t, err, "expected gateway, got Fleet")
 		require.Nil(t, g)
 	})
 }

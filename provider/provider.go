@@ -19,13 +19,12 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/observiq/bindplane-op-enterprise/config"
-	"github.com/observiq/bindplane-op-enterprise/model/auth"
 	"github.com/observiq/terraform-provider-bindplane/client"
 )
 
@@ -43,10 +42,14 @@ const (
 
 	// defaultTLSMinVersion is the minimum TLS version used when
 	// tls_min_version is not set.
-	defaultTLSMinVersion = string(config.TLSVersion13)
+	defaultTLSMinVersion = client.TLSVersion13
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5
+
+	// scopedAPIKeyPrefix is the prefix of scoped API keys, which
+	// require an account ID.
+	scopedAPIKeyPrefix = "bps_"
 )
 
 // Provider returns a *schema.Provider.
@@ -163,17 +166,17 @@ func Configure() *schema.Provider {
 
 // tlsMinVersions returns the allowed values for tls_min_version.
 func tlsMinVersions() []string {
-	return []string{string(config.TLSVersion12), string(config.TLSVersion13)}
+	return []string{client.TLSVersion12, client.TLSVersion13}
 }
 
-// parseTLSMinVersion converts a tls_min_version value to a config.TLSVersion.
-// The schema validates the value already. This guards against values that
+// parseTLSMinVersion validates a tls_min_version value. The schema
+// validates the value already. This guards against values that
 // bypass schema validation.
-func parseTLSMinVersion(v string) (config.TLSVersion, error) {
+func parseTLSMinVersion(v string) (string, error) {
 	if !slices.Contains(tlsMinVersions(), v) {
 		return "", fmt.Errorf("invalid tls_min_version %q, must be one of %q", v, tlsMinVersions())
 	}
-	return config.TLSVersion(v), nil
+	return v, nil
 }
 
 // providerConfigure configures the BindPlane client, which can be accessed from data / resource
@@ -189,12 +192,12 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		config.AccountID = v
 	}
 
-	scoped := auth.IsScopedKeyString(config.APIKey)
+	scoped := strings.HasPrefix(config.APIKey, scopedAPIKeyPrefix)
 	if scoped && config.AccountID == "" {
-		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, auth.ScopedAPIKeyPrefix)
+		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, scopedAPIKeyPrefix)
 	}
 	if !scoped && config.AccountID != "" {
-		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", auth.ScopedAPIKeyPrefix)
+		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", scopedAPIKeyPrefix)
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
@@ -229,7 +232,7 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
-		config.TLSMinVersion = string(minVersion)
+		config.TLSMinVersion = minVersion
 	}
 
 	c, err := client.New(config)
