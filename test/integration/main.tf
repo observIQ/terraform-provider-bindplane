@@ -31,6 +31,7 @@ resource "bindplane_configuration" "config" {
   measurement_interval = "1m"
 
   rollout = true
+  description = "my terraform configuration description"
 
   rollout_options {
     type = "progressive"
@@ -625,6 +626,7 @@ resource "bindplane_configuration_v2" "configuration" {
   }
 
   rollout = true
+  description = "my terraform configuration v2 description"
 
   name = "my-config-v2"
   platform = "linux"
