@@ -20,8 +20,3 @@ allow:
   - "MPL-2.0"
   - "Unicode-DFS-2016"
   - "BSD-2-Clause-FreeBSD"
-
-exceptions:
-  unresolvableLicense:
-    - path: "github.com/observiq/bindplane-op-enterprise"
-    
