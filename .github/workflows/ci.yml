@@ -14,32 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup-environment:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v7
-
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
-
-      - name: Install Tools
-        if: steps.tool-cache.outputs.cache-hit != 'true'
-        run: make install-tools
-
   vet:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -54,8 +30,6 @@ jobs:
 
   secure:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -64,21 +38,12 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - name: Gosec
         run: make gosec
 
   check-license:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -87,21 +52,12 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - name: Check License Headers
         run: make check-license
 
   lint:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -110,21 +66,12 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - name: Lint
         run: make lint
 
   misspell:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -134,20 +81,11 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
-
       - name: Misspell
         run: make misspell
 
   test-end-to-end:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     strategy:
       fail-fast: false
       matrix:
@@ -175,19 +113,12 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
-
       - run: make test-end-to-end
         env:
           BINDPLANE_VERSION: ${{ matrix.bindplane_version }}
           BINDPLANE_LICENSE: ${{ secrets.BINDPLANE_LICENSE }}
 
-      - run: goreleaser --version
+      - run: go tool goreleaser --version
         if: always()
 
       - run: tree dist/
@@ -199,8 +130,6 @@ jobs:
 
   test-local:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     strategy:
       matrix:
         bindplane_version:
@@ -218,13 +147,6 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       # https://bindplane.com/download
       - name: Start Bindplane
@@ -341,7 +263,7 @@ jobs:
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: example/
 
-      - run: goreleaser --version
+      - run: go tool goreleaser --version
         if: always()
 
       - run: tree dist/
@@ -365,8 +287,6 @@ jobs:
 
   test-local-tls:
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     strategy:
       matrix:
         bindplane_version:
@@ -384,13 +304,6 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - name: Generate self-signed TLS certificate
         run: |
@@ -503,7 +416,7 @@ jobs:
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: test/local-tls
 
-      - run: goreleaser --version
+      - run: go tool goreleaser --version
         if: always()
 
       - run: tree dist/
@@ -530,8 +443,6 @@ jobs:
     # key. The `test-end-to-end` job will test building the binary.
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: "ubuntu-22.04"
-    needs:
-      - setup-environment
     steps:
       - name: Check out source code
         uses: actions/checkout@v7
@@ -540,13 +451,6 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-
-      - name: Cache Tools
-        id: tool-cache
-        uses: actions/cache@v6
-        with:
-          path: /home/runner/go/bin
-          key: tooling-${{ runner.os }}-${{ hashFiles('./internal/tools/go.mod') }}
 
       - name: Import GPG key
         id: import_gpg
@@ -564,4 +468,4 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
       - name: Scan Binaries
-        run: lichen --config=./license.yaml $(find dist/provider_* -type f | grep terraform-provider-bindplane | xargs)
+        run: go tool lichen --config=./license.yaml $(find dist/provider_* -type f | grep terraform-provider-bindplane | xargs)
