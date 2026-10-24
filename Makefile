@@ -1,4 +1,4 @@
-ADDLICENSE=addlicense
+ADDLICENSE=go tool addlicense
 ALL_SRC := $(shell find . -name '*.go' -o -name '*.sh' -type f | sort)
 
 GOOS ?= $(shell go env GOOS)
@@ -21,16 +21,17 @@ PWD=$(shell pwd)
 # All source code and documents, used when checking for misspellings
 ALLDOC := $(shell find . \( -name "*.md" -o -name "*.yaml" \) -type f | sort)
 
-TOOLS_MOD_DIR := ./internal/tools
+# Development tools are declared as `tool` directives in go.mod and run with
+# `go tool <name>`. To add one, run `go get -tool <package path>@<version>` and
+# review the go.mod diff; `go get` can move existing requirements.
+TOOLS := misspell addlicense goreleaser revive gosec lichen
 
+# Builds every tool so that later `go tool` invocations are served from the build cache.
 .PHONY: install-tools
 install-tools:
-	cd $(TOOLS_MOD_DIR) && go install github.com/securego/gosec/v2/cmd/gosec
-	cd $(TOOLS_MOD_DIR) && go install github.com/google/addlicense
-	cd $(TOOLS_MOD_DIR) && go install github.com/mgechev/revive
-	cd $(TOOLS_MOD_DIR) && go install github.com/uw-labs/lichen
-	cd $(TOOLS_MOD_DIR) && go install github.com/goreleaser/goreleaser/v2
-	cd $(TOOLS_MOD_DIR) && go install github.com/client9/misspell/cmd/misspell
+	@for tool in $(TOOLS); do \
+		go tool -n $$tool >/dev/null || exit 1; \
+	done
 
 .PHONY: tidy
 tidy:
@@ -42,7 +43,7 @@ tidy:
 .PHONY: provider
 provider:
 	rm -rf dist/
-	goreleaser build \
+	go tool goreleaser build \
 		--skip=validate \
 		--single-target \
 		--snapshot \
@@ -50,7 +51,7 @@ provider:
 
 .PHONY: release-test
 release-test:
-	goreleaser release \
+	go tool goreleaser release \
 		--skip=publish \
 		--skip=validate \
 		--snapshot \
@@ -63,7 +64,7 @@ ci-check: lint misspell check-fmt gosec vet test check-license
 
 .PHONY: lint
 lint:
-	revive -config .revive.toml -formatter friendly -set_exit_status ./...
+	go tool revive -config .revive.toml -formatter friendly -set_exit_status ./...
 
 .PHONY: check-fmt
 check-fmt:
@@ -83,15 +84,15 @@ fmt:
 
 .PHONY: misspell
 misspell:
-	misspell $(ALLDOC)
+	go tool misspell $(ALLDOC)
 
 .PHONY: misspell-fix
 misspell-fix:
-	misspell -w $(ALLDOC)
+	go tool misspell -w $(ALLDOC)
 
 .PHONY: gosec
 gosec:
-	gosec -exclude-generated -exclude-dir internal/tools ./...
+	go tool gosec -exclude-generated ./...
 
 .PHONY: vet
 vet:
@@ -138,7 +139,7 @@ test-local-apply:
 
 
 .PHONY: check-license
-check-license:
+check-license: install-tools
 	@ADDLICENSEOUT=`$(ADDLICENSE) -check $(ALL_SRC) 2>&1`; \
 		if [ "$$ADDLICENSEOUT" ]; then \
 			echo "$(ADDLICENSE) FAILED => add License errors:"; \
@@ -150,7 +151,7 @@ check-license:
 		fi
 
 .PHONY: add-license
-add-license:
+add-license: install-tools
 	@ADDLICENSEOUT=`$(ADDLICENSE) -y "" -c "observIQ, Inc." $(ALL_SRC) 2>&1`; \
 		if [ "$$ADDLICENSEOUT" ]; then \
 			echo "$(ADDLICENSE) FAILED => add License errors:"; \
