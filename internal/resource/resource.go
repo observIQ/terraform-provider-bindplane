@@ -19,7 +19,7 @@ package resource
 import (
 	"fmt"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 )
 
 // AnyResourceV1 takes a Bindplane resource name, kind, type, parameters

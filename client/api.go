@@ -15,7 +15,7 @@
 package client
 
 import (
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 )
 
 // This file contains the request and response bodies of the Bindplane

@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/observiq/terraform-provider-bindplane/client"
 	"github.com/observiq/terraform-provider-bindplane/internal/component"
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 	v2 "github.com/observiq/terraform-provider-bindplane/provider/resource/configuration/v2"
 
