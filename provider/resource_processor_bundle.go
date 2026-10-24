@@ -196,6 +196,10 @@ func resourceProcessorBundleRead(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	if err := setResourceMetadata(d, g.Metadata); err != nil {
+		return err
+	}
+
 	rType := strings.Split(g.Spec.Type, ":")[0]
 	if err := d.Set("type", rType); err != nil {
 		return err
