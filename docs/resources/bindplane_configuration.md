@@ -17,6 +17,7 @@ to one or more managed agents. Configurations are a combination of [sources](./b
 | ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
 | `name`             | string          | required | The source name.                                                            |
 | `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
+| `description`      | string          | optional | The description of the configuration, displayed in the Bindplane UI. Sets the configuration's `metadata.description` field. |
 | `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
 | `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
 | `destination`      | block           | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section. |

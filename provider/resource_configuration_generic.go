@@ -65,6 +65,17 @@ var advancedSchema = &schema.Schema{
 }
 
 // genericConfigurationDelete deletes configurations and raw configurations.
+// configurationSchemaDescription returns the schema for a configuration's
+// optional description.
+func configurationSchemaDescription() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Optional:    true,
+		ForceNew:    false,
+		Description: "The description of the configuration, displayed in the Bindplane UI. Sets the configuration's metadata.description field.",
+	}
+}
+
 func genericConfigurationDelete(d *schema.ResourceData, meta any) error {
 	return genericResourceDelete(model.KindConfiguration, d, meta)
 }
