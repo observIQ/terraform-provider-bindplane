@@ -297,3 +297,58 @@ func TestAnyResourceFromConfigurationV1(t *testing.T) {
 		})
 	}
 }
+
+func TestAnyResourceFromConfigurationV1_allFields(t *testing.T) {
+	routes := &model.Routes{
+		Logs: []model.Route{{ID: "logs", Components: []model.ComponentPath{"destinations/dest-1"}}},
+	}
+	rollout := model.ResourceConfiguration{
+		ParameterizedSpec: model.ParameterizedSpec{
+			Type: "progressive",
+			Parameters: []model.Parameter{
+				{Name: "stages", Value: []any{map[string]any{"name": "stage"}}},
+			},
+		},
+	}
+
+	input := &model.Configuration{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v2",
+			Kind:       model.KindConfiguration,
+			Metadata: model.Metadata{
+				Name:   "my-config",
+				Labels: model.LabelsFromValidatedMap(map[string]string{"platform": "linux"}),
+			},
+		},
+		Spec: model.ConfigurationSpec{
+			ContentType:         "text/yaml",
+			MeasurementInterval: "1m",
+			Selector: model.AgentSelector{
+				MatchLabels: map[string]string{"configuration": "my-config"},
+			},
+			Sources:      []model.ResourceConfiguration{{Name: "my-source", Routes: routes}},
+			Processors:   []model.ResourceConfiguration{{ID: "pg-1", Routes: routes}},
+			Connectors:   []model.ResourceConfiguration{{ID: "conn-1", Name: "my-connector", Routes: routes}},
+			Destinations: []model.ResourceConfiguration{{ID: "dest-1", Name: "my-dest"}},
+			Extensions:   []model.ResourceConfiguration{{Name: "my-pprof"}},
+			Rollout:      rollout,
+		},
+	}
+
+	expect := model.AnyResource{
+		ResourceMeta: input.ResourceMeta,
+		Spec: map[string]any{
+			"contentType":         "text/yaml",
+			"selector":            input.Spec.Selector,
+			"measurementInterval": "1m",
+			"sources":             input.Spec.Sources,
+			"processors":          input.Spec.Processors,
+			"connectors":          input.Spec.Connectors,
+			"destinations":        input.Spec.Destinations,
+			"extensions":          input.Spec.Extensions,
+			"rollout":             rollout,
+		},
+	}
+
+	require.Equal(t, expect, AnyResourceFromConfigurationV1(input))
+}

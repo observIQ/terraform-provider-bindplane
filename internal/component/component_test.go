@@ -15,16 +15,21 @@
 package component
 
 import (
-	"strings"
 	"testing"
 
-	"github.com/oklog/ulid/v2"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewResourceID(t *testing.T) {
-	id := NewResourceID()
-	require.True(t, strings.HasPrefix(id, "tf-"))
-	_, err := ulid.Parse(strings.TrimPrefix(id, "tf-"))
-	require.NoError(t, err)
+	// IDs are "tf-" followed by a ULID: 26 characters of Crockford's
+	// base32, the first of which is at most 7.
+	const pattern = `^tf-[0-7][0-9A-HJKMNP-TV-Z]{25}$`
+
+	ids := map[string]bool{}
+	for range 1000 {
+		id := NewResourceID()
+		require.Regexp(t, pattern, id)
+		require.False(t, ids[id], "duplicate id %s", id)
+		ids[id] = true
+	}
 }

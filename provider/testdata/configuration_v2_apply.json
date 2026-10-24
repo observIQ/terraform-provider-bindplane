@@ -1,0 +1,140 @@
+{
+  "resources": [
+    {
+      "apiVersion": "bindplane.observiq.com/v2",
+      "kind": "Configuration",
+      "metadata": {
+        "id": "",
+        "labels": {
+          "env": "test",
+          "platform": "linux"
+        },
+        "name": "my-config"
+      },
+      "spec": {
+        "connectors": [
+          {
+            "id": "conn-1",
+            "name": "my-connector",
+            "routes": {
+              "metrics": [
+                {
+                  "components": [
+                    "destinations/dest-1"
+                  ],
+                  "id": "conn-metrics"
+                }
+              ]
+            }
+          }
+        ],
+        "contentType": "text/yaml",
+        "destinations": [
+          {
+            "id": "dest-1",
+            "name": "my-dest",
+            "processors": [
+              {
+                "name": "my-filter"
+              }
+            ]
+          }
+        ],
+        "extensions": [
+          {
+            "name": "my-pprof"
+          }
+        ],
+        "measurementInterval": "1m",
+        "parameters": [
+          {
+            "name": "telemetryPort",
+            "value": 8888
+          },
+          {
+            "name": "telemetryLevel",
+            "value": "detailed"
+          }
+        ],
+        "processors": [
+          {
+            "id": "pg-1",
+            "processors": [
+              {
+                "name": "my-filter"
+              },
+              {
+                "name": "my-batch"
+              }
+            ],
+            "routes": {
+              "logs": [
+                {
+                  "components": [
+                    "destinations/dest-1"
+                  ],
+                  "id": "pg-logs"
+                }
+              ]
+            }
+          }
+        ],
+        "rollout": {
+          "parameters": [
+            {
+              "name": "stages",
+              "value": [
+                {
+                  "labels": {
+                    "env": "stage"
+                  },
+                  "name": "stage"
+                },
+                {
+                  "labels": {
+                    "env": "production"
+                  },
+                  "name": "production"
+                }
+              ]
+            }
+          ],
+          "type": "progressive"
+        },
+        "selector": {
+          "matchLabels": {
+            "configuration": "my-config"
+          }
+        },
+        "sources": [
+          {
+            "name": "my-source",
+            "processors": [
+              {
+                "name": "my-batch"
+              }
+            ],
+            "routes": {
+              "logs": [
+                {
+                  "components": [
+                    "processors/pg-1"
+                  ],
+                  "id": "source-logs"
+                }
+              ],
+              "traces": [
+                {
+                  "components": [
+                    "connectors/conn-1"
+                  ],
+                  "id": "source-traces"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

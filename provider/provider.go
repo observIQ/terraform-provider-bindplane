@@ -22,11 +22,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	bpclient "github.com/observiq/bindplane-op-enterprise/client"
-	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/bindplane-op-enterprise/model/auth"
 	"github.com/observiq/terraform-provider-bindplane/client"
-	"go.uber.org/zap"
 )
 
 const (
@@ -146,82 +143,59 @@ func Configure() *schema.Provider {
 	}
 }
 
-// NewLogger returns a zap logger suitable for
-// Terraform providers.
-func NewLogger() (*zap.Logger, error) {
-	loggerConf := zap.NewProductionConfig()
-	loggerConf.OutputPaths = []string{"stdout"}
-	logger, err := loggerConf.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
-	}
-	return logger, nil
-}
-
 // providerConfigure configures the BindPlane client, which can be accessed from data / resource
 // functions with with 'bindplane := meta.(client.BindPlane)'
 func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Diagnostics) {
-	config := &config.Config{}
+	config := client.Config{}
 
 	if v, ok := d.Get("api_key").(string); ok && v != "" {
-		config.Auth.APIKey = v
+		config.APIKey = v
 	}
 
 	if v, ok := d.Get("account_id").(string); ok && v != "" {
-		config.Accounts.Account = v
+		config.AccountID = v
 	}
 
-	scoped := auth.IsScopedKeyString(config.Auth.APIKey)
-	if scoped && config.Accounts.Account == "" {
+	scoped := auth.IsScopedKeyString(config.APIKey)
+	if scoped && config.AccountID == "" {
 		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, auth.ScopedAPIKeyPrefix)
 	}
-	if !scoped && config.Accounts.Account != "" {
+	if !scoped && config.AccountID != "" {
 		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", auth.ScopedAPIKeyPrefix)
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
-		config.Auth.Username = v
+		config.Username = v
 	}
 
 	if v, ok := d.Get("password").(string); ok && v != "" {
-		config.Auth.Password = v
-	}
-
-	if config.Auth.Username != "" && config.Auth.Password != "" {
-		config.Auth.Type = "system"
+		config.Password = v
 	}
 
 	if v, ok := d.Get("remote_url").(string); ok && v != "" {
-		config.Network.RemoteURL = v
+		config.RemoteURL = v
 	}
 
 	if v, ok := d.Get("tls_certificate_authority").(string); ok && v != "" {
-		config.Network.TLS.CertificateAuthority = []string{v}
+		config.TLSCertificateAuthority = v
 	}
 
 	if crt, ok := d.Get("tls_certificate").(string); ok && crt != "" {
 		if key, ok := d.Get("tls_private_key").(string); ok && key != "" {
-			config.Network.TLS.Certificate = crt
-			config.Network.TLS.PrivateKey = key
+			config.TLSCertificate = crt
+			config.TLSPrivateKey = key
 		}
 	}
 
 	if v, ok := d.Get("tls_skip_verify").(bool); ok && v {
-		config.Network.TLS.InsecureSkipVerify = v
+		config.TLSSkipVerify = v
 	}
 
-	logger, err := NewLogger()
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
-
-	c, err := bpclient.NewBindplane(config, logger)
+	c, err := client.New(config)
 	if err != nil {
 		err = fmt.Errorf("failed to initialize bindplane client: %w", err)
 		return nil, diag.FromErr(err)
 	}
 
-	return &client.BindPlane{
-		Client: c,
-	}, nil
+	return c, nil
 }

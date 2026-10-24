@@ -16,51 +16,21 @@ package client
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
-	"github.com/observiq/bindplane-op-enterprise/client"
-	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 func newTestConfig(endpoint, user, pass, ca, crt, key string) (*BindPlane, error) {
-	config := &config.Config{}
-	var err error
-
-	config.Network.RemoteURL = endpoint
-	config.Auth.Username = user
-	config.Auth.Password = pass
-
-	// System auth type must be set when using user / pass. When using API
-	// key, auth type does not need to be set client side.
-	if config.Auth.Username != "" && config.Auth.Password != "" {
-		config.Auth.Type = "system"
-	}
-
-	if ca != "" {
-		config.Network.TLS.CertificateAuthority = []string{ca}
-	}
-	if crt != "" && key != "" {
-		config.Network.TLS.Certificate = crt
-		config.Network.TLS.PrivateKey = key
-	}
-
-	loggerConf := zap.NewProductionConfig()
-	loggerConf.OutputPaths = []string{"stdout"}
-	logger, err := loggerConf.Build()
-	if err != nil {
-		return nil, fmt.Errorf("failed to configure zap stdout logger: %w", err)
-	}
-
-	i, err := client.NewBindplane(config, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	return &BindPlane{i}, nil
+	return New(Config{
+		RemoteURL:               endpoint,
+		Username:                user,
+		Password:                pass,
+		TLSCertificateAuthority: ca,
+		TLSCertificate:          crt,
+		TLSPrivateKey:           key,
+	})
 }
 
 func TestNewTestConfig(t *testing.T) {
