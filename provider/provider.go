@@ -18,11 +18,11 @@ package provider
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op-enterprise/model/auth"
 	"github.com/observiq/terraform-provider-bindplane/client"
 )
 
@@ -39,6 +39,10 @@ const (
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5
+
+	// scopedAPIKeyPrefix is the prefix of scoped API keys, which
+	// require an account ID.
+	scopedAPIKeyPrefix = "bps_"
 )
 
 // Provider returns a *schema.Provider.
@@ -156,12 +160,12 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 		config.AccountID = v
 	}
 
-	scoped := auth.IsScopedKeyString(config.APIKey)
+	scoped := strings.HasPrefix(config.APIKey, scopedAPIKeyPrefix)
 	if scoped && config.AccountID == "" {
-		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, auth.ScopedAPIKeyPrefix)
+		return nil, diag.Errorf("account_id (or %s) is required when api_key is a scoped key (%s prefix)", envAccountID, scopedAPIKeyPrefix)
 	}
 	if !scoped && config.AccountID != "" {
-		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", auth.ScopedAPIKeyPrefix)
+		return nil, diag.Errorf("account_id is only supported with a scoped api_key (%s prefix)", scopedAPIKeyPrefix)
 	}
 
 	if v, ok := d.Get("username").(string); ok && v != "" {
