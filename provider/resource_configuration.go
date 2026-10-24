@@ -43,6 +43,7 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the configuration.",
 			},
+			"description": configurationSchemaDescription(),
 			"platform": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -316,6 +317,7 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 
 	opts := []configuration.Option{
 		configuration.WithName(name),
+		configuration.WithDescription(d.Get("description").(string)),
 		configuration.WithLabels(labels),
 		configuration.WithMatchLabels(matchLabels),
 		configuration.WithSourcesByName(sources),
@@ -368,6 +370,12 @@ func resourceConfigurationRead(d *schema.ResourceData, meta any) error {
 	}
 
 	if err := d.Set("name", config.Name()); err != nil {
+		return err
+	}
+
+	// Always set the description, including the empty string, so that
+	// a description removed outside of Terraform is detected as drift.
+	if err := d.Set("description", config.Metadata.Description); err != nil {
 		return err
 	}
 

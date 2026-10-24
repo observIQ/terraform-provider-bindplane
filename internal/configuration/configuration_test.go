@@ -57,6 +57,35 @@ func TestNewV1(t *testing.T) {
 			},
 		},
 		{
+			"description",
+			WithDescription("collects host metrics"),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+					Metadata: model.Metadata{
+						Description: "collects host metrics",
+					},
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
+			"description-empty",
+			WithDescription(""),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v1",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
 			"sources",
 			func() Option {
 				r := []ResourceConfig{
@@ -257,6 +286,35 @@ func TestNewV2Beta(t *testing.T) {
 		expect *model.Configuration
 	}{
 		{
+			"description",
+			WithDescription("collects host metrics"),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2beta",
+					Kind:       model.KindConfiguration,
+					Metadata: model.Metadata{
+						Description: "collects host metrics",
+					},
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
+			"description-empty",
+			WithDescription(""),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2beta",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
 			"advanced-metrics",
 			func() Option {
 				return WithAdvancedParameters([]model.Parameter{
@@ -295,6 +353,35 @@ func TestNewV2(t *testing.T) {
 		input  Option
 		expect *model.Configuration
 	}{
+		{
+			"description",
+			WithDescription("collects host metrics"),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2",
+					Kind:       model.KindConfiguration,
+					Metadata: model.Metadata{
+						Description: "collects host metrics",
+					},
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
+			"description-empty",
+			WithDescription(""),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+				},
+			},
+		},
 		{
 			"advanced-metrics",
 			func() Option {

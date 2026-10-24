@@ -34,6 +34,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
 | `name`             | string          | required | The source name.                                                            |
 | `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
+| `description`      | string          | optional | The description of the configuration, displayed in the Bindplane UI. Sets the configuration's `metadata.description` field. |
 | `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
 | `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
 | `processor_group`  | block           | optional | One or more processor group blocks. See the [processor group block](./bindplane_configuration.md#processor-group-block) section. |
