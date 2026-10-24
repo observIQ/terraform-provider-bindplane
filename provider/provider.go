@@ -18,10 +18,12 @@ package provider
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	bpclient "github.com/observiq/bindplane-op-enterprise/client"
 	"github.com/observiq/bindplane-op-enterprise/config"
 	"github.com/observiq/bindplane-op-enterprise/model/auth"
@@ -39,6 +41,11 @@ const (
 	envTLSCrt        = "BINDPLANE_TF_TLS_CERT"
 	envTLSKey        = "BINDPLANE_TF_TLS_KEY"
 	envTLSSkipVerify = "BINDPLANE_TF_TLS_SKIP_VERIFY"
+	envTLSMinVersion = "BINDPLANE_TF_TLS_MIN_VERSION"
+
+	// defaultTLSMinVersion is the minimum TLS version used when
+	// tls_min_version is not set.
+	defaultTLSMinVersion = string(config.TLSVersion13)
 
 	// Timeout (including retries) for resources
 	maxTimeout = time.Minute * 5
@@ -131,6 +138,15 @@ func Configure() *schema.Provider {
 				}, nil),
 				Description: "Disables TLS certificate verification. Should only be used for testing.",
 			},
+			"tls_min_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					envTLSMinVersion,
+				}, defaultTLSMinVersion),
+				ValidateFunc: validation.StringInSlice(tlsMinVersions(), false),
+				Description:  "The minimum TLS version used when connecting to the Bindplane instance. One of \"1.2\" or \"1.3\", defaults to \"1.3\". Set to \"1.2\" when the Bindplane instance, or a load balancer or proxy in front of it, does not support TLS 1.3.",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"bindplane_connector":        resourceConnector(),
@@ -144,6 +160,21 @@ func Configure() *schema.Provider {
 			"bindplane_source":           resourceSource(),
 		},
 	}
+}
+
+// tlsMinVersions returns the allowed values for tls_min_version.
+func tlsMinVersions() []string {
+	return []string{string(config.TLSVersion12), string(config.TLSVersion13)}
+}
+
+// parseTLSMinVersion converts a tls_min_version value to a config.TLSVersion.
+// The schema validates the value already. This guards against values that
+// bypass schema validation.
+func parseTLSMinVersion(v string) (config.TLSVersion, error) {
+	if !slices.Contains(tlsMinVersions(), v) {
+		return "", fmt.Errorf("invalid tls_min_version %q, must be one of %q", v, tlsMinVersions())
+	}
+	return config.TLSVersion(v), nil
 }
 
 // NewLogger returns a zap logger suitable for
@@ -208,6 +239,14 @@ func providerConfigure(d *schema.ResourceData, _ *schema.Provider) (any, diag.Di
 
 	if v, ok := d.Get("tls_skip_verify").(bool); ok && v {
 		config.Network.TLS.InsecureSkipVerify = v
+	}
+
+	if v, ok := d.Get("tls_min_version").(string); ok && v != "" {
+		minVersion, err := parseTLSMinVersion(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		config.Network.TLS.MinTLSVersion = minVersion
 	}
 
 	logger, err := NewLogger()
