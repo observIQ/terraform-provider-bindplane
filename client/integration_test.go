@@ -464,6 +464,53 @@ func TestIntegration_http_config(t *testing.T) {
 
 	require.NoError(t, i.Apply(&extensionsResource, false), "did not expect error when creating extension")
 	require.NoError(t, i.Delete(model.KindExtension, "my-extension"), "did not expect error when deleting extension")
+
+	t.Run("gateway", func(t *testing.T) {
+		testIntegrationGateway(t, i, version)
+	})
+}
+
+// testIntegrationGateway applies, gets and deletes a gateway. Gateways
+// require Bindplane v1.103.0 or newer. A nil version is latest.
+func testIntegrationGateway(t *testing.T, i *BindPlane, version *hashiversion.Version) {
+	minVersion := hashiversion.Must(hashiversion.NewVersion(MinGatewayVersion))
+	if version != nil && version.LessThan(minVersion) {
+		t.Skipf("gateways require Bindplane %s or newer, testing %s", MinGatewayVersion, version)
+	}
+
+	g, err := i.Gateway("my-gateway")
+	require.NoError(t, err)
+	require.Nil(t, g, "gateway should not exist before it is created")
+
+	gatewayResource := model.AnyResource{
+		ResourceMeta: model.ResourceMeta{
+			APIVersion: "bindplane.observiq.com/v1",
+			Kind:       model.KindGateway,
+			Metadata: model.Metadata{
+				ID:          "my-gateway",
+				Name:        "my-gateway",
+				DisplayName: "My Gateway",
+			},
+		},
+		Spec: map[string]any{
+			"loadBalancerHostname": "gateway.example.com",
+		},
+	}
+	require.NoError(t, i.ApplyWithRetry(context.Background(), time.Minute, &gatewayResource, false))
+
+	g, err = i.Gateway("my-gateway")
+	require.NoError(t, err)
+	require.NotNil(t, g)
+	require.Equal(t, "my-gateway", g.ID())
+	require.Equal(t, "My Gateway", g.Metadata.DisplayName)
+	require.Equal(t, "gateway.example.com", g.GatewaySpec.LoadBalancerHostname)
+	require.Equal(t, model.GatewayModeManual, g.Mode())
+
+	require.NoError(t, i.Delete(model.KindGateway, "my-gateway"))
+
+	g, err = i.Gateway("my-gateway")
+	require.NoError(t, err)
+	require.Nil(t, g, "gateway should not exist after it is deleted")
 }
 
 func TestIntegration_invalidProtocol(t *testing.T) {

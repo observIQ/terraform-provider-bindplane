@@ -155,6 +155,7 @@ func Configure() *schema.Provider {
 			"bindplane_destination":      resourceDestination(),
 			"bindplane_extension":        resourceExtension(),
 			"bindplane_fleet":            resourceFleet(),
+			"bindplane_gateway":          resourceGateway(),
 			"bindplane_processor":        resourceProcessor(),
 			"bindplane_processor_bundle": resourceProcessorBundle(),
 			"bindplane_source":           resourceSource(),

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/observiq/bindplane-op-enterprise/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReadRolloutOptions(t *testing.T) {
@@ -174,4 +175,29 @@ func TestReadRolloutOptions_Empty(t *testing.T) {
 	resourceConfig, err := readRolloutOptions(resourceData)
 	assert.NoError(t, err)
 	assert.Equal(t, resourceConfig, model.ResourceConfiguration{})
+}
+
+func TestResourceConfigurationV2RoleLabel(t *testing.T) {
+	// The gateway role is set with the role=gateway label. Guard against
+	// the role label being filtered the way platform is.
+	f := newFakeBindplane(t)
+
+	d := schema.TestResourceDataRaw(t, resourceConfigurationV2().Schema, map[string]any{
+		"name":     "gw-config",
+		"platform": "linux",
+		"labels": map[string]any{
+			"role": "gateway",
+		},
+	})
+	require.NoError(t, resourceConfigurationV2Create(d, f.client()))
+	require.Equal(t, "id-gw-config", d.Id())
+
+	metadata := f.lastApplied()["metadata"].(map[string]any)
+	require.Equal(t, map[string]any{
+		"platform": "linux",
+		"role":     "gateway",
+	}, metadata["labels"])
+
+	require.Equal(t, map[string]any{"role": "gateway"}, d.Get("labels"))
+	require.Equal(t, "linux", d.Get("platform"))
 }

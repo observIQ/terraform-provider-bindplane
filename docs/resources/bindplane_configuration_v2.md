@@ -34,7 +34,7 @@ Configuration V2 builds upon [Configuration V1](./bindplane_configuration.md) by
 | ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
 | `name`             | string          | required | The source name.                                                            |
 | `platform`         | string          | required | The platform the configuration supports. See the [supported platforms](./bindplane_configuration.md#supported-platforms) section. |
-| `labels`           | map             | optional | Key value pairs representing labels to set on the configuration.            |
+| `labels`           | map             | optional | Key value pairs representing labels to set on the configuration. Set `role = "gateway"` to mark a gateway configuration. See [gateway configurations](#gateway-configurations). |
 | `source`           | block           | optional | One or more source blocks. See the [source block](./bindplane_configuration.md#source-block) section. |
 | `processor_group`  | block           | optional | One or more processor group blocks. See the [processor group block](./bindplane_configuration.md#processor-group-block) section. |
 | `destination`      | block           | optional | One or more destination blocks. See the [destination block](./bindplane_configuration.md#destination-block) section. |
@@ -139,6 +139,29 @@ This table should be used as a reference for supported `platform` values.
 | ------------------ | --------------- | -------- | --------------------------------------------------------------------------- |
 | `port`    | int             | optional | The port used for telemetry. Requires Bindplane v1.90.2 or newer.            |
 | `level`   | string          | optional | The level of detail for telemetry. Valid values are 'basic', 'detailed'. Requires Bindplane v1.92 or newer.    |
+
+### Gateway Configurations
+
+> [!NOTE]
+> Gateway configurations require Bindplane v1.103.0 or newer.
+
+Bindplane marks a configuration as a gateway configuration with the label `role=gateway`.
+Gateway configurations run on the collectors of a [gateway](./bindplane_gateway.md), which receive
+telemetry from edge collectors. Configurations without the label are edge configurations.
+
+```hcl
+resource "bindplane_configuration_v2" "gateway" {
+  rollout  = true
+  name     = "my-gateway-config"
+  platform = "linux"
+
+  labels = {
+    role = "gateway"
+  }
+
+  # ... sources, destinations, etc.
+}
+```
 
 ## Examples
 

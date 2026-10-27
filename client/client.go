@@ -280,6 +280,37 @@ func (i *BindPlane) DeleteFleet(name string) error {
 	return nil
 }
 
+// Gateway takes a name and returns the matching gateway. It returns nil
+// when the gateway does not exist.
+func (i *BindPlane) Gateway(name string) (*model.Gateway, error) {
+	r, err := i.Client.Resource(context.Background(), model.KindGateway, name)
+	if err != nil {
+		// Do not return an error if the resource is not found. Terraform
+		// will understand that the resource does not exist when it receives
+		// a nil value, and will instead offer to create the resource.
+		if isNotFoundError(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get gateway with name %s: %w", name, GatewayUnsupportedError(err))
+	}
+
+	switch g := r.(type) {
+	case *model.Gateway:
+		return g, nil
+	default:
+		return nil, fmt.Errorf("unexpected response from bindplane, expected gateway, got %T, this is a bug that should be reported", g)
+	}
+}
+
+// DeleteGateway will delete a Bindplane gateway
+func (i *BindPlane) DeleteGateway(name string) error {
+	err := i.Client.DeleteResource(context.Background(), model.KindGateway, name)
+	if err != nil {
+		return fmt.Errorf("error while deleting gateway with name %s: %w", name, GatewayUnsupportedError(err))
+	}
+	return nil
+}
+
 // Delete will delete a Bindplane resource
 func (i *BindPlane) Delete(k model.Kind, name string) error {
 	switch k {
@@ -297,6 +328,8 @@ func (i *BindPlane) Delete(k model.Kind, name string) error {
 		return i.DeleteConnector(name)
 	case model.KindFleet:
 		return i.DeleteFleet(name)
+	case model.KindGateway:
+		return i.DeleteGateway(name)
 	default:
 		return fmt.Errorf("Delete does not support bindplane kind '%s'", k)
 	}
@@ -393,6 +426,21 @@ func (i *BindPlane) GenericResource(k model.Kind, name string) (*GenericResource
 	}
 
 	return g, nil
+}
+
+// MinGatewayVersion is the oldest Bindplane version that supports gateways.
+const MinGatewayVersion = "v1.103.0"
+
+// GatewayUnsupportedError adds the minimum Bindplane version to errors
+// returned by Bindplane versions that do not support gateways. Other errors
+// are returned unchanged.
+func GatewayUnsupportedError(err error) error {
+	e := err.Error()
+	if strings.Contains(e, "unknown resource kind: Gateway") ||
+		strings.Contains(e, "kind: Gateway cannot be requested") {
+		return fmt.Errorf("gateways require Bindplane %s or newer: %w", MinGatewayVersion, err)
+	}
+	return err
 }
 
 // TODO(jsirianni): Bindplane should probably have error types so we can check
