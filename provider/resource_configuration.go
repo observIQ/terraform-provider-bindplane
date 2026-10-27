@@ -253,10 +253,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		for _, v := range sourcesRaw {
 			sourcesRaw := v.(map[string]any)
 
-			processors := []string{}
+			processors := []model.ResourceConfiguration{}
 			if v := sourcesRaw["processors"].([]any); v != nil {
 				for _, v := range v {
-					processors = append(processors, v.(string))
+					processors = append(processors, model.ResourceConfiguration{Name: v.(string)})
 				}
 			}
 
@@ -275,10 +275,10 @@ func resourceConfigurationCreate(d *schema.ResourceData, meta any) error {
 		for _, v := range destinationsRaw {
 			destinationRaw := v.(map[string]any)
 
-			processors := []string{}
+			processors := []model.ResourceConfiguration{}
 			if v := destinationRaw["processors"].([]any); v != nil {
 				for _, v := range v {
-					processors = append(processors, v.(string))
+					processors = append(processors, model.ResourceConfiguration{Name: v.(string)})
 				}
 			}
 
