@@ -25,6 +25,7 @@ The provider can be configured with options and environment variables.
 | `tls_certificate_authority` | `BINDPLANE_TF_TLS_CA`     | Path to x509 PEM encoded certificate authority to trust when connecting to Bindplane. |
 | `tls_certificate`           | `BINDPLANE_TF_TLS_CERT`   | Path to x509 PEM encoded client certificate to use when mTLS is desired. |
 | `tls_private_key`           | `BINDPLANE_TF_TLS_KEY`    | Path to x509 PEM encoded private key to use when mTLS is desired. |
+| `tls_min_version`           | `BINDPLANE_TF_TLS_MIN_VERSION` | Minimum TLS version, `"1.2"` or `"1.3"`. Defaults to `"1.3"`. Use `"1.2"` when Bindplane, or a load balancer or proxy in front of it, does not support TLS 1.3. |
 
 ## Example Usage
 
@@ -80,6 +81,19 @@ terraform {
 provider "bindplane" {
   remote_url = "https://192.168.1.10"
   tls_certificate_authority = "/opt/tls/bindplane-east1.crt"
+}
+```
+
+The provider requires TLS 1.3 by default. If Bindplane, or a load balancer or proxy
+in front of it, only supports TLS 1.2, every request fails with `EOF` or a TLS
+handshake error, while `curl` from the same host works. Set `tls_min_version` to
+`"1.2"` (or set `BINDPLANE_TF_TLS_MIN_VERSION=1.2`) to allow TLS 1.2.
+
+```hcl
+provider "bindplane" {
+  remote_url                = "https://bindplane.example.com"
+  tls_certificate_authority = "/opt/tls/bindplane-east1.crt"
+  tls_min_version           = "1.2"
 }
 ```
 

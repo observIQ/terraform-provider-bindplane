@@ -522,6 +522,20 @@ jobs:
                 - POSTGRES_DB=bindplane
                 - POSTGRES_PASSWORD=password
                 - POSTGRES_USER=bindplane
+            # TLS 1.2-only proxy in front of Bindplane, standing in for a
+            # load balancer that does not support TLS 1.3 (issue #195).
+            tls12-proxy:
+              container_name: bindplane-tls12-proxy
+              restart: always
+              image: nginx:1.27.5-alpine
+              ports:
+                - "3002:3002"
+              volumes:
+                - ./test/local-tls12/nginx.conf:/etc/nginx/nginx.conf:ro
+                - /tmp/bindplane.crt:/etc/nginx/tls/bindplane.crt:ro
+                - /tmp/bindplane.key:/etc/nginx/tls/bindplane.key:ro
+              depends_on:
+                - bindplane
           EOF
           docker-compose up -d
         env:
@@ -571,6 +585,51 @@ jobs:
         run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve
         working-directory: test/local-tls
 
+      - name: Check TLS 1.2 proxy refuses TLS 1.3
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 1
+          polling_interval_seconds: 2
+          max_attempts: 3
+          shell: bash
+          command: |
+            set -e
+            echo | openssl s_client -connect localhost:3002 -tls1_2 -CAfile /tmp/bindplane.crt -verify_return_error
+            if echo | openssl s_client -connect localhost:3002 -tls1_3; then
+              echo "proxy accepted TLS 1.3, expected TLS 1.2 only"
+              exit 1
+            fi
+            curl -sf --cacert /tmp/bindplane.crt -u admin:password https://localhost:3002/v1/version
+
+      - name: Copy provider to local-tls12 directory
+        run: cp -r test/local/providers test/local-tls12/providers
+
+      - name: local-tls12 apply with default tls_min_version must fail
+        working-directory: test/local-tls12
+        run: |
+          set +e
+          TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -no-color 2>&1 | tee apply.log
+          code=${PIPESTATUS[0]}
+          set -e
+          if [ "$code" -eq 0 ]; then
+            echo "apply succeeded through the TLS 1.2-only proxy with the default tls_min_version, expected failure"
+            exit 1
+          fi
+          grep -E "protocol version not supported|handshake|EOF" apply.log
+
+      - name: local-tls12 apply with tls_min_version 1.2
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform apply -auto-approve -var tls_min_version=1.2
+        working-directory: test/local-tls12
+
+      - name: local-tls12 second plan must be clean
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform plan -detailed-exitcode -var tls_min_version=1.2
+        working-directory: test/local-tls12
+
+      - name: cleanup local-tls12 tests
+        if: always()
+        run: TF_CLI_CONFIG_FILE=./dev.tfrc terraform destroy -auto-approve -var tls_min_version=1.2
+        working-directory: test/local-tls12
+
       - run: goreleaser --version
         if: always()
 
@@ -592,6 +651,10 @@ jobs:
       - name: postgres logs (debug)
         if: always()
         run: docker logs bindplane-postgres
+
+      - name: tls12 proxy logs (debug)
+        if: always()
+        run: docker logs bindplane-tls12-proxy
 
   build:
     # Skip build for dependabot. It takes long and requires our GPG
