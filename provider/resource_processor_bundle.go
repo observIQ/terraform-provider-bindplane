@@ -75,6 +75,8 @@ func resourceProcessorBundle() *schema.Resource {
 				ForceNew:    false,
 				Description: "Whether or not to trigger a rollout automatically when a configuration is updated. When set to true, Bindplane will automatically roll out the configuration change to managed agents.",
 			},
+			"display_name": genericSchemaDisplayName(),
+			"description":  genericSchemaDescription(),
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(maxTimeout),
@@ -138,7 +140,10 @@ func resourceProcessorBundleCreate(d *schema.ResourceData, meta any) error {
 		}
 	}
 
-	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors)
+	displayName := d.Get("display_name").(string)
+	description := d.Get("description").(string)
+
+	r, err := resource.AnyResourceV1(id, name, processorType, model.KindProcessor, nil, processors, displayName, description)
 	if err != nil {
 		return err
 	}
@@ -188,6 +193,10 @@ func resourceProcessorBundleRead(d *schema.ResourceData, meta any) error {
 	}
 
 	if err := d.Set("name", g.Name); err != nil {
+		return err
+	}
+
+	if err := setResourceMetadata(d, g.Metadata); err != nil {
 		return err
 	}
 

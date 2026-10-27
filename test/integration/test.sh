@@ -96,6 +96,24 @@ test_resources() {
     eval docker exec integration-bindplane-1 /bindplane get config "$args"
     eval docker exec integration-bindplane-1 /bindplane get destination google-test "$args"
 
+    # terraform apply errors are not fatal (see apply), so fail here
+    # unless Bindplane returns the values set in main.tf.
+    expect_resource destination google-test \
+        '.metadata.displayName == "Google Test" and .metadata.description == "my terraform description"'
+
+    # Older versions persist the description, but these configurations
+    # are not created on them: they reference processor types that do
+    # not exist there (processor_bundle in 1.76.0, parse_timestamp_v2
+    # in 1.96.0 and older).
+    if version_at_least 1.89.3; then
+        expect_resource configuration testtf \
+            '.metadata.description == "my terraform configuration description"'
+    fi
+    if version_at_least 1.104.0; then
+        expect_resource configuration my-config-v2 \
+            '.metadata.description == "my terraform configuration v2 description"'
+    fi
+
     if [[ $GATEWAY == "true" ]]; then
         test_gateway
     fi
@@ -134,6 +152,34 @@ test_gateway() {
         || fail "configuration my-gateway-config does not have label role=gateway"
 
     echo "gateway test passed"
+}
+
+# version_at_least <version> succeeds when BINDPLANE_VERSION is latest
+# or at least <version>.
+version_at_least() {
+    if [[ $BINDPLANE_VERSION == "latest" ]]; then
+        return 0
+    fi
+    [[ $(printf '%s\n' "$1" "$BINDPLANE_VERSION" | sort -V | head -n1) == "$1" ]]
+}
+
+# expect_resource <kind> <name> <jq filter> fails unless the resource
+# returned by the Bindplane CLI matches the jq filter.
+expect_resource() {
+    local kind=$1
+    local name=$2
+    local filter=$3
+    local out
+
+    # The CLI can print its own JSON log lines to stdout, so only
+    # objects with metadata (the resource) are checked.
+    out=$(eval docker exec integration-bindplane-1 /bindplane get "$kind" "$name" -o json "$args") || true
+    if ! echo "$out" | jq -e "select(.metadata != null) | $filter" > /dev/null; then
+        echo "FAIL: $kind $name does not match: $filter"
+        echo "$out"
+        return 1
+    fi
+    echo "OK: $kind $name matches: $filter"
 }
 
 destroy () {

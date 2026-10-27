@@ -52,6 +52,15 @@ func WithName(name string) Option {
 	}
 }
 
+// WithDescription is a Option that configures a configuration's
+// description.
+func WithDescription(description string) Option {
+	return func(c *model.Configuration) error {
+		c.Metadata.Description = description
+		return nil
+	}
+}
+
 // WithLabels is a Option that configures a configuration's
 // labels.
 func WithLabels(labels map[string]string) Option {

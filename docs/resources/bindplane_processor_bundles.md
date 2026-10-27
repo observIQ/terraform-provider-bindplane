@@ -17,6 +17,8 @@ The processor bundle can be used by multiple [configurations](./bindplane_config
 | `name`              | string | required | The processor name.             |
 | `processor`         | processor block | required | One or more processor blocks. |
 | `rollout`           | bool   | required | Whether or not updates to the processor should trigger an automatic rollout of any configuration that uses it. |
+| `display_name`      | string | optional | The friendly name displayed in the Bindplane UI in place of the name. Sets the resource's `metadata.displayName` field. |
+| `description`       | string | optional | The description of the resource. Sets the resource's `metadata.description` field. |
 
 Processor block supports the following:
 

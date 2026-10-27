@@ -117,13 +117,53 @@ func TestAnyResourceV1(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors)
+			_, err := AnyResourceV1(tc.id, tc.rName, tc.rType, tc.rkind, tc.rParameters, tc.rProcessors, "", "")
 			if tc.expectErr != "" {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.expectErr)
 				return
 			}
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAnyResourceV1Metadata(t *testing.T) {
+	cases := []struct {
+		name        string
+		displayName string
+		description string
+	}{
+		{
+			"empty",
+			"",
+			"",
+		},
+		{
+			"display-name",
+			"My Host",
+			"",
+		},
+		{
+			"description",
+			"",
+			"collects host metrics",
+		},
+		{
+			"display-name-and-description",
+			"My Host",
+			"collects host metrics",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r, err := AnyResourceV1("tf-source", "my-host", "host", model.KindSource, nil, nil, tc.displayName, tc.description)
+			require.NoError(t, err)
+			require.Equal(t, "tf-source", r.Metadata.ID)
+			require.Equal(t, "my-host", r.Metadata.Name)
+			require.Equal(t, tc.displayName, r.Metadata.DisplayName)
+			require.Equal(t, tc.description, r.Metadata.Description)
 		})
 	}
 }
