@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 )
 
 const (

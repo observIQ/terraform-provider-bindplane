@@ -20,7 +20,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/stretchr/testify/require"
 )
 

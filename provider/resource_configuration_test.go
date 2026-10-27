@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/observiq/bindplane-op-enterprise/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
