@@ -91,9 +91,9 @@ func TestNewV1(t *testing.T) {
 				r := []ResourceConfig{
 					{
 						Name: "test",
-						Processors: []string{
-							"count",
-							"batch",
+						Processors: []model.ResourceConfiguration{
+							{Name: "count"},
+							{Name: "batch"},
 						},
 					},
 				}
@@ -130,9 +130,9 @@ func TestNewV1(t *testing.T) {
 				r := []ResourceConfig{
 					{
 						Name: "test",
-						Processors: []string{
-							"count",
-							"batch",
+						Processors: []model.ResourceConfiguration{
+							{Name: "count"},
+							{Name: "batch"},
 						},
 					},
 				}
@@ -169,7 +169,7 @@ func TestNewV1(t *testing.T) {
 				r := []ResourceConfig{
 					{
 						Name:       "test",
-						Processors: []string{},
+						Processors: []model.ResourceConfiguration{},
 					},
 				}
 				return WithExtensionsByName(r)
@@ -379,6 +379,106 @@ func TestNewV2(t *testing.T) {
 				},
 				Spec: model.ConfigurationSpec{
 					ContentType: "text/yaml",
+				},
+			},
+		},
+		{
+			"inline-connectors",
+			func() Option {
+				return WithConnectorsByName([]ResourceConfig{
+					{
+						RouteID: "router",
+						Type:    "routing",
+						Parameters: []model.Parameter{
+							{Name: "telemetry_types", Value: []any{"Logs"}},
+						},
+					},
+					{
+						RouteID: "count",
+						Name:    "my-count",
+					},
+				})
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Connectors: []model.ResourceConfiguration{
+						{
+							ID: "router",
+							ParameterizedSpec: model.ParameterizedSpec{
+								Type: "routing",
+								Parameters: []model.Parameter{
+									{Name: "telemetry_types", Value: []any{"Logs"}},
+								},
+							},
+						},
+						{
+							ID:   "count",
+							Name: "my-count",
+						},
+					},
+				},
+			},
+		},
+		{
+			"processor-groups",
+			func() Option {
+				return WithProcessorGroups([]ResourceConfig{
+					{
+						RouteID: "pg-1",
+						Parameters: []model.Parameter{
+							{Name: "telemetry_types", Value: []any{"Logs"}},
+						},
+						Processors: []model.ResourceConfiguration{
+							{Name: "my-filter"},
+							{
+								ID:          "batch-1",
+								DisplayName: "Batch",
+								ParameterizedSpec: model.ParameterizedSpec{
+									Type: "batch",
+									Parameters: []model.Parameter{
+										{Name: "send_batch_size", Value: 200},
+									},
+								},
+							},
+						},
+					},
+				})
+			}(),
+			&model.Configuration{
+				ResourceMeta: model.ResourceMeta{
+					APIVersion: "bindplane.observiq.com/v2",
+					Kind:       model.KindConfiguration,
+				},
+				Spec: model.ConfigurationSpec{
+					ContentType: "text/yaml",
+					Processors: []model.ResourceConfiguration{
+						{
+							ID: "pg-1",
+							ParameterizedSpec: model.ParameterizedSpec{
+								Parameters: []model.Parameter{
+									{Name: "telemetry_types", Value: []any{"Logs"}},
+								},
+								Processors: []model.ResourceConfiguration{
+									{Name: "my-filter"},
+									{
+										ID:          "batch-1",
+										DisplayName: "Batch",
+										ParameterizedSpec: model.ParameterizedSpec{
+											Type: "batch",
+											Parameters: []model.Parameter{
+												{Name: "send_batch_size", Value: 200},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},

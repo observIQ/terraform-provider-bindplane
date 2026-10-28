@@ -26,6 +26,7 @@ import (
 	"github.com/observiq/terraform-provider-bindplane/internal/configuration"
 	"github.com/observiq/terraform-provider-bindplane/internal/maputil"
 	"github.com/observiq/terraform-provider-bindplane/internal/model"
+	"github.com/observiq/terraform-provider-bindplane/internal/parameter"
 	"github.com/observiq/terraform-provider-bindplane/internal/resource"
 	v2 "github.com/observiq/terraform-provider-bindplane/provider/resource/configuration/v2"
 
@@ -96,9 +97,10 @@ func resourceConfigurationV2() *schema.Resource {
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of processor names to attach to the source.",
+							Description: "List of processor names to attach to the source. Conflicts with processor.",
 						},
-						"route": v2.RouteSchema,
+						"processor": processorBlockSchema(),
+						"route":     v2.RouteSchema,
 					},
 				},
 				Description: "Source name and list of processor names to attach to the configuration. This option can be configured one or many times.",
@@ -117,9 +119,22 @@ func resourceConfigurationV2() *schema.Resource {
 						},
 						"name": {
 							Type:        schema.TypeString,
-							Required:    true,
+							Optional:    true,
 							ForceNew:    false,
-							Description: "Name of the connector to attach.",
+							Description: "Name of the connector to attach. Conflicts with type.",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    false,
+							Description: "The type of an inline connector, such as 'routing'. Conflicts with name.",
+						},
+						"parameters_json": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         false,
+							Description:      "A JSON array of parameters used to configure an inline connector. Requires type.",
+							DiffSuppressFunc: suppressEquivalentJSONDiffs,
 						},
 						"route": v2.RouteSchema,
 					},
@@ -138,14 +153,22 @@ func resourceConfigurationV2() *schema.Resource {
 							ForceNew:    false,
 							Description: "The ID to use for routing to this processor group.",
 						},
+						"parameters_json": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         false,
+							Description:      "A JSON array of parameters used to configure the processor group, such as telemetry_types.",
+							DiffSuppressFunc: suppressEquivalentJSONDiffs,
+						},
 						"processors": {
 							Type:        schema.TypeList,
-							Required:    true,
+							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of processor names to attach to the processor group.",
+							Description: "List of processor names to attach to the processor group. Conflicts with processor.",
 						},
-						"route": v2.RouteSchema,
+						"processor": processorBlockSchema(),
+						"route":     v2.RouteSchema,
 					},
 				},
 				Description: "Group of processors that will receive and process telemetry from one or more routes.",
@@ -173,8 +196,9 @@ func resourceConfigurationV2() *schema.Resource {
 							Optional:    true,
 							ForceNew:    false,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "List of processor names to attach to the destination.",
+							Description: "List of processor names to attach to the destination. Conflicts with processor.",
 						},
+						"processor": processorBlockSchema(),
 					},
 				},
 				Description: "Destination name and list of processor names to attach to the configuration. This option can be configured one or many times.",
@@ -309,11 +333,9 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		for _, v := range sourcesRaw {
 			sourcesRaw := v.(map[string]any)
 
-			processors := []string{}
-			if v := sourcesRaw["processors"].([]any); v != nil {
-				for _, v := range v {
-					processors = append(processors, v.(string))
-				}
+			processors, err := processorsFromConfig(sourcesRaw["processors"].([]any), sourcesRaw["processor"].([]any))
+			if err != nil {
+				return fmt.Errorf("source '%s': %w", sourcesRaw["name"], err)
 			}
 
 			routes := &model.Routes{}
@@ -340,6 +362,15 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		for _, v := range connectorsRaw {
 			connectorRaw := v.(map[string]any)
 
+			routeID := connectorRaw["route_id"].(string)
+			connectorName := connectorRaw["name"].(string)
+			connectorType := connectorRaw["type"].(string)
+
+			parameters, err := parseInlineComponent(connectorName, connectorType, connectorRaw["parameters_json"].(string))
+			if err != nil {
+				return fmt.Errorf("connector '%s': %w", routeID, err)
+			}
+
 			routes := &model.Routes{}
 			if rawRoutes := connectorRaw["route"].(*schema.Set).List(); v != nil {
 				r, err := component.ParseRoutes(rawRoutes)
@@ -350,9 +381,11 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			}
 
 			connectorConf := configuration.ResourceConfig{
-				RouteID: connectorRaw["route_id"].(string),
-				Name:    connectorRaw["name"].(string),
-				Routes:  routes,
+				RouteID:    routeID,
+				Name:       connectorName,
+				Type:       connectorType,
+				Parameters: parameters,
+				Routes:     routes,
 			}
 			connectors = append(connectors, connectorConf)
 		}
@@ -364,11 +397,20 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		for _, v := range processorGroupsRaw {
 			processorGroupRaw := v.(map[string]any)
 
-			processors := []string{}
-			if v := processorGroupRaw["processors"].([]any); v != nil {
-				for _, v := range v {
-					processors = append(processors, v.(string))
+			routeID := processorGroupRaw["route_id"].(string)
+
+			var parameters []model.Parameter
+			if s := processorGroupRaw["parameters_json"].(string); s != "" {
+				params, err := parameter.StringToParameter(s)
+				if err != nil {
+					return fmt.Errorf("processor group '%s': %w", routeID, err)
 				}
+				parameters = params
+			}
+
+			processors, err := processorsFromConfig(processorGroupRaw["processors"].([]any), processorGroupRaw["processor"].([]any))
+			if err != nil {
+				return fmt.Errorf("processor group '%s': %w", routeID, err)
 			}
 
 			routes := &model.Routes{}
@@ -381,7 +423,8 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 			}
 
 			processorGroupConf := configuration.ResourceConfig{
-				RouteID:    processorGroupRaw["route_id"].(string),
+				RouteID:    routeID,
+				Parameters: parameters,
 				Processors: processors,
 				Routes:     routes,
 			}
@@ -396,11 +439,9 @@ func resourceConfigurationV2Create(d *schema.ResourceData, meta any) error {
 		for _, v := range destinationsRaw {
 			destinationRaw := v.(map[string]any)
 
-			processors := []string{}
-			if v := destinationRaw["processors"].([]any); v != nil {
-				for _, v := range v {
-					processors = append(processors, v.(string))
-				}
+			processors, err := processorsFromConfig(destinationRaw["processors"].([]any), destinationRaw["processor"].([]any))
+			if err != nil {
+				return fmt.Errorf("destination '%s': %w", destinationRaw["name"], err)
 			}
 
 			destConfig := configuration.ResourceConfig{
@@ -527,15 +568,22 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	// Save the current state here so we can reconcile the
+	// processors of each source
+	stateSourceBlocks := d.Get("source").([]any)
+
 	sourceBlocks := []map[string]any{}
 	for _, s := range config.Spec.Sources {
 		source := map[string]any{}
 		source["name"] = strings.Split(s.Name, ":")[0]
-		processors := []string{}
-		for _, p := range s.Processors {
-			processors = append(processors, strings.Split(p.Name, ":")[0])
+
+		stateSource := stateBlock(stateSourceBlocks, "name", source["name"])
+		processors, processorBlocks, err := processorsToState(stateSource, s.Processors)
+		if err != nil {
+			return fmt.Errorf("source '%s': %w", source["name"], err)
 		}
 		source["processors"] = processors
+		source["processor"] = processorBlocks
 
 		stateRoutes, err := component.RoutesToState(s.Routes)
 		if err != nil {
@@ -549,11 +597,23 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
+	// Save the current state here so we can reconcile the
+	// parameters of each connector
+	stateConnectorBlocks := d.Get("connector").([]any)
+
 	connectorBlocks := []map[string]any{}
 	for _, c := range config.Spec.Connectors {
 		connector := map[string]any{}
 		connector["route_id"] = c.ID
 		connector["name"] = strings.Split(c.Name, ":")[0]
+		connector["type"] = strings.Split(c.Type, ":")[0]
+
+		stateParams, _ := stateBlock(stateConnectorBlocks, "route_id", c.ID)["parameters_json"].(string)
+		params, err := reconcileParametersJSON(stateParams, c.Parameters)
+		if err != nil {
+			return fmt.Errorf("connector '%s': %w", c.ID, err)
+		}
+		connector["parameters_json"] = params
 
 		stateRoutes, err := component.RoutesToState(c.Routes)
 		if err != nil {
@@ -575,11 +635,21 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	for _, pg := range config.Spec.Processors {
 		processorGroup := map[string]any{}
 
-		processors := []string{}
-		for _, p := range pg.Processors {
-			processors = append(processors, strings.Split(p.Name, ":")[0])
+		stateProcessorGroup := stateBlock(stateProcessorGroupBlocks, "route_id", pg.ID)
+
+		stateParams, _ := stateProcessorGroup["parameters_json"].(string)
+		params, err := reconcileParametersJSON(stateParams, pg.Parameters)
+		if err != nil {
+			return fmt.Errorf("processor group '%s': %w", pg.ID, err)
+		}
+		processorGroup["parameters_json"] = params
+
+		processors, processorBlocks, err := processorsToState(stateProcessorGroup, pg.Processors)
+		if err != nil {
+			return fmt.Errorf("processor group '%s': %w", pg.ID, err)
 		}
 		processorGroup["processors"] = processors
+		processorGroup["processor"] = processorBlocks
 
 		stateRoutes, err := component.RoutesToState(pg.Routes)
 		if err != nil {
@@ -589,12 +659,8 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 
 		// Retrieve the saved route IDs from state and copy them
 		// to the new processor blocks before calling d.Set.
-		for _, stateProcessorGroup := range stateProcessorGroupBlocks {
-			stateProcessorGroup := stateProcessorGroup.(map[string]any)
-			if stateProcessorGroup["route_id"] == pg.ID {
-				processorGroup["route_id"] = stateProcessorGroup["route_id"]
-				break
-			}
+		if stateProcessorGroup != nil {
+			processorGroup["route_id"] = stateProcessorGroup["route_id"]
 		}
 
 		processorGroupBlocks = append(processorGroupBlocks, processorGroup)
@@ -611,20 +677,19 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	for _, d := range config.Spec.Destinations {
 		destination := map[string]any{}
 		destination["name"] = strings.Split(d.Name, ":")[0]
-		processors := []string{}
-		for _, p := range d.Processors {
-			processors = append(processors, strings.Split(p.Name, ":")[0])
+
+		stateDestination := stateBlock(stateDestinationBlocks, "name", destination["name"])
+		processors, processorBlocks, err := processorsToState(stateDestination, d.Processors)
+		if err != nil {
+			return fmt.Errorf("destination '%s': %w", destination["name"], err)
 		}
 		destination["processors"] = processors
+		destination["processor"] = processorBlocks
 
 		// Retrieve the saved route IDs from state and copy them
 		// to the new destination blocks before calling d.Set.
-		for _, stateDestination := range stateDestinationBlocks {
-			stateDestination := stateDestination.(map[string]any)
-			if stateDestination["name"] == destination["name"] {
-				destination["route_id"] = stateDestination["route_id"]
-				break
-			}
+		if stateDestination != nil {
+			destination["route_id"] = stateDestination["route_id"]
 		}
 
 		destinationBlocks = append(destinationBlocks, destination)
@@ -656,5 +721,181 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 	}
 
 	d.SetId(config.ID())
+	return nil
+}
+
+// processorBlockSchema returns the schema for processors that are
+// attached to a source, processor group, or destination. Processors
+// are referenced by name or defined inline with a type and parameters.
+func processorBlockSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		ForceNew: false,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					ForceNew:    false,
+					Description: "Name of the processor to attach. Conflicts with type.",
+				},
+				"type": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					ForceNew:    false,
+					Description: "The type of an inline processor, such as 'batch'. Conflicts with name.",
+				},
+				"parameters_json": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         false,
+					Description:      "A JSON array of parameters used to configure an inline processor. Requires type.",
+					DiffSuppressFunc: suppressEquivalentJSONDiffs,
+				},
+				"display_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					ForceNew:    false,
+					Description: "The name of the processor displayed in the Bindplane UI.",
+				},
+				"id": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Computed:    true,
+					ForceNew:    false,
+					Description: "The ID of an inline processor. When unset, the ID generated by Bindplane is saved and reused by later applies.",
+				},
+			},
+		},
+		Description: "Processor to attach, referenced by name or defined inline with a type and parameters. Conflicts with processors. This option can be configured one or many times.",
+	}
+}
+
+// parseInlineComponent validates a component that is either referenced by
+// name or defined inline by type, and returns the parameters of an inline
+// component.
+func parseInlineComponent(name, componentType, parametersJSON string) ([]model.Parameter, error) {
+	switch {
+	case name != "" && componentType != "":
+		return nil, errors.New("name and type cannot both be set")
+	case name == "" && componentType == "":
+		return nil, errors.New("one of name or type must be set")
+	case parametersJSON == "":
+		return nil, nil
+	case componentType == "":
+		return nil, errors.New("parameters_json requires type")
+	}
+	return parameter.StringToParameter(parametersJSON)
+}
+
+// processorsFromConfig returns the processors configured by a block's
+// processors list, which references processors by name, or by its
+// processor blocks, which reference processors by name or define them
+// inline. Both cannot be set.
+func processorsFromConfig(names, blocks []any) ([]model.ResourceConfiguration, error) {
+	if len(names) > 0 && len(blocks) > 0 {
+		return nil, errors.New("processors and processor cannot both be set")
+	}
+
+	processors := []model.ResourceConfiguration{}
+	for _, name := range names {
+		processors = append(processors, model.ResourceConfiguration{Name: name.(string)})
+	}
+
+	for i, b := range blocks {
+		// An empty processor block is nil. The type
+		// assertions below return zero values for it.
+		block, _ := b.(map[string]any)
+		name, _ := block["name"].(string)
+		processorType, _ := block["type"].(string)
+		parametersJSON, _ := block["parameters_json"].(string)
+		displayName, _ := block["display_name"].(string)
+
+		parameters, err := parseInlineComponent(name, processorType, parametersJSON)
+		if err != nil {
+			return nil, fmt.Errorf("processor %d: %w", i, err)
+		}
+
+		processor := model.ResourceConfiguration{
+			Name:        name,
+			DisplayName: displayName,
+			ParameterizedSpec: model.ParameterizedSpec{
+				Type:       processorType,
+				Parameters: parameters,
+			},
+		}
+
+		// Bindplane derives the ID of a processor referenced by name
+		// from its name. Only inline processors keep the ID from state,
+		// which is empty when Bindplane has not generated one yet.
+		if processorType != "" {
+			processor.ID, _ = block["id"].(string)
+		}
+
+		processors = append(processors, processor)
+	}
+
+	return processors, nil
+}
+
+// processorsToState returns the processors of a source, processor group,
+// or destination as a list of names and a list of processor blocks, one
+// of which is empty. Processor blocks are returned when the block saved
+// to state used them, or when a processor is defined inline, because an
+// inline processor cannot be represented by name. The parameters of each
+// processor are reconciled with the processor block at the same position
+// in state.
+func processorsToState(stateBlock map[string]any, processors []model.ResourceConfiguration) ([]string, []map[string]any, error) {
+	stateProcessors, _ := stateBlock["processor"].([]any)
+
+	useBlocks := len(stateProcessors) > 0
+	for _, p := range processors {
+		if p.Name == "" {
+			useBlocks = true
+		}
+	}
+
+	if !useBlocks {
+		names := []string{}
+		for _, p := range processors {
+			names = append(names, strings.Split(p.Name, ":")[0])
+		}
+		return names, nil, nil
+	}
+
+	blocks := []map[string]any{}
+	for i, p := range processors {
+		stateParams := ""
+		if i < len(stateProcessors) {
+			stateProcessor, _ := stateProcessors[i].(map[string]any)
+			stateParams, _ = stateProcessor["parameters_json"].(string)
+		}
+
+		params, err := reconcileParametersJSON(stateParams, p.Parameters)
+		if err != nil {
+			return nil, nil, fmt.Errorf("processor %d: %w", i, err)
+		}
+
+		blocks = append(blocks, map[string]any{
+			"id":              p.ID,
+			"name":            strings.Split(p.Name, ":")[0],
+			"type":            strings.Split(p.Type, ":")[0],
+			"parameters_json": params,
+			"display_name":    p.DisplayName,
+		})
+	}
+
+	return nil, blocks, nil
+}
+
+// stateBlock returns the block saved to state whose key is equal
+// to value, or nil if there is no such block.
+func stateBlock(blocks []any, key string, value any) map[string]any {
+	for _, b := range blocks {
+		if block, ok := b.(map[string]any); ok && block[key] == value {
+			return block
+		}
+	}
 	return nil
 }
