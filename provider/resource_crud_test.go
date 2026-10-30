@@ -494,11 +494,9 @@ func TestResourceConfiguration_read(t *testing.T) {
 	require.Empty(t, d.Id())
 }
 
-func TestResourceConfigurationV2(t *testing.T) {
-	srv := fakebindplane.New(t)
-	meta := newProviderMeta(t, srv, nil)
-	r := resourceConfigurationV2()
-
+// configurationV2TestRaw returns a bindplane_configuration_v2 config
+// with every component type and their routes.
+func configurationV2TestRaw() map[string]any {
 	raw := configurationTestRaw()
 	raw["source"] = []any{map[string]any{
 		"name":       "my-source",
@@ -527,8 +525,15 @@ func TestResourceConfigurationV2(t *testing.T) {
 		"name":       "my-dest",
 		"processors": []any{"my-filter"},
 	}}
+	return raw
+}
 
-	d := schema.TestResourceDataRaw(t, r.Schema, raw)
+func TestResourceConfigurationV2(t *testing.T) {
+	srv := fakebindplane.New(t)
+	meta := newProviderMeta(t, srv, nil)
+	r := resourceConfigurationV2()
+
+	d := schema.TestResourceDataRaw(t, r.Schema, configurationV2TestRaw())
 	require.NoError(t, r.Create(d, meta))
 
 	requireGoldenJSON(t, "configuration_v2_apply.json", lastApplyBody(t, srv))
@@ -606,4 +611,124 @@ func TestResourceConfigurationV2_read(t *testing.T) {
 	require.Equal(t, []any{"my-pprof"}, d.Get("extensions"))
 	require.Equal(t, 8888, d.Get("advanced.0.metrics.0.port"))
 	require.Equal(t, "progressive", d.Get("rollout_options.0.type"))
+}
+
+func TestResourceConfigurationV2_readRouteIDs(t *testing.T) {
+	r := resourceConfigurationV2()
+
+	t.Run("from-bindplane", func(t *testing.T) {
+		srv := fakebindplane.New(t)
+		meta := newProviderMeta(t, srv, nil)
+		srv.Seed(t, seedConfiguration)
+
+		// Without prior state, route IDs come from Bindplane.
+		d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{"name": "my-config"})
+		require.NoError(t, r.Read(d, meta))
+		require.Equal(t, "pg-1", d.Get("processor_group.0.route_id"))
+		require.Equal(t, "dest-route", d.Get("destination.0.route_id"))
+	})
+
+	t.Run("destination-state-fallback", func(t *testing.T) {
+		srv := fakebindplane.New(t)
+		meta := newProviderMeta(t, srv, nil)
+		srv.Seed(t, strings.Replace(seedConfiguration, `"id": "dest-route", `, "", 1))
+
+		// A destination without an ID keeps the route ID saved in state.
+		d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
+			"name":        "my-config",
+			"destination": []any{map[string]any{"route_id": "state-route", "name": "my-dest"}},
+		})
+		require.NoError(t, r.Read(d, meta))
+		require.Equal(t, "state-route", d.Get("destination.0.route_id"))
+	})
+}
+
+func TestResourceConfigurationV2Import(t *testing.T) {
+	srv := fakebindplane.New(t)
+	meta := newProviderMeta(t, srv, nil)
+	srv.Seed(t, seedConfiguration)
+	r := resourceConfigurationV2()
+	require.NotNil(t, r.Importer)
+
+	// Terraform import sets the ID to the name given by the user.
+	d := r.TestResourceData()
+	d.SetId("my-config")
+
+	imported, err := r.Importer.StateContext(context.Background(), d, meta)
+	require.NoError(t, err)
+	require.Len(t, imported, 1)
+	require.Equal(t, "cfg-id", imported[0].Id())
+	require.Equal(t, "my-config", imported[0].Get("name"))
+
+	// Terraform reads the resource after import, with no prior state.
+	d = imported[0]
+	require.NoError(t, r.Read(d, meta))
+	require.Equal(t, "cfg-id", d.Id())
+	require.Equal(t, "my-config", d.Get("name"))
+	require.Equal(t, "linux", d.Get("platform"))
+	require.Equal(t, map[string]any{"env": "test"}, d.Get("labels"))
+	require.Equal(t, map[string]any{"configuration": "my-config"}, d.Get("match_labels"))
+	require.Equal(t, "", d.Get("description"))
+	require.Equal(t, "1m", d.Get("measurement_interval"))
+
+	require.Equal(t, "my-source", d.Get("source.0.name"))
+	require.Equal(t, []any{"my-batch"}, d.Get("source.0.processors"))
+	require.Len(t, d.Get("source.0.route").(*schema.Set).List(), 1)
+	require.Equal(t, "pg-1", d.Get("processor_group.0.route_id"))
+	require.Equal(t, []any{"my-batch", "my-filter"}, d.Get("processor_group.0.processors"))
+	require.Equal(t, "conn-1", d.Get("connector.0.route_id"))
+	require.Equal(t, "my-connector", d.Get("connector.0.name"))
+	require.Equal(t, "dest-route", d.Get("destination.0.route_id"))
+	require.Equal(t, "my-dest", d.Get("destination.0.name"))
+	require.Equal(t, []any{"my-filter"}, d.Get("destination.0.processors"))
+	require.Equal(t, []any{"my-pprof"}, d.Get("extensions"))
+	require.Equal(t, 8888, d.Get("advanced.0.metrics.0.port"))
+	require.Equal(t, "progressive", d.Get("rollout_options.0.type"))
+	require.Equal(t, "stage", d.Get("rollout_options.0.parameters.0.value.0.name"))
+
+	// Bindplane does not store rollout, so it is not imported.
+	_, ok := d.GetOk("rollout")
+	require.False(t, ok)
+
+	t.Run("not-found", func(t *testing.T) {
+		d := r.TestResourceData()
+		d.SetId("missing")
+
+		_, err := r.Importer.StateContext(context.Background(), d, meta)
+		require.ErrorContains(t, err, "does not exist")
+	})
+
+	t.Run("server-error", func(t *testing.T) {
+		srv.RespondOnce(http.MethodGet, "/v1/configurations/my-config", serverError)
+		d := r.TestResourceData()
+		d.SetId("my-config")
+
+		_, err := r.Importer.StateContext(context.Background(), d, meta)
+		require.ErrorContains(t, err, "boom")
+	})
+}
+
+// TestResourceConfigurationV2ImportVerify checks that importing a
+// configuration created by Terraform produces the same state,
+// except for rollout which Bindplane does not store.
+func TestResourceConfigurationV2ImportVerify(t *testing.T) {
+	srv := fakebindplane.New(t)
+	meta := newProviderMeta(t, srv, nil)
+	r := resourceConfigurationV2()
+
+	created := schema.TestResourceDataRaw(t, r.Schema, configurationV2TestRaw())
+	require.NoError(t, r.Create(created, meta))
+
+	d := r.TestResourceData()
+	d.SetId("my-config")
+	imported, err := r.Importer.StateContext(context.Background(), d, meta)
+	require.NoError(t, err)
+	require.Len(t, imported, 1)
+	require.NoError(t, r.Read(imported[0], meta))
+
+	want := created.State().Attributes
+	got := imported[0].State().Attributes
+	delete(want, "rollout")
+	require.NotContains(t, got, "rollout")
+	require.Equal(t, want, got)
 }

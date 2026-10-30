@@ -22,6 +22,7 @@ clean () {
 
     rm -rf terraform.tfstate*
     rm -rf providers
+    rm -f import.tfplan import.json apply.json
 
     docker ps
 
@@ -214,6 +215,79 @@ expect_resource() {
     echo "OK: $kind $name matches: $filter"
 }
 
+# plan_json <file> writes the current plan as JSON to file.
+plan_json() {
+    terraform plan -input=false -out=import.tfplan > /dev/null || fail "terraform plan failed"
+    terraform show -json import.tfplan > "$1"
+    rm -f import.tfplan
+}
+
+# assert_plan <file> <addr> <changed> fails unless the plan for addr is a
+# no-op, or an in-place update whose changed attributes are exactly
+# <changed>, given as a JSON array. An empty array requires a no-op.
+assert_plan() {
+    local file=$1
+    local addr=$2
+    local changed=$3
+    local result
+
+    result=$(jq -c --arg addr "$addr" '
+        [.resource_changes[] | select(.address == $addr)]
+        | if length != 1 then {error: "resource not found in plan"}
+          else .[0].change as $c
+            | {
+                actions: $c.actions,
+                changed: ([($c.before // {} | keys[]), ($c.after // {} | keys[])]
+                  | unique | map(select($c.before[.] != $c.after[.])))
+              }
+          end' "$file")
+
+    if ! jq -e --argjson want "$changed" '
+        .actions == ["no-op"]
+        or ($want != [] and .actions == ["update"] and .changed == $want)' \
+        <<< "$result" > /dev/null; then
+        fail "unexpected plan for $addr, want no-op or update of $changed: $result"
+    fi
+    echo "OK: $addr: $result"
+}
+
+# test_import_configuration_v2 removes the v2 configurations from state,
+# imports them by name, and fails if anything other than rollout, which
+# Bindplane does not store, would change.
+test_import_configuration_v2() {
+    echo "testing configuration v2 import"
+
+    local imports=("bindplane_configuration_v2.configuration:my-config-v2")
+    if [[ $GATEWAY == "true" ]]; then
+        imports+=("bindplane_configuration_v2.gateway[0]:my-gateway-config")
+    fi
+
+    local addrs=()
+    local targets=()
+    for entry in "${imports[@]}"; do
+        local addr="${entry%%:*}"
+        local name="${entry##*:}"
+        terraform state rm "$addr" || fail "state rm $addr failed"
+        terraform import -input=false "$addr" "$name" || fail "import $addr $name failed"
+        addrs+=("$addr")
+        targets+=("-target=$addr")
+    done
+
+    plan_json import.json
+    for addr in "${addrs[@]}"; do
+        assert_plan import.json "$addr" '["rollout"]'
+    done
+
+    terraform apply -auto-approve -input=false "${targets[@]}" || fail "apply after import failed"
+    plan_json apply.json
+    for addr in "${addrs[@]}"; do
+        assert_plan apply.json "$addr" '[]'
+    done
+    rm -f import.json apply.json
+
+    echo "configuration v2 import test passed"
+}
+
 destroy () {
     terraform destroy -auto-approve
 }
@@ -275,5 +349,9 @@ sleep 10
 configure
 apply
 test_resources
+# Configuration v2 requires Bindplane v1.104.0 or newer, see test_resources.
+if version_at_least 1.104.0; then
+    test_import_configuration_v2
+fi
 destroy
 clean

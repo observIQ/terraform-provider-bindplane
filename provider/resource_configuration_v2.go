@@ -39,6 +39,9 @@ func resourceConfigurationV2() *schema.Resource {
 		Update: resourceConfigurationV2Create, // Run create as update
 		Read:   resourceConfigurationV2Read,
 		Delete: genericConfigurationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceConfigurationV2ImportState,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -627,8 +630,8 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	// Save the current state here so we can retrieve the saved
-	// route ID
+	// Save the current state here so we can reconcile the
+	// parameters and processors of each processor group
 	stateProcessorGroupBlocks := d.Get("processor_group").([]any)
 
 	processorGroupBlocks := []map[string]any{}
@@ -656,12 +659,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 			return fmt.Errorf("routes to state: %w", err)
 		}
 		processorGroup["route"] = stateRoutes
-
-		// Retrieve the saved route IDs from state and copy them
-		// to the new processor blocks before calling d.Set.
-		if stateProcessorGroup != nil {
-			processorGroup["route_id"] = stateProcessorGroup["route_id"]
-		}
+		processorGroup["route_id"] = pg.ID
 
 		processorGroupBlocks = append(processorGroupBlocks, processorGroup)
 	}
@@ -669,26 +667,27 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		return err
 	}
 
-	// Save the current state here so we can retrieve the saved
-	// route ID
+	// Save the current state here so we can fall back to the saved
+	// route ID when Bindplane does not return one
 	stateDestinationBlocks := d.Get("destination").([]any)
 
 	destinationBlocks := []map[string]any{}
-	for _, d := range config.Spec.Destinations {
+	for _, dest := range config.Spec.Destinations {
 		destination := map[string]any{}
-		destination["name"] = strings.Split(d.Name, ":")[0]
+		destination["name"] = strings.Split(dest.Name, ":")[0]
 
 		stateDestination := stateBlock(stateDestinationBlocks, "name", destination["name"])
-		processors, processorBlocks, err := processorsToState(stateDestination, d.Processors)
+		processors, processorBlocks, err := processorsToState(stateDestination, dest.Processors)
 		if err != nil {
 			return fmt.Errorf("destination '%s': %w", destination["name"], err)
 		}
 		destination["processors"] = processors
 		destination["processor"] = processorBlocks
 
-		// Retrieve the saved route IDs from state and copy them
-		// to the new destination blocks before calling d.Set.
-		if stateDestination != nil {
+		// Prefer the route ID returned by Bindplane so that imported
+		// resources, which have no prior state, are populated.
+		destination["route_id"] = dest.ID
+		if dest.ID == "" && stateDestination != nil {
 			destination["route_id"] = stateDestination["route_id"]
 		}
 
@@ -898,4 +897,29 @@ func stateBlock(blocks []any, key string, value any) map[string]any {
 		}
 	}
 	return nil
+}
+
+func resourceConfigurationV2ImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	bindplane := meta.(*client.BindPlane)
+
+	name := d.Id()
+
+	config, err := bindplane.Configuration(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if config == nil {
+		return nil, fmt.Errorf("configuration with name '%s' does not exist", name)
+	}
+
+	// Read compares the state ID with the ID returned by Bindplane
+	// and looks the configuration up by name, so both must be set.
+	d.SetId(config.ID())
+
+	if err := d.Set("name", config.Name()); err != nil {
+		return nil, fmt.Errorf("failed to set configuration name: %w", err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
