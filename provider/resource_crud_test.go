@@ -607,3 +607,22 @@ func TestResourceConfigurationV2_read(t *testing.T) {
 	require.Equal(t, 8888, d.Get("advanced.0.metrics.0.port"))
 	require.Equal(t, "progressive", d.Get("rollout_options.0.type"))
 }
+
+func TestResourceConfigurationV2_readRouteIDs(t *testing.T) {
+	r := resourceConfigurationV2()
+
+	t.Run("destination-state-differs", func(t *testing.T) {
+		srv := fakebindplane.New(t)
+		meta := newProviderMeta(t, srv, nil)
+		srv.Seed(t, seedConfiguration)
+
+		// A destination keeps the route ID saved in state, even when
+		// Bindplane returns a different ID.
+		d := schema.TestResourceDataRaw(t, r.Schema, map[string]any{
+			"name":        "my-config",
+			"destination": []any{map[string]any{"route_id": "state-route", "name": "my-dest"}},
+		})
+		require.NoError(t, r.Read(d, meta))
+		require.Equal(t, "state-route", d.Get("destination.0.route_id"))
+	})
+}
