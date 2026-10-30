@@ -684,11 +684,14 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		destination["processors"] = processors
 		destination["processor"] = processorBlocks
 
-		// Prefer the route ID returned by Bindplane so that imported
-		// resources, which have no prior state, are populated.
-		destination["route_id"] = d.ID
-		if d.ID == "" && stateDestination != nil {
+		// Retrieve the saved route IDs from state and copy them
+		// to the new destination blocks before calling d.Set.
+		if stateDestination != nil {
 			destination["route_id"] = stateDestination["route_id"]
+		} else {
+			// Imported resources have no prior state, so use the
+			// route ID returned by Bindplane.
+			destination["route_id"] = d.ID
 		}
 
 		destinationBlocks = append(destinationBlocks, destination)
