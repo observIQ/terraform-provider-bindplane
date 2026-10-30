@@ -744,7 +744,6 @@ resource "bindplane_configuration_v2" "configuration" {
       telemetry_type = "metrics"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
-        "destinations/${bindplane_destination.google.id}",
         "destinations/${bindplane_destination.google.id}"
       ]
     }
@@ -753,7 +752,6 @@ resource "bindplane_configuration_v2" "configuration" {
       telemetry_type = "traces"
       components = [
         "destinations/${bindplane_destination.datadog.id}",
-        "destinations/${bindplane_destination.google.id}",
         "destinations/${bindplane_destination.google.id}"
       ]
     }
