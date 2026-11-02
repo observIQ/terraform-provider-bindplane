@@ -29,8 +29,16 @@ type ResourceConfig struct {
 	// attached to the configuration
 	Name string
 
-	// A list of processor names to attach to the resource
-	Processors []string
+	// Type is the type of an inline resource, which is used
+	// instead of Name
+	Type string
+
+	// Parameters of an inline resource or processor group
+	Parameters []model.Parameter
+
+	// Processors to attach to the resource, referenced by name
+	// or defined inline
+	Processors []model.ResourceConfiguration
 
 	// RouteID is the ID to use when routing to this resource
 	RouteID string
@@ -237,31 +245,18 @@ func withResourcesByName(r []ResourceConfig) []model.ResourceConfiguration {
 	resources := []model.ResourceConfiguration{}
 
 	for _, r := range r {
-		// build list of processor resource objects by name
-		processorResources := []model.ResourceConfiguration{}
-		for _, name := range r.Processors {
-			processor := model.ResourceConfiguration{
-				Name: name,
-			}
-			processorResources = append(processorResources, processor)
-		}
-
-		routeID := r.RouteID
-
-		// Build source resource with name and list
-		// of processor resources
-		r := model.ResourceConfiguration{
+		// Build the resource with its name, or type and parameters
+		// when the resource is inline, and its list of processors.
+		resources = append(resources, model.ResourceConfiguration{
+			ID:   r.RouteID,
 			Name: r.Name,
 			ParameterizedSpec: model.ParameterizedSpec{
-				Processors: processorResources,
+				Type:       r.Type,
+				Parameters: r.Parameters,
+				Processors: r.Processors,
 			},
 			Routes: r.Routes,
-		}
-		if routeID != "" {
-			r.ID = routeID
-		}
-
-		resources = append(resources, r)
+		})
 	}
 	return resources
 }

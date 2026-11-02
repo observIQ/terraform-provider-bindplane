@@ -1,0 +1,134 @@
+{
+  "resources": [
+    {
+      "apiVersion": "bindplane.observiq.com/v2",
+      "kind": "Configuration",
+      "metadata": {
+        "id": "",
+        "labels": {
+          "platform": "linux"
+        },
+        "name": "my-config"
+      },
+      "spec": {
+        "connectors": [
+          {
+            "id": "router",
+            "parameters": [
+              {
+                "name": "telemetry_types",
+                "value": [
+                  "Logs"
+                ]
+              },
+              {
+                "name": "routes",
+                "value": [
+                  {
+                    "condition": {
+                      "ottl": "attributes[\"env\"] == \"prod\""
+                    },
+                    "id": "prod"
+                  }
+                ]
+              }
+            ],
+            "routes": {
+              "logs": [
+                {
+                  "components": [
+                    "processors/pg-1"
+                  ],
+                  "id": "prod"
+                }
+              ]
+            },
+            "type": "routing"
+          }
+        ],
+        "contentType": "text/yaml",
+        "destinations": [
+          {
+            "id": "dest-1",
+            "name": "my-dest",
+            "processors": [
+              {
+                "displayName": "Filter",
+                "name": "my-filter"
+              }
+            ]
+          }
+        ],
+        "processors": [
+          {
+            "id": "pg-1",
+            "parameters": [
+              {
+                "name": "telemetry_types",
+                "value": [
+                  "Logs"
+                ]
+              }
+            ],
+            "processors": [
+              {
+                "name": "my-filter"
+              },
+              {
+                "displayName": "Batch",
+                "parameters": [
+                  {
+                    "name": "send_batch_size",
+                    "value": 200
+                  }
+                ],
+                "type": "batch"
+              }
+            ],
+            "routes": {
+              "logs": [
+                {
+                  "components": [
+                    "destinations/dest-1"
+                  ],
+                  "id": "pg-logs"
+                }
+              ]
+            }
+          }
+        ],
+        "selector": {
+          "matchLabels": {
+            "configuration": "my-config"
+          }
+        },
+        "sources": [
+          {
+            "name": "my-source",
+            "processors": [
+              {
+                "parameters": [
+                  {
+                    "name": "api_key",
+                    "value": "secret"
+                  }
+                ],
+                "type": "custom"
+              }
+            ],
+            "routes": {
+              "logs": [
+                {
+                  "components": [
+                    "connectors/router"
+                  ],
+                  "id": "source-logs"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

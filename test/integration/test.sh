@@ -117,6 +117,10 @@ test_resources() {
     if [[ $GATEWAY == "true" ]]; then
         test_gateway
     fi
+
+    if [[ $INLINE == "true" ]]; then
+        test_inline
+    fi
 }
 
 # bindplane_api performs a GET request against the Bindplane API.
@@ -152,6 +156,34 @@ test_gateway() {
         || fail "configuration my-gateway-config does not have label role=gateway"
 
     echo "gateway test passed"
+}
+
+# test_inline fails the test when the inline components of a configuration
+# were not applied as expected, or when Terraform plans changes to the
+# configuration after Bindplane adds versions, IDs, and default parameters
+# to its inline components.
+test_inline() {
+    echo "testing inline components"
+
+    config=$(bindplane_api configurations/my-inline-config) || fail "configuration my-inline-config not found"
+    echo "$config" | jq .
+    echo "$config" | jq -e '.configuration.spec.connectors[0].type | startswith("routing")' > /dev/null \
+        || fail "connector router is not an inline routing connector"
+    echo "$config" | jq -e '.configuration.spec.processors[0].parameters[] | select(.name == "telemetry_types") | .value == ["Logs"]' > /dev/null \
+        || fail "processor group production does not have telemetry_types Logs"
+    echo "$config" | jq -e '.configuration.spec.processors[0].processors[1].type | startswith("batch")' > /dev/null \
+        || fail "processor group production does not have an inline batch processor"
+    echo "$config" | jq -e '.configuration.spec.sources[0].processors[0].type | startswith("filter_severity")' > /dev/null \
+        || fail "source does not have an inline filter_severity processor"
+
+    local address='bindplane_configuration_v2.inline[0]'
+    terraform plan -target="$address" -out=inline.tfplan
+    actions=$(terraform show -json inline.tfplan | jq -c --arg address "$address" \
+        '.resource_changes[] | select(.address == $address) | .change.actions')
+    rm -f inline.tfplan
+    [[ $actions == '["no-op"]' ]] || fail "terraform plans ${actions} for ${address} after apply"
+
+    echo "inline test passed"
 }
 
 # version_at_least <version> succeeds when BINDPLANE_VERSION is latest
@@ -228,6 +260,13 @@ else
     echo "gateway tests skipped: ${BINDPLANE_VERSION} is older than ${GATEWAY_MIN_VERSION}"
 fi
 export TF_VAR_enable_gateway=$GATEWAY
+
+# Inline components are tested on latest and on every version from v1.104.0.
+export INLINE=false
+if version_at_least 1.104.0; then
+    export INLINE=true
+fi
+export TF_VAR_enable_inline=$INLINE
 
 echo "using BINDPLANE_VERSION: ${BINDPLANE_VERSION}"
 
