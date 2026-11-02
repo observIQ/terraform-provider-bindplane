@@ -39,6 +39,9 @@ func resourceConfigurationV2() *schema.Resource {
 		Update: resourceConfigurationV2Create, // Run create as update
 		Read:   resourceConfigurationV2Read,
 		Delete: genericConfigurationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceConfigurationV2ImportState,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -656,12 +659,7 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 			return fmt.Errorf("routes to state: %w", err)
 		}
 		processorGroup["route"] = stateRoutes
-
-		// Retrieve the saved route IDs from state and copy them
-		// to the new processor blocks before calling d.Set.
-		if stateProcessorGroup != nil {
-			processorGroup["route_id"] = stateProcessorGroup["route_id"]
-		}
+		processorGroup["route_id"] = pg.ID
 
 		processorGroupBlocks = append(processorGroupBlocks, processorGroup)
 	}
@@ -690,6 +688,10 @@ func resourceConfigurationV2Read(d *schema.ResourceData, meta any) error {
 		// to the new destination blocks before calling d.Set.
 		if stateDestination != nil {
 			destination["route_id"] = stateDestination["route_id"]
+		} else {
+			// Imported resources have no prior state, so use the
+			// route ID returned by Bindplane.
+			destination["route_id"] = d.ID
 		}
 
 		destinationBlocks = append(destinationBlocks, destination)
@@ -898,4 +900,29 @@ func stateBlock(blocks []any, key string, value any) map[string]any {
 		}
 	}
 	return nil
+}
+
+func resourceConfigurationV2ImportState(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	bindplane := meta.(*client.BindPlane)
+
+	name := d.Id()
+
+	config, err := bindplane.Configuration(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if config == nil {
+		return nil, fmt.Errorf("configuration with name '%s' does not exist", name)
+	}
+
+	// Read compares the state ID with the ID returned by Bindplane
+	// and looks the configuration up by name, so both must be set.
+	d.SetId(config.ID())
+
+	if err := d.Set("name", config.Name()); err != nil {
+		return nil, fmt.Errorf("failed to set configuration name: %w", err)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
