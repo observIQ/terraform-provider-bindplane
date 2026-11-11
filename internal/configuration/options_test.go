@@ -41,7 +41,7 @@ func TestOptions(t *testing.T) {
 			{Name: "my-connector", RouteID: "conn-1", Routes: routes},
 		}),
 		WithProcessorGroups([]ResourceConfig{
-			{RouteID: "pg-1", Processors: []string{"my-batch", "my-filter"}, Routes: routes},
+			{RouteID: "pg-1", Processors: []model.ResourceConfiguration{{Name: "my-batch"}, {Name: "my-filter"}}, Routes: routes},
 		}),
 		WithExtensionsByName([]ResourceConfig{
 			{Name: "my-pprof"},
@@ -54,11 +54,8 @@ func TestOptions(t *testing.T) {
 	require.Equal(t, "my-config", c.Metadata.Name)
 	require.Equal(t, []model.ResourceConfiguration{
 		{
-			ID:   "conn-1",
-			Name: "my-connector",
-			ParameterizedSpec: model.ParameterizedSpec{
-				Processors: []model.ResourceConfiguration{},
-			},
+			ID:     "conn-1",
+			Name:   "my-connector",
 			Routes: routes,
 		},
 	}, c.Spec.Connectors)
@@ -77,9 +74,6 @@ func TestOptions(t *testing.T) {
 	require.Equal(t, []model.ResourceConfiguration{
 		{
 			Name: "my-pprof",
-			ParameterizedSpec: model.ParameterizedSpec{
-				Processors: []model.ResourceConfiguration{},
-			},
 		},
 	}, c.Spec.Extensions)
 	require.Equal(t, rollout, c.Spec.Rollout)

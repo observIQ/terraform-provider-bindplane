@@ -69,23 +69,27 @@ func genericResourceRead(rKind model.Kind, d *schema.ResourceData, meta any) err
 		return err
 	}
 
-	// Parameters defined by the user, previously saved to state
-	stateParams := []model.Parameter{}
-	if s := d.Get("parameters_json").(string); s != "" {
-		if err := json.Unmarshal([]byte(s), &stateParams); err != nil {
-			return fmt.Errorf("failed to unmarshal state paramters: %w", err)
-		}
-	}
-
-	// Parameters returned by BindPlane API
-	incomingParams := reconcileParameters(stateParams, g.Spec.Parameters)
-
-	paramStr, err := parameter.ParametersToString(incomingParams)
+	paramStr, err := reconcileParametersJSON(d.Get("parameters_json").(string), g.Spec.Parameters)
 	if err != nil {
 		return err
 	}
 
 	return d.Set("parameters_json", paramStr)
+}
+
+// reconcileParametersJSON takes the parameters_json previously saved to
+// state and the parameters returned by the Bindplane API, and returns the
+// parameters_json that should be saved to state. See reconcileParameters.
+func reconcileParametersJSON(stateJSON string, incomingParams []model.Parameter) (string, error) {
+	// Parameters defined by the user, previously saved to state
+	stateParams := []model.Parameter{}
+	if stateJSON != "" {
+		if err := json.Unmarshal([]byte(stateJSON), &stateParams); err != nil {
+			return "", fmt.Errorf("failed to unmarshal state paramters: %w", err)
+		}
+	}
+
+	return parameter.ParametersToString(reconcileParameters(stateParams, incomingParams))
 }
 
 // reconcileParameters returns the parameters that should be saved to state

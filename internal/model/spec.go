@@ -45,6 +45,9 @@ type ResourceConfiguration struct {
 	// Name is the name of the referenced resource
 	Name string `json:"name,omitempty"`
 
+	// DisplayName is the name displayed in the Bindplane UI
+	DisplayName string `json:"displayName,omitempty"`
+
 	ParameterizedSpec
 
 	// Routes connect resources in a configuration
