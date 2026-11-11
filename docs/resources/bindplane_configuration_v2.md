@@ -443,3 +443,16 @@ resource "bindplane_configuration_v2" "inline" {
   }
 }
 ```
+
+## Import
+
+When using the [terraform import command](https://developer.hashicorp.com/terraform/cli/commands/import),
+configurations can be imported by name. For example:
+
+```bash
+terraform import bindplane_configuration_v2.my_config my-config
+```
+
+Bindplane does not store the `rollout` option, so the first plan after an import
+shows an in-place update to `rollout`. Applying it re-applies the unchanged
+configuration.
